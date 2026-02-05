@@ -57,9 +57,9 @@
 
     // --- Meter geometry ---
     var cx = W / 2;
-    var cy = H + 20; // pivot below canvas
-    var needleLen = H * 0.95;
-    var arcRadius = needleLen * 0.80;
+    var cy = H - 8; // pivot visible near bottom edge
+    var needleLen = H * 0.82;
+    var arcRadius = needleLen * 0.78;
     var minAngle = -0.65;
     var maxAngle = 0.65;
     var clipY = H - 4; // mechanical stop
