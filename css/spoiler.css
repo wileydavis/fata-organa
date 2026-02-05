@@ -1,0 +1,209 @@
+/* ============================================
+   FATA ORGANA — Redaction / Spoiler Styles
+   ============================================ */
+
+/* --- Redacted content --- */
+[data-spoiler].redacted {
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    cursor: default;
+}
+
+/* Block-level redaction (terms, paragraphs, sections) */
+.term.redacted,
+p.redacted,
+div.redacted,
+section.redacted,
+h3.redacted {
+    color: transparent !important;
+    min-height: 1.2em;
+}
+
+.term.redacted *,
+p.redacted *,
+div.redacted *,
+section.redacted * {
+    color: transparent !important;
+    border-color: transparent !important;
+}
+
+/* The redaction bar overlay */
+[data-spoiler].redacted::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(20, 20, 22, 0.97) 0px,
+        rgba(20, 20, 22, 0.97) 3px,
+        rgba(30, 30, 33, 0.95) 3px,
+        rgba(30, 30, 33, 0.95) 4px
+    );
+    z-index: 1;
+}
+
+/* Redaction label */
+[data-spoiler].redacted::before {
+    content: 'REDACTED — CLEARANCE LEVEL ' attr(data-spoiler) ' REQUIRED';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(196, 163, 90, 0.3);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Inline redaction (for spans within text) */
+span[data-spoiler].redacted {
+    background: rgba(20, 20, 22, 0.97);
+    color: transparent !important;
+    padding: 0.1em 0.3em;
+    border-radius: 1px;
+}
+
+span[data-spoiler].redacted::after {
+    display: none;
+}
+
+span[data-spoiler].redacted::before {
+    content: '████';
+    position: static;
+    transform: none;
+    color: rgba(30, 30, 35, 1);
+    font-size: inherit;
+    letter-spacing: -0.05em;
+    background: none;
+}
+
+/* --- Declassified (revealed) --- */
+[data-spoiler].declassified {
+    /* subtle indicator that this was once redacted */
+}
+
+/* Optional: faint border to show "this was classified" */
+.term.declassified {
+    border-left: 2px solid rgba(196, 163, 90, 0.08);
+    padding-left: 0.75rem;
+}
+
+/* --- Transition --- */
+[data-spoiler] {
+    transition: color 0.4s ease, background 0.4s ease;
+}
+
+[data-spoiler]::after,
+[data-spoiler]::before {
+    transition: opacity 0.4s ease;
+}
+
+[data-spoiler].declassified::after,
+[data-spoiler].declassified::before {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* --- Clearance Toggle (nav) --- */
+.clearance-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1.5rem;
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--border);
+}
+
+.clearance-label {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+}
+
+.clearance-control {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.clearance-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.clearance-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+}
+
+.clearance-display {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    min-width: 1.8rem;
+    text-align: center;
+    letter-spacing: 0.05em;
+}
+
+/* Tooltip */
+.clearance-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    max-width: 220px;
+    z-index: 200;
+    white-space: normal;
+}
+
+.clearance-toggle:hover .clearance-tooltip {
+    display: block;
+}
+
+/* --- Responsive --- */
+@media (max-width: 600px) {
+    .clearance-toggle {
+        margin-left: 0.75rem;
+        padding-left: 0.75rem;
+    }
+
+    .clearance-label {
+        display: none;
+    }
+
+    .clearance-tooltip {
+        right: -1rem;
+        max-width: 180px;
+    }
+}
