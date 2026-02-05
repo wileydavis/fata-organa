@@ -65,10 +65,10 @@
     var clipY = H - 4; // mechanical stop
     var dbMarks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3];
 
-    // REC indicator geometry
-    var recX = W - 58;
+    // Indicator geometry
+    var recX = W - 138;
     var recY = 12;
-    var recW = 48;
+    var recW = 128;
     var recH = 16;
 
     function dbToAngle(db) {
@@ -262,49 +262,49 @@
         ctx.lineWidth = 0.5;
         ctx.stroke();
 
-        // --- REC indicator (upper right, inside meter) ---
+        // --- RECEIVE indicator (upper right, inside meter) ---
         if (!hasStarted) {
             // Flashing
             var flash = Math.sin(time * 0.08) * 0.5 + 0.5;
-            var recAlpha = 0.15 + flash * 0.35;
+            var recAlpha = 0.3 + flash * 0.45;
 
             // Background
-            ctx.fillStyle = 'rgba(140, 45, 40, ' + (recAlpha * 0.25) + ')';
+            ctx.fillStyle = 'rgba(50, 140, 60, ' + (recAlpha * 0.3) + ')';
             ctx.fillRect(recX, recY, recW, recH);
 
             // Border
-            ctx.strokeStyle = 'rgba(160, 55, 45, ' + (recAlpha * 0.5) + ')';
+            ctx.strokeStyle = 'rgba(60, 160, 70, ' + (recAlpha * 0.55) + ')';
             ctx.lineWidth = 0.5;
             ctx.strokeRect(recX, recY, recW, recH);
 
             // Dot
             ctx.beginPath();
             ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(180, 60, 50, ' + recAlpha + ')';
+            ctx.fillStyle = 'rgba(70, 180, 80, ' + recAlpha + ')';
             ctx.fill();
 
             // Text
-            ctx.font = '500 7px "JetBrains Mono", monospace';
+            ctx.font = '500 6px "JetBrains Mono", monospace';
             ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(180, 65, 55, ' + (recAlpha * 0.9) + ')';
-            ctx.fillText('REC', recX + 16, recY + recH / 2 + 2.5);
+            ctx.fillStyle = 'rgba(70, 175, 80, ' + (recAlpha * 0.9) + ')';
+            ctx.fillText('RECEIVE TRANSMISSION', recX + 16, recY + recH / 2 + 2);
         } else if (isPlaying) {
             // Solid, not flashing
-            ctx.fillStyle = 'rgba(140, 45, 40, 0.12)';
+            ctx.fillStyle = 'rgba(50, 140, 60, 0.15)';
             ctx.fillRect(recX, recY, recW, recH);
-            ctx.strokeStyle = 'rgba(160, 55, 45, 0.2)';
+            ctx.strokeStyle = 'rgba(60, 160, 70, 0.25)';
             ctx.lineWidth = 0.5;
             ctx.strokeRect(recX, recY, recW, recH);
 
             ctx.beginPath();
             ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(180, 60, 50, 0.5)';
+            ctx.fillStyle = 'rgba(70, 180, 80, 0.55)';
             ctx.fill();
 
-            ctx.font = '500 7px "JetBrains Mono", monospace';
+            ctx.font = '500 6px "JetBrains Mono", monospace';
             ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(180, 65, 55, 0.4)';
-            ctx.fillText('REC', recX + 16, recY + recH / 2 + 2.5);
+            ctx.fillStyle = 'rgba(70, 175, 80, 0.45)';
+            ctx.fillText('RECEIVING', recX + 16, recY + recH / 2 + 2);
         }
 
         // Inner bezel shadow (top edge)
