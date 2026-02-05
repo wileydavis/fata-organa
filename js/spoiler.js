@@ -102,6 +102,43 @@
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
 
+        // Static noise canvas
+        var staticCanvas = document.createElement('canvas');
+        staticCanvas.className = 'static-canvas';
+        staticCanvas.width = window.innerWidth;
+        staticCanvas.height = window.innerHeight;
+        overlay.insertBefore(staticCanvas, modal);
+
+        var sCtx = staticCanvas.getContext('2d');
+        var staticRunning = true;
+
+        function drawStatic() {
+            if (!staticRunning) return;
+            var w = staticCanvas.width;
+            var h = staticCanvas.height;
+            var imageData = sCtx.createImageData(w, h);
+            var data = imageData.data;
+            // Draw every 2nd pixel for performance + chunkier look
+            for (var sy = 0; sy < h; sy += 2) {
+                for (var sx = 0; sx < w; sx += 2) {
+                    var v = Math.random() * 255;
+                    // Fill 2x2 block
+                    for (var dy = 0; dy < 2 && sy + dy < h; dy++) {
+                        for (var dx = 0; dx < 2 && sx + dx < w; dx++) {
+                            var idx = ((sy + dy) * w + (sx + dx)) * 4;
+                            data[idx] = v;
+                            data[idx + 1] = v;
+                            data[idx + 2] = v;
+                            data[idx + 3] = 255;
+                        }
+                    }
+                }
+            }
+            sCtx.putImageData(imageData, 0, 0);
+            setTimeout(function() { requestAnimationFrame(drawStatic); }, 100);
+        }
+        drawStatic();
+
         // Animate in
         requestAnimationFrame(function() {
             overlay.classList.add('visible');
@@ -127,6 +164,7 @@
 
         document.getElementById('modal-enter').addEventListener('click', function() {
             markOnboarded();
+            staticRunning = false;
             overlay.classList.remove('visible');
             setTimeout(function() {
                 overlay.parentNode.removeChild(overlay);
