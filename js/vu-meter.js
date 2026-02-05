@@ -18,9 +18,9 @@
     var source = null;
     var isPlaying = false;
     var hasStarted = false;
-    var needleAngle = -0.65;
-    var targetAngle = -0.65;
-    var peakAngle = -0.65;
+    var needleAngle = -0.85;
+    var targetAngle = -0.85;
+    var peakAngle = -0.85;
     var peakDecay = 0;
     var glowIntensity = 0;
     var time = 0;
@@ -57,12 +57,12 @@
 
     // --- Meter geometry ---
     var cx = W / 2;
-    var cy = H - 8; // pivot visible near bottom edge
-    var needleLen = H * 0.82;
-    var arcRadius = needleLen * 0.78;
-    var minAngle = -0.65;
-    var maxAngle = 0.65;
-    var clipY = H - 4; // mechanical stop
+    var cy = H + 30; // pivot below canvas
+    var needleLen = H * 1.25;
+    var arcRadius = needleLen * 0.72;
+    var minAngle = -0.85; // rest position — rotated clockwise ~15deg from before
+    var maxAngle = 0.85;
+    var clipY = H - 3; // mechanical stop
     var dbMarks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3];
 
     // Indicator geometry
