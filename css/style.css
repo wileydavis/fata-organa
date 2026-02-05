@@ -245,64 +245,6 @@ body {
     border-color: rgba(196, 163, 90, 0.25);
 }
 
-/* Receive button overlay */
-.vu-receive-overlay {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 380px;
-    height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 5;
-    transition: opacity 0.5s ease;
-}
-
-.vu-receive-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.vu-receive-btn {
-    background: rgba(10, 10, 12, 0.7);
-    border: 1px solid rgba(196, 163, 90, 0.3);
-    color: rgba(196, 163, 90, 0.8);
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    padding: 0.7rem 1.5rem;
-    cursor: pointer;
-    transition: color 0.3s, border-color 0.3s, background 0.3s, box-shadow 0.3s;
-    animation: receiveGlow 2.5s ease-in-out infinite;
-}
-
-.vu-receive-btn:hover {
-    color: rgba(196, 163, 90, 1);
-    border-color: rgba(196, 163, 90, 0.6);
-    background: rgba(20, 18, 12, 0.85);
-    box-shadow: 0 0 20px rgba(196, 163, 90, 0.1), inset 0 0 15px rgba(196, 163, 90, 0.03);
-}
-
-.vu-receive-icon {
-    display: inline-block;
-    margin-right: 0.3rem;
-    font-size: 0.7rem;
-}
-
-@keyframes receiveGlow {
-    0%, 100% {
-        box-shadow: 0 0 8px rgba(196, 163, 90, 0.03), 0 0 2px rgba(196, 163, 90, 0.06);
-        border-color: rgba(196, 163, 90, 0.2);
-    }
-    50% {
-        box-shadow: 0 0 18px rgba(196, 163, 90, 0.1), 0 0 4px rgba(196, 163, 90, 0.12);
-        border-color: rgba(196, 163, 90, 0.45);
-    }
-}
-
 .vu-progress-wrap {
     width: 380px;
     height: 3px;
@@ -331,17 +273,12 @@ body {
 
 @media (max-width: 480px) {
     #vu-player canvas,
-    .vu-progress-wrap,
-    .vu-receive-overlay {
+    .vu-progress-wrap {
         width: 100% !important;
     }
 
     #vu-player canvas {
         height: auto !important;
-    }
-
-    .vu-receive-overlay {
-        height: 160px;
     }
 }
 
