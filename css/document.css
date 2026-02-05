@@ -177,3 +177,51 @@
         gap: 0.25rem;
     }
 }
+
+/* --- Full Transmission Log --- */
+.full-log {
+    margin-top: 1.5rem;
+}
+
+.log-entry-full {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid rgba(42, 42, 47, 0.5);
+}
+
+.log-entry-full:last-child {
+    border-bottom: none;
+}
+
+.log-entry-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.log-entry-full .log-date {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+}
+
+.log-tag {
+    font-family: var(--mono);
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid rgba(196, 163, 90, 0.12);
+    color: var(--accent-dim);
+    background: rgba(196, 163, 90, 0.03);
+}
+
+.log-body {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 0;
+    text-indent: 0 !important;
+}
