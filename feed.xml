@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" 
+     xmlns:itunes="http://www.itunes.apple.com/dtds/podcast-1.0.dtd"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Fata Organa</title>
+    <link>https://wileydavis.github.io/fata-organa</link>
+    <language>en-us</language>
+    <description>An audio drama in twelve transmissions. Something is broadcasting from inside the Containment Zone.</description>
+    <atom:link href="https://wileydavis.github.io/fata-organa/feed.xml" rel="self" type="application/rss+xml"/>
+    
+    <itunes:author>Wiley Davis</itunes:author>
+    <itunes:summary>An audio drama in twelve transmissions. Something is broadcasting from inside the Containment Zone.</itunes:summary>
+    <itunes:category text="Fiction">
+      <itunes:category text="Science Fiction"/>
+    </itunes:category>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:type>serial</itunes:type>
+    
+    <!-- Episodes will be added here as transmissions are decoded -->
+    
+  </channel>
+</rss>
