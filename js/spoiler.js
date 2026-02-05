@@ -41,14 +41,20 @@
 
     function hasBeenOnboarded() {
         try {
-            return localStorage.getItem(SEEN_KEY) === '1';
+            return sessionStorage.getItem(SEEN_KEY) === '1';
         } catch(e) { return false; }
     }
 
     function markOnboarded() {
         try {
-            localStorage.setItem(SEEN_KEY, '1');
+            sessionStorage.setItem(SEEN_KEY, '1');
         } catch(e) {}
+    }
+
+    function shouldShowOnboarding() {
+        if (hasBeenOnboarded()) return false;
+        var path = window.location.pathname.replace(/\/+$/, '') || '/';
+        return (path === '' || path === '/' || path === '/archive' || path.indexOf('/archive') === 0);
     }
 
     // --- Apply redactions ---
@@ -73,6 +79,7 @@
 
     // --- First-visit interstitial ---
     function showOnboarding() {
+        if (!shouldShowOnboarding()) return;
 
         var overlay = document.createElement('div');
         overlay.className = 'clearance-modal-overlay';
@@ -118,21 +125,12 @@
             var h = staticCanvas.height;
             var imageData = sCtx.createImageData(w, h);
             var data = imageData.data;
-            // Draw every 2nd pixel for performance + chunkier look
-            for (var sy = 0; sy < h; sy += 2) {
-                for (var sx = 0; sx < w; sx += 2) {
-                    var v = Math.random() * 255;
-                    // Fill 2x2 block
-                    for (var dy = 0; dy < 2 && sy + dy < h; dy++) {
-                        for (var dx = 0; dx < 2 && sx + dx < w; dx++) {
-                            var idx = ((sy + dy) * w + (sx + dx)) * 4;
-                            data[idx] = v;
-                            data[idx + 1] = v;
-                            data[idx + 2] = v;
-                            data[idx + 3] = 255;
-                        }
-                    }
-                }
+            for (var si = 0; si < data.length; si += 4) {
+                var v = Math.random() * 255;
+                data[si] = v;
+                data[si + 1] = v;
+                data[si + 2] = v;
+                data[si + 3] = 255;
             }
             sCtx.putImageData(imageData, 0, 0);
             setTimeout(function() { requestAnimationFrame(drawStatic); }, 100);
