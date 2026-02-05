@@ -15,6 +15,7 @@
     'use strict';
 
     var STORAGE_KEY = 'fataorgana_clearance';
+    var SEEN_KEY = 'fataorgana_onboarded';
     var MAX_LEVEL = 12;
 
     // --- State ---
@@ -35,6 +36,19 @@
         } catch(e) {}
         applyRedactions(n);
         updateToggleDisplay(n);
+        updateModalDisplay(n);
+    }
+
+    function hasBeenOnboarded() {
+        try {
+            return localStorage.getItem(SEEN_KEY) === '1';
+        } catch(e) { return false; }
+    }
+
+    function markOnboarded() {
+        try {
+            localStorage.setItem(SEEN_KEY, '1');
+        } catch(e) {}
     }
 
     // --- Apply redactions ---
@@ -57,7 +71,77 @@
         }
     }
 
-    // --- Build toggle UI ---
+    // --- First-visit interstitial ---
+    function showOnboarding() {
+        if (hasBeenOnboarded()) return;
+
+        var overlay = document.createElement('div');
+        overlay.className = 'clearance-modal-overlay';
+
+        var modal = document.createElement('div');
+        modal.className = 'clearance-modal';
+
+        modal.innerHTML = ''
+            + '<div class="clearance-modal-header">'
+            +   '<span class="clearance-modal-classification">SIGNAL INTERCEPT NOTICE</span>'
+            +   '<h2>Clearance Required</h2>'
+            + '</div>'
+            + '<div class="clearance-modal-body">'
+            +   '<p>This archive contains recovered materials from the Containment Zone. '
+            +   'Documents are <strong>redacted by default</strong> to preserve the integrity of the transmission sequence.</p>'
+            +   '<p>Set your spoiler clearance to the number of transmissions (episodes) you have received. '
+            +   'Material will be declassified accordingly.</p>'
+            +   '<div class="clearance-modal-control">'
+            +     '<button class="clearance-modal-btn" id="modal-btn-down">−</button>'
+            +     '<span class="clearance-modal-display" id="modal-display">0</span>'
+            +     '<button class="clearance-modal-btn" id="modal-btn-up">+</button>'
+            +   '</div>'
+            +   '<p class="clearance-modal-hint">You can change this anytime using the <strong>Spoiler Clearance</strong> control in the navigation bar.</p>'
+            + '</div>'
+            + '<button class="clearance-modal-enter" id="modal-enter">Enter Archive</button>';
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(function() {
+            overlay.classList.add('visible');
+        });
+
+        // Wire up controls
+        var modalLevel = getLevel();
+        updateModalDisplay(modalLevel);
+
+        document.getElementById('modal-btn-down').addEventListener('click', function() {
+            var lvl = getLevel();
+            if (lvl > 0) {
+                setLevel(lvl - 1);
+            }
+        });
+
+        document.getElementById('modal-btn-up').addEventListener('click', function() {
+            var lvl = getLevel();
+            if (lvl < MAX_LEVEL) {
+                setLevel(lvl + 1);
+            }
+        });
+
+        document.getElementById('modal-enter').addEventListener('click', function() {
+            markOnboarded();
+            overlay.classList.remove('visible');
+            setTimeout(function() {
+                overlay.parentNode.removeChild(overlay);
+            }, 500);
+        });
+    }
+
+    function updateModalDisplay(level) {
+        var display = document.getElementById('modal-display');
+        if (!display) return;
+        display.textContent = String(level);
+    }
+
+    // --- Build nav toggle ---
     function buildToggle() {
         var nav = document.querySelector('.nav-links');
         if (!nav) return;
@@ -119,9 +203,9 @@
         var display = document.getElementById('clearance-display');
         if (!display) return;
         if (level === 0) {
-            display.textContent = '▮▮';
+            display.textContent = '\u25AE\u25AE';
         } else if (level === MAX_LEVEL) {
-            display.textContent = level + ' ✓';
+            display.textContent = level + ' \u2713';
         } else {
             display.textContent = String(level);
         }
@@ -130,5 +214,6 @@
     // --- Init ---
     buildToggle();
     applyRedactions(getLevel());
+    showOnboarding();
 
 })();
