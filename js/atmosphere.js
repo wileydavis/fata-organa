@@ -1,261 +1,220 @@
 /* ============================================
    FATA ORGANA — Atmosphere
    Canvas-based particle/signal animation
-   Subtle, unsettling, but with warmth
    ============================================ */
 
 (function() {
     'use strict';
 
-    const canvas = document.createElement('canvas');
+    var canvas = document.createElement('canvas');
     canvas.id = 'atmosphere';
-    canvas.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1;
-        opacity: 0.6;
-    `;
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '1';
     document.body.insertBefore(canvas, document.body.firstChild);
 
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    let signals = [];
-    let time = 0;
-    let glitchTimer = 0;
-    let glitchActive = false;
-    let glitchIntensity = 0;
+    var ctx = canvas.getContext('2d');
+    var width = 0;
+    var height = 0;
+    var particles = [];
+    var signalLines = [];
+    var time = 0;
+    var glitchTimer = 200;
+    var glitchActive = false;
+    var glitchIntensity = 0;
 
     function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
     }
 
     window.addEventListener('resize', resize);
     resize();
 
-    // --- Particles: drifting motes of consciousness ---
-    class Particle {
-        constructor() {
-            this.reset();
-        }
-
-        reset() {
-            this.x = Math.random() * width;
-            this.y = Math.random() * height;
-            this.size = Math.random() * 1.5 + 0.3;
-            this.baseAlpha = Math.random() * 0.3 + 0.05;
-            this.alpha = this.baseAlpha;
-            this.vx = (Math.random() - 0.5) * 0.15;
-            this.vy = (Math.random() - 0.5) * 0.1 - 0.05; // slight upward drift
-            this.life = Math.random() * 600 + 200;
-            this.maxLife = this.life;
-            this.phase = Math.random() * Math.PI * 2;
-            this.frequency = Math.random() * 0.02 + 0.005;
-            // warm amber to pale gold
-            this.hue = 38 + Math.random() * 15;
-            this.saturation = 30 + Math.random() * 30;
-            this.lightness = 55 + Math.random() * 25;
-        }
-
-        update() {
-            this.life--;
-
-            // Breathing opacity
-            let breathe = Math.sin(time * this.frequency + this.phase) * 0.5 + 0.5;
-            let lifeFade = this.life < 60 ? this.life / 60 : 
-                           this.life > this.maxLife - 60 ? (this.maxLife - this.life) / 60 : 1;
-            this.alpha = this.baseAlpha * breathe * lifeFade;
-
-            // Gentle drift with slight wave
-            this.x += this.vx + Math.sin(time * 0.003 + this.phase) * 0.1;
-            this.y += this.vy + Math.cos(time * 0.002 + this.phase) * 0.05;
-
-            // Glitch displacement
-            if (glitchActive && Math.random() > 0.92) {
-                this.x += (Math.random() - 0.5) * glitchIntensity * 20;
-                this.alpha = Math.min(this.alpha * 2, 0.6);
-            }
-
-            if (this.life <= 0 || this.x < -20 || this.x > width + 20 || this.y < -20 || this.y > height + 20) {
-                this.reset();
-            }
-        }
-
-        draw() {
-            if (this.alpha < 0.01) return;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.alpha})`;
-            ctx.fill();
-        }
+    function createParticle() {
+        return {
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() * 2 + 0.5,
+            baseAlpha: Math.random() * 0.5 + 0.15,
+            alpha: 0,
+            vx: (Math.random() - 0.5) * 0.2,
+            vy: (Math.random() - 0.5) * 0.1 - 0.08,
+            life: Math.random() * 500 + 200,
+            maxLife: 0,
+            phase: Math.random() * Math.PI * 2,
+            freq: Math.random() * 0.02 + 0.005,
+            hue: 38 + Math.random() * 15,
+            sat: 30 + Math.random() * 30,
+            lit: 55 + Math.random() * 25
+        };
     }
 
-    // --- Signals: horizontal scan lines that drift through ---
-    class Signal {
-        constructor() {
-            this.reset();
-        }
-
-        reset() {
-            this.y = Math.random() * height;
-            this.alpha = 0;
-            this.targetAlpha = Math.random() * 0.04 + 0.01;
-            this.width = Math.random() * width * 0.6 + width * 0.1;
-            this.x = Math.random() * (width - this.width);
-            this.thickness = Math.random() < 0.3 ? 1 : Math.random() * 0.5 + 0.2;
-            this.speed = (Math.random() - 0.5) * 0.3;
-            this.life = Math.random() * 400 + 100;
-            this.maxLife = this.life;
-            this.phase = Math.random() * Math.PI * 2;
-        }
-
-        update() {
-            this.life--;
-            
-            let lifePct = this.life / this.maxLife;
-            let fade = lifePct < 0.1 ? lifePct / 0.1 :
-                       lifePct > 0.9 ? (1 - lifePct) / 0.1 : 1;
-            this.alpha = this.targetAlpha * fade;
-
-            this.y += this.speed;
-            this.x += Math.sin(time * 0.001 + this.phase) * 0.3;
-
-            // During glitch, signals flare
-            if (glitchActive && Math.random() > 0.85) {
-                this.alpha = Math.min(this.targetAlpha * 4, 0.15);
-                this.x += (Math.random() - 0.5) * 10;
-            }
-
-            if (this.life <= 0) this.reset();
-        }
-
-        draw() {
-            if (this.alpha < 0.005) return;
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x + this.width, this.y);
-            ctx.strokeStyle = `hsla(40, 25%, 70%, ${this.alpha})`;
-            ctx.lineWidth = this.thickness;
-            ctx.stroke();
-        }
+    function resetParticle(p) {
+        p.x = Math.random() * width;
+        p.y = Math.random() * height;
+        p.size = Math.random() * 2 + 0.5;
+        p.baseAlpha = Math.random() * 0.5 + 0.15;
+        p.vx = (Math.random() - 0.5) * 0.2;
+        p.vy = (Math.random() - 0.5) * 0.1 - 0.08;
+        p.life = Math.random() * 500 + 200;
+        p.maxLife = p.life;
+        p.phase = Math.random() * Math.PI * 2;
     }
 
-    // --- Initialize ---
-    const particleCount = Math.min(Math.floor(width * height / 8000), 120);
-    for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle());
+    function createSignal() {
+        return {
+            y: Math.random() * height,
+            alpha: 0,
+            targetAlpha: Math.random() * 0.06 + 0.02,
+            w: Math.random() * width * 0.6 + width * 0.1,
+            x: Math.random() * width * 0.5,
+            thickness: Math.random() < 0.3 ? 1.5 : 0.5,
+            speed: (Math.random() - 0.5) * 0.3,
+            life: Math.random() * 400 + 100,
+            maxLife: 0,
+            phase: Math.random() * Math.PI * 2
+        };
     }
 
-    for (let i = 0; i < 8; i++) {
-        signals.push(new Signal());
+    function resetSignal(s) {
+        s.y = Math.random() * height;
+        s.targetAlpha = Math.random() * 0.06 + 0.02;
+        s.w = Math.random() * width * 0.6 + width * 0.1;
+        s.x = Math.random() * width * 0.5;
+        s.thickness = Math.random() < 0.3 ? 1.5 : 0.5;
+        s.speed = (Math.random() - 0.5) * 0.3;
+        s.life = Math.random() * 400 + 100;
+        s.maxLife = s.life;
+        s.phase = Math.random() * Math.PI * 2;
     }
 
-    // --- Glitch system ---
-    function updateGlitch() {
+    var count = Math.min(Math.floor(width * height / 6000), 150);
+    for (var i = 0; i < count; i++) {
+        var p = createParticle();
+        p.maxLife = p.life;
+        particles.push(p);
+    }
+    for (var j = 0; j < 10; j++) {
+        var s = createSignal();
+        s.maxLife = s.life;
+        signalLines.push(s);
+    }
+
+    function render() {
+        time++;
+
         glitchTimer--;
-        
-        if (glitchTimer <= 0 && !glitchActive) {
-            // Random chance of glitch event
-            if (Math.random() > 0.997) {
+        if (!glitchActive && glitchTimer <= 0) {
+            if (Math.random() > 0.5) {
                 glitchActive = true;
                 glitchIntensity = Math.random() * 0.8 + 0.2;
-                glitchTimer = Math.floor(Math.random() * 15) + 3; // short bursts
+                glitchTimer = Math.floor(Math.random() * 12) + 3;
+            } else {
+                glitchTimer = Math.floor(Math.random() * 200) + 100;
             }
         }
-
         if (glitchActive) {
             glitchTimer--;
             if (glitchTimer <= 0) {
                 glitchActive = false;
-                glitchTimer = Math.floor(Math.random() * 300) + 200; // wait between glitches
+                glitchTimer = Math.floor(Math.random() * 300) + 200;
             }
         }
-    }
-
-    // --- Render ---
-    function render() {
-        time++;
-        updateGlitch();
 
         ctx.clearRect(0, 0, width, height);
 
-        // Very subtle vignette
-        let gradient = ctx.createRadialGradient(
+        var grad = ctx.createRadialGradient(
             width / 2, height / 2, height * 0.2,
             width / 2, height / 2, height * 0.9
         );
-        gradient.addColorStop(0, 'transparent');
-        gradient.addColorStop(1, 'rgba(10, 10, 12, 0.3)');
-        ctx.fillStyle = gradient;
+        grad.addColorStop(0, 'transparent');
+        grad.addColorStop(1, 'rgba(10, 10, 12, 0.25)');
+        ctx.fillStyle = grad;
         ctx.fillRect(0, 0, width, height);
 
-        // Draw signals (behind particles)
-        for (let s of signals) {
-            s.update();
-            s.draw();
+        for (var si = 0; si < signalLines.length; si++) {
+            var sl = signalLines[si];
+            sl.life--;
+            var slPct = sl.life / sl.maxLife;
+            var slFade = slPct < 0.1 ? slPct / 0.1 : slPct > 0.9 ? (1 - slPct) / 0.1 : 1;
+            sl.alpha = sl.targetAlpha * slFade;
+            sl.y += sl.speed;
+            sl.x += Math.sin(time * 0.001 + sl.phase) * 0.3;
+
+            if (glitchActive && Math.random() > 0.8) {
+                sl.alpha = Math.min(sl.targetAlpha * 5, 0.2);
+                sl.x += (Math.random() - 0.5) * 15;
+            }
+
+            if (sl.alpha > 0.005) {
+                ctx.beginPath();
+                ctx.moveTo(sl.x, sl.y);
+                ctx.lineTo(sl.x + sl.w, sl.y);
+                ctx.strokeStyle = 'hsla(40, 25%, 70%, ' + sl.alpha + ')';
+                ctx.lineWidth = sl.thickness;
+                ctx.stroke();
+            }
+
+            if (sl.life <= 0) resetSignal(sl);
         }
 
-        // Draw particles
-        for (let p of particles) {
-            p.update();
-            p.draw();
+        for (var pi = 0; pi < particles.length; pi++) {
+            var pt = particles[pi];
+            pt.life--;
+
+            var breathe = Math.sin(time * pt.freq + pt.phase) * 0.5 + 0.5;
+            var lifeFade = pt.life < 50 ? pt.life / 50 :
+                           pt.life > pt.maxLife - 50 ? (pt.maxLife - pt.life) / 50 : 1;
+            pt.alpha = pt.baseAlpha * breathe * lifeFade;
+
+            pt.x += pt.vx + Math.sin(time * 0.003 + pt.phase) * 0.12;
+            pt.y += pt.vy + Math.cos(time * 0.002 + pt.phase) * 0.06;
+
+            if (glitchActive && Math.random() > 0.9) {
+                pt.x += (Math.random() - 0.5) * glitchIntensity * 25;
+                pt.alpha = Math.min(pt.alpha * 2.5, 0.8);
+            }
+
+            if (pt.alpha > 0.01) {
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'hsla(' + pt.hue + ', ' + pt.sat + '%, ' + pt.lit + '%, ' + pt.alpha + ')';
+                ctx.fill();
+            }
+
+            if (pt.life <= 0 || pt.x < -30 || pt.x > width + 30 || pt.y < -30 || pt.y > height + 30) {
+                resetParticle(pt);
+            }
         }
 
-        // Glitch: occasional horizontal tear
-        if (glitchActive && Math.random() > 0.7) {
-            let tearY = Math.random() * height;
-            let tearH = Math.random() * 3 + 1;
-            let shift = (Math.random() - 0.5) * glitchIntensity * 8;
-            
-            // Subtle color shift on the tear line
-            ctx.fillStyle = `hsla(40, 20%, 50%, ${glitchIntensity * 0.06})`;
+        if (glitchActive && Math.random() > 0.6) {
+            var tearY = Math.random() * height;
+            var tearH = Math.random() * 3 + 1;
+            ctx.fillStyle = 'hsla(40, 20%, 50%, ' + (glitchIntensity * 0.08) + ')';
             ctx.fillRect(0, tearY, width, tearH);
         }
 
-        // Very rare: warm pulse from center (the hopeful part)
-        if (Math.random() > 0.9985) {
-            let pulseAlpha = 0.015;
-            let pulseGrad = ctx.createRadialGradient(
+        if (Math.random() > 0.998) {
+            var pg = ctx.createRadialGradient(
                 width / 2, height * 0.4, 0,
                 width / 2, height * 0.4, height * 0.5
             );
-            pulseGrad.addColorStop(0, `hsla(38, 40%, 60%, ${pulseAlpha})`);
-            pulseGrad.addColorStop(1, 'transparent');
-            ctx.fillStyle = pulseGrad;
+            pg.addColorStop(0, 'hsla(38, 40%, 60%, 0.03)');
+            pg.addColorStop(1, 'transparent');
+            ctx.fillStyle = pg;
             ctx.fillRect(0, 0, width, height);
         }
 
         requestAnimationFrame(render);
     }
 
-    // Start after a brief delay
-    setTimeout(render, 100);
-
-    // Reduce particle count on low-performance devices
-    let lastTime = performance.now();
-    let frameCount = 0;
-    let fps = 60;
-
-    function checkPerformance() {
-        frameCount++;
-        let now = performance.now();
-        if (now - lastTime >= 2000) {
-            fps = Math.round(frameCount / ((now - lastTime) / 1000));
-            frameCount = 0;
-            lastTime = now;
-            
-            if (fps < 30 && particles.length > 30) {
-                particles.splice(0, Math.floor(particles.length * 0.3));
-                signals.splice(0, Math.floor(signals.length * 0.3));
-            }
-        }
-        requestAnimationFrame(checkPerformance);
-    }
-    checkPerformance();
+    render();
 
 })();
