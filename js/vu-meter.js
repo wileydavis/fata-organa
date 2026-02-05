@@ -20,30 +20,32 @@
     var source = null;
     var isPlaying = false;
     var isLoaded = false;
-    var needleAngle = -0.65; // resting position (radians from center)
+    var needleAngle = -0.65;
     var targetAngle = -0.65;
     var peakAngle = -0.65;
     var peakDecay = 0;
     var glowIntensity = 0;
     var hoverGlow = 0;
+    var hasStarted = false;
 
     // --- Canvas setup ---
     var canvas = document.createElement('canvas');
     var dpr = window.devicePixelRatio || 1;
     var W = 380;
-    var H = 240;
+    var H = 160;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
     canvas.style.cursor = 'pointer';
+    canvas.style.display = 'block';
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
     // Status label
-    var status = document.createElement('div');
-    status.className = 'vu-status';
-    status.textContent = 'CLICK TO RECEIVE TRANSMISSION';
+    var statusEl = document.createElement('div');
+    statusEl.className = 'vu-status';
+    statusEl.textContent = '\u00A0';
 
     // Progress bar
     var progressWrap = document.createElement('div');
@@ -52,38 +54,32 @@
     progressBar.className = 'vu-progress-bar';
     progressWrap.appendChild(progressBar);
 
-    container.appendChild(canvas);
-    container.appendChild(progressWrap);
-    container.appendChild(status);
+    // Receive button overlay
+    var btnOverlay = document.createElement('div');
+    btnOverlay.className = 'vu-receive-overlay';
+    var btn = document.createElement('button');
+    btn.className = 'vu-receive-btn';
+    btn.innerHTML = '<span class="vu-receive-icon">&#9655;</span> RECEIVE TRANSMISSION';
+    btnOverlay.appendChild(btn);
 
-    // --- Colors ---
-    var COLORS = {
-        faceLight: '#1a1915',
-        faceDark: '#111110',
-        bezel: '#2a2822',
-        needle: '#c4a35a',
-        needleShadow: 'rgba(196, 163, 90, 0.15)',
-        scaleMarks: 'rgba(196, 163, 90, 0.35)',
-        scaleText: 'rgba(196, 163, 90, 0.5)',
-        redZone: 'rgba(180, 60, 50, 0.25)',
-        pivot: '#3a3530',
-        glow: 'rgba(196, 163, 90, 0.06)'
-    };
+    container.appendChild(canvas);
+    container.appendChild(btnOverlay);
+    container.appendChild(progressWrap);
+    container.appendChild(statusEl);
 
     // --- Meter geometry ---
     var cx = W / 2;
-    var cy = H * 0.88;
-    var needleLen = H * 0.72;
-    var arcRadius = needleLen * 0.85;
-    var minAngle = -0.65; // full left
-    var maxAngle = 0.65;  // full right
+    var cy = H * 1.05;
+    var needleLen = H * 0.88;
+    var arcRadius = needleLen * 0.78;
+    var minAngle = -0.60;
+    var maxAngle = 0.60;
+    var clipY = H - 6; // mechanical stop — needle can't go below this
     var dbMarks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3];
 
     function dbToAngle(db) {
-        // Map -20..+3 to minAngle..maxAngle (logarithmic-ish feel)
         var normalized = (db + 20) / 23;
         normalized = Math.max(0, Math.min(1, normalized));
-        // Apply slight curve for analog feel
         normalized = Math.pow(normalized, 0.7);
         return minAngle + normalized * (maxAngle - minAngle);
     }
@@ -92,30 +88,41 @@
     function draw() {
         ctx.clearRect(0, 0, W, H);
 
-        // Face background with gradient
-        var faceGrad = ctx.createRadialGradient(cx, cy - 20, 10, cx, cy, H);
-        faceGrad.addColorStop(0, COLORS.faceLight);
-        faceGrad.addColorStop(1, COLORS.faceDark);
+        // Save state for clipping
+        ctx.save();
+
+        // Face background
+        var faceGrad = ctx.createRadialGradient(cx - 60, cy - H * 0.6, 10, cx, cy, H * 1.1);
+        faceGrad.addColorStop(0, '#1e1b14');
+        faceGrad.addColorStop(0.5, '#171510');
+        faceGrad.addColorStop(1, '#0f0e0c');
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Bezel border
-        ctx.strokeStyle = COLORS.bezel;
+        // Warm backlight — brighter, falls off toward right
+        var backlightGrad = ctx.createRadialGradient(cx - 80, cy - H * 0.5, 0, cx - 80, cy - H * 0.5, W * 0.55);
+        var backlightAlpha = 0.12 + glowIntensity * 0.08;
+        backlightGrad.addColorStop(0, 'rgba(210, 175, 90, ' + backlightAlpha + ')');
+        backlightGrad.addColorStop(0.4, 'rgba(196, 163, 90, ' + (backlightAlpha * 0.5) + ')');
+        backlightGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = backlightGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Additional warm wash from left
+        var warmGrad = ctx.createLinearGradient(0, 0, W, 0);
+        warmGrad.addColorStop(0, 'rgba(200, 165, 80, ' + (0.04 + glowIntensity * 0.03) + ')');
+        warmGrad.addColorStop(0.6, 'transparent');
+        ctx.fillStyle = warmGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Bezel
+        ctx.strokeStyle = 'rgba(60, 55, 42, 0.6)';
         ctx.lineWidth = 1;
         ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
 
-        // Active glow
-        if (glowIntensity > 0.01) {
-            var glowGrad = ctx.createRadialGradient(cx, cy * 0.5, 0, cx, cy * 0.5, W * 0.5);
-            glowGrad.addColorStop(0, 'rgba(196, 163, 90, ' + (glowIntensity * 0.08) + ')');
-            glowGrad.addColorStop(1, 'transparent');
-            ctx.fillStyle = glowGrad;
-            ctx.fillRect(0, 0, W, H);
-        }
-
         // Hover glow
-        if (hoverGlow > 0.01) {
-            var hGrad = ctx.createRadialGradient(cx, cy * 0.5, 0, cx, cy * 0.5, W * 0.4);
+        if (hoverGlow > 0.01 && !hasStarted) {
+            var hGrad = ctx.createRadialGradient(cx, cy * 0.4, 0, cx, cy * 0.4, W * 0.4);
             hGrad.addColorStop(0, 'rgba(196, 163, 90, ' + (hoverGlow * 0.04) + ')');
             hGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = hGrad;
@@ -123,125 +130,147 @@
         }
 
         // VU label
-        ctx.font = '500 11px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(196, 163, 90, 0.25)';
+        ctx.font = '500 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(196, 163, 90, 0.2)';
         ctx.textAlign = 'center';
-        ctx.fillText('VU', cx, cy - needleLen + 35);
+        ctx.fillText('VU', cx, 22);
 
-        // Scale arc and markings
-        ctx.strokeStyle = COLORS.scaleMarks;
+        // Scale arc
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.3)';
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.arc(cx, cy, arcRadius, Math.PI + minAngle, Math.PI + maxAngle);
         ctx.stroke();
 
-        // Red zone background (0 to +3)
+        // Red zone background
         var redStart = dbToAngle(0);
         ctx.beginPath();
-        ctx.arc(cx, cy, arcRadius + 8, Math.PI + redStart, Math.PI + maxAngle);
+        ctx.arc(cx, cy, arcRadius + 7, Math.PI + redStart, Math.PI + maxAngle);
         ctx.arc(cx, cy, arcRadius - 3, Math.PI + maxAngle, Math.PI + redStart, true);
         ctx.closePath();
-        ctx.fillStyle = COLORS.redZone;
+        ctx.fillStyle = 'rgba(180, 60, 50, 0.2)';
         ctx.fill();
 
         // DB markings
-        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.font = '9px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         for (var i = 0; i < dbMarks.length; i++) {
             var db = dbMarks[i];
             var a = dbToAngle(db);
-            var markInner = arcRadius - 6;
+            var markInner = arcRadius - 5;
             var markOuter = arcRadius + 4;
-            var textR = arcRadius + 16;
+            var textR = arcRadius + 15;
 
-            // Tick
             ctx.beginPath();
             ctx.moveTo(cx + Math.cos(Math.PI + a) * markInner, cy + Math.sin(Math.PI + a) * markInner);
             ctx.lineTo(cx + Math.cos(Math.PI + a) * markOuter, cy + Math.sin(Math.PI + a) * markOuter);
-            ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.4)' : COLORS.scaleMarks;
+            ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.4)' : 'rgba(196, 163, 90, 0.3)';
             ctx.lineWidth = db === 0 || db === -20 ? 1 : 0.5;
             ctx.stroke();
 
-            // Label
-            ctx.fillStyle = db >= 0 ? 'rgba(180, 60, 50, 0.5)' : COLORS.scaleText;
-            var label = db === 0 ? '0' : db > 0 ? '+' + db : String(db);
-            ctx.fillText(label, cx + Math.cos(Math.PI + a) * textR, cy + Math.sin(Math.PI + a) * textR + 3);
+            var ty = cy + Math.sin(Math.PI + a) * textR + 3;
+            if (ty < H - 2) {
+                ctx.fillStyle = db >= 0 ? 'rgba(180, 60, 50, 0.45)' : 'rgba(196, 163, 90, 0.4)';
+                var label = db === 0 ? '0' : db > 0 ? '+' + db : String(db);
+                ctx.fillText(label, cx + Math.cos(Math.PI + a) * textR, ty);
+            }
         }
 
         // Sub-ticks
         for (var d = -20; d <= 3; d += 1) {
             if (dbMarks.indexOf(d) !== -1) continue;
             var sa = dbToAngle(d);
-            var si1 = arcRadius - 3;
+            var si1 = arcRadius - 2;
             var si2 = arcRadius + 2;
-            ctx.beginPath();
-            ctx.moveTo(cx + Math.cos(Math.PI + sa) * si1, cy + Math.sin(Math.PI + sa) * si1);
-            ctx.lineTo(cx + Math.cos(Math.PI + sa) * si2, cy + Math.sin(Math.PI + sa) * si2);
-            ctx.strokeStyle = d >= 0 ? 'rgba(180, 60, 50, 0.2)' : 'rgba(196, 163, 90, 0.15)';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+            var sy1 = cy + Math.sin(Math.PI + sa) * si1;
+            if (sy1 < H - 2) {
+                ctx.beginPath();
+                ctx.moveTo(cx + Math.cos(Math.PI + sa) * si1, sy1);
+                ctx.lineTo(cx + Math.cos(Math.PI + sa) * si2, cy + Math.sin(Math.PI + sa) * si2);
+                ctx.strokeStyle = d >= 0 ? 'rgba(180, 60, 50, 0.15)' : 'rgba(196, 163, 90, 0.12)';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
+        }
+
+        // --- Needle (clipped to meter bounds) ---
+        var needleTipX = cx + Math.cos(Math.PI + needleAngle) * needleLen;
+        var needleTipY = cy + Math.sin(Math.PI + needleAngle) * needleLen;
+
+        // If tip would go below clipY, calculate intersection
+        var drawTipX = needleTipX;
+        var drawTipY = needleTipY;
+        if (needleTipY > clipY) {
+            // Find where needle crosses clipY
+            var t = (clipY - cy) / (needleTipY - cy);
+            drawTipX = cx + t * (needleTipX - cx);
+            drawTipY = clipY;
         }
 
         // Needle shadow
         ctx.beginPath();
-        ctx.moveTo(cx + 2, cy + 2);
-        ctx.lineTo(
-            cx + Math.cos(Math.PI + needleAngle) * needleLen + 2,
-            cy + Math.sin(Math.PI + needleAngle) * needleLen + 2
-        );
-        ctx.strokeStyle = COLORS.needleShadow;
+        ctx.moveTo(cx + 1.5, Math.min(cy + 1.5, clipY));
+        ctx.lineTo(drawTipX + 1.5, drawTipY + 1.5);
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.1)';
         ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
         ctx.stroke();
 
         // Needle
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(
-            cx + Math.cos(Math.PI + needleAngle) * needleLen,
-            cy + Math.sin(Math.PI + needleAngle) * needleLen
-        );
-        ctx.strokeStyle = COLORS.needle;
+        ctx.moveTo(cx, Math.min(cy, clipY));
+        ctx.lineTo(drawTipX, drawTipY);
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.85)';
         ctx.lineWidth = 1.5;
         ctx.lineCap = 'round';
         ctx.stroke();
 
-        // Needle tip glow when active
+        // Needle tip glow
         if (glowIntensity > 0.1) {
-            var tipX = cx + Math.cos(Math.PI + needleAngle) * needleLen;
-            var tipY = cy + Math.sin(Math.PI + needleAngle) * needleLen;
-            var tipGrad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 8);
-            tipGrad.addColorStop(0, 'rgba(196, 163, 90, ' + (glowIntensity * 0.3) + ')');
+            var tipGrad = ctx.createRadialGradient(drawTipX, drawTipY, 0, drawTipX, drawTipY, 6);
+            tipGrad.addColorStop(0, 'rgba(196, 163, 90, ' + (glowIntensity * 0.25) + ')');
             tipGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = tipGrad;
             ctx.beginPath();
-            ctx.arc(tipX, tipY, 8, 0, Math.PI * 2);
+            ctx.arc(drawTipX, drawTipY, 6, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // Peak hold indicator (thin line)
+        // Peak hold
         if (peakAngle > minAngle + 0.05) {
-            ctx.beginPath();
-            ctx.moveTo(
-                cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.6),
-                cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.6)
-            );
-            ctx.lineTo(
-                cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.9),
-                cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.9)
-            );
-            ctx.strokeStyle = 'rgba(196, 163, 90, 0.15)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+            var peakTipX = cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.9);
+            var peakTipY = cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.9);
+            var peakBaseX = cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.6);
+            var peakBaseY = cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.6);
+            if (peakTipY < clipY && peakBaseY < clipY) {
+                ctx.beginPath();
+                ctx.moveTo(peakBaseX, peakBaseY);
+                ctx.lineTo(peakTipX, peakTipY);
+                ctx.strokeStyle = 'rgba(196, 163, 90, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
         }
 
-        // Pivot cap
+        // Pivot cap (at bottom edge)
+        var pivotY = Math.min(cy, clipY);
         ctx.beginPath();
-        ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-        ctx.fillStyle = COLORS.pivot;
+        ctx.arc(cx, pivotY, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#2a2520';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.2)';
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.15)';
         ctx.lineWidth = 0.5;
         ctx.stroke();
+
+        // Bottom edge line (mechanical stop visual)
+        ctx.beginPath();
+        ctx.moveTo(0, H - 1);
+        ctx.lineTo(W, H - 1);
+        ctx.strokeStyle = 'rgba(60, 55, 42, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.restore();
     }
 
     // --- Audio setup ---
@@ -254,7 +283,7 @@
 
         audio.addEventListener('ended', function() {
             isPlaying = false;
-            status.textContent = 'TRANSMISSION COMPLETE — CLICK TO REPLAY';
+            statusEl.textContent = 'TRANSMISSION COMPLETE \u2014 CLICK METER TO REPLAY';
         });
 
         audio.addEventListener('canplay', function() {
@@ -280,34 +309,47 @@
         analyser.connect(audioCtx.destination);
     }
 
-    function togglePlay() {
-        if (!audio) {
-            initAudio();
-        }
+    function startPlayback() {
+        if (!audio) initAudio();
+        if (!audioCtx) initAnalyser();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        audio.play().then(function() {
+            isPlaying = true;
+            hasStarted = true;
+            btnOverlay.classList.add('hidden');
+            statusEl.textContent = 'RECEIVING TRANSMISSION';
+        }).catch(function() {
+            statusEl.textContent = 'SIGNAL ERROR \u2014 TRY AGAIN';
+        });
+    }
 
+    function togglePlay() {
+        if (!hasStarted) {
+            startPlayback();
+            return;
+        }
         if (isPlaying) {
             audio.pause();
             isPlaying = false;
-            status.textContent = 'PAUSED — CLICK TO RESUME';
+            statusEl.textContent = 'PAUSED \u2014 CLICK METER TO RESUME';
         } else {
-            if (!audioCtx) initAnalyser();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
             audio.play().then(function() {
                 isPlaying = true;
-                status.textContent = 'RECEIVING TRANSMISSION';
-            }).catch(function(e) {
-                status.textContent = 'SIGNAL ERROR — TRY AGAIN';
+                statusEl.textContent = 'RECEIVING TRANSMISSION';
             });
         }
     }
 
     // --- Interaction ---
-    canvas.addEventListener('click', togglePlay);
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        startPlayback();
+    });
 
+    canvas.addEventListener('click', togglePlay);
     canvas.addEventListener('mouseenter', function() { hoverGlow = 0.5; });
     canvas.addEventListener('mouseleave', function() { hoverGlow = 0; });
 
-    // Progress bar seeking
     progressWrap.addEventListener('click', function(e) {
         if (!audio || !audio.duration) return;
         var rect = progressWrap.getBoundingClientRect();
@@ -317,12 +359,9 @@
 
     // --- Animation loop ---
     function animate() {
-        // Get level from analyser
         if (isPlaying && analyser) {
             var dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(dataArray);
-
-            // RMS-ish average weighted toward lower frequencies
             var sum = 0;
             var count = Math.min(dataArray.length, 64);
             for (var i = 0; i < count; i++) {
@@ -330,8 +369,6 @@
                 sum += dataArray[i] * weight;
             }
             var avg = sum / count / 255;
-
-            // Map to dB range (-20 to +3)
             var db = -20 + avg * 26;
             targetAngle = dbToAngle(db);
             glowIntensity += (1 - glowIntensity) * 0.05;
@@ -340,19 +377,22 @@
             glowIntensity *= 0.95;
         }
 
-        // Needle physics — slight overshoot and damping
         var diff = targetAngle - needleAngle;
         needleAngle += diff * 0.15;
 
-        // Peak hold
         if (needleAngle > peakAngle) {
             peakAngle = needleAngle;
-            peakDecay = 60; // hold for ~1 second
+            peakDecay = 60;
         } else {
             peakDecay--;
             if (peakDecay <= 0) {
                 peakAngle += (minAngle - peakAngle) * 0.03;
             }
+        }
+
+        // Ease hover glow
+        if (!canvas.matches(':hover')) {
+            hoverGlow *= 0.9;
         }
 
         draw();
