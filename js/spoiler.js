@@ -73,7 +73,6 @@
 
     // --- First-visit interstitial ---
     function showOnboarding() {
-        if (hasBeenOnboarded()) return;
 
         var overlay = document.createElement('div');
         overlay.className = 'clearance-modal-overlay';
