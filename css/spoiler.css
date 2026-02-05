@@ -207,3 +207,203 @@ span[data-spoiler].redacted::before {
         max-width: 180px;
     }
 }
+
+/* ============================================
+   First-visit Interstitial Modal
+   ============================================ */
+
+.clearance-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 5, 7, 0.92);
+    backdrop-filter: blur(6px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.clearance-modal-overlay.visible {
+    opacity: 1;
+}
+
+.clearance-modal {
+    max-width: 420px;
+    width: 90%;
+    border: 1px solid rgba(196, 163, 90, 0.2);
+    background: var(--bg-surface, #111114);
+    padding: 0;
+    position: relative;
+}
+
+.clearance-modal-header {
+    padding: 1.5rem 2rem 1rem;
+    border-bottom: 1px solid rgba(196, 163, 90, 0.1);
+}
+
+.clearance-modal-classification {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: rgba(196, 163, 90, 0.5);
+    background: rgba(196, 163, 90, 0.06);
+    padding: 0.2rem 0.6rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid rgba(196, 163, 90, 0.12);
+}
+
+.clearance-modal h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(230, 225, 215, 0.9);
+    margin: 0.5rem 0 0;
+}
+
+.clearance-modal-body {
+    padding: 1.5rem 2rem;
+}
+
+.clearance-modal-body p {
+    font-family: 'EB Garamond', serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(180, 175, 165, 0.8);
+    margin-bottom: 1rem;
+}
+
+.clearance-modal-body strong {
+    color: rgba(230, 225, 215, 0.9);
+}
+
+.clearance-modal-hint {
+    font-size: 0.85rem !important;
+    color: rgba(140, 135, 125, 0.6) !important;
+    margin-bottom: 0 !important;
+}
+
+/* Modal clearance control */
+.clearance-modal-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.25rem 0;
+    margin: 0.5rem 0;
+}
+
+.clearance-modal-btn {
+    background: none;
+    border: 1px solid rgba(196, 163, 90, 0.25);
+    color: rgba(196, 163, 90, 0.7);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.clearance-modal-btn:hover {
+    color: rgba(196, 163, 90, 1);
+    border-color: rgba(196, 163, 90, 0.5);
+    background: rgba(196, 163, 90, 0.06);
+}
+
+.clearance-modal-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: rgba(196, 163, 90, 0.9);
+    min-width: 2.5rem;
+    text-align: center;
+    letter-spacing: 0.05em;
+}
+
+/* Enter button */
+.clearance-modal-enter {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: none;
+    border: none;
+    border-top: 1px solid rgba(196, 163, 90, 0.15);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(196, 163, 90, 0.6);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+}
+
+.clearance-modal-enter:hover {
+    color: rgba(196, 163, 90, 1);
+    background: rgba(196, 163, 90, 0.04);
+}
+
+/* ============================================
+   Archive page callout
+   ============================================ */
+
+.clearance-callout {
+    border: 1px solid rgba(196, 163, 90, 0.15);
+    background: rgba(196, 163, 90, 0.03);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+}
+
+.clearance-callout::before {
+    content: 'NOTICE';
+    display: block;
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(196, 163, 90, 0.4);
+    margin-bottom: 0.6rem;
+}
+
+.clearance-callout p {
+    font-family: var(--serif, 'EB Garamond', serif);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: rgba(180, 175, 165, 0.7);
+    margin-bottom: 0.5rem;
+}
+
+.clearance-callout p:last-child {
+    margin-bottom: 0;
+}
+
+.clearance-callout strong {
+    color: rgba(230, 225, 215, 0.8);
+}
+
+/* Responsive modal */
+@media (max-width: 480px) {
+    .clearance-modal {
+        width: 95%;
+    }
+
+    .clearance-modal-header,
+    .clearance-modal-body {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+}
