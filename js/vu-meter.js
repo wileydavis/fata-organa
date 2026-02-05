@@ -1,7 +1,5 @@
 /* ============================================
    FATA ORGANA — VU Meter Audio Player
-   Canvas-rendered analog VU meter with 
-   Web Audio API analysis. Click to play.
    ============================================ */
 
 (function() {
@@ -19,20 +17,19 @@
     var analyser = null;
     var source = null;
     var isPlaying = false;
-    var isLoaded = false;
+    var hasStarted = false;
     var needleAngle = -0.65;
     var targetAngle = -0.65;
     var peakAngle = -0.65;
     var peakDecay = 0;
     var glowIntensity = 0;
-    var hoverGlow = 0;
-    var hasStarted = false;
+    var time = 0;
 
     // --- Canvas setup ---
     var canvas = document.createElement('canvas');
     var dpr = window.devicePixelRatio || 1;
     var W = 380;
-    var H = 160;
+    var H = 180;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width = W + 'px';
@@ -54,28 +51,25 @@
     progressBar.className = 'vu-progress-bar';
     progressWrap.appendChild(progressBar);
 
-    // Receive button overlay
-    var btnOverlay = document.createElement('div');
-    btnOverlay.className = 'vu-receive-overlay';
-    var btn = document.createElement('button');
-    btn.className = 'vu-receive-btn';
-    btn.innerHTML = '<span class="vu-receive-icon">&#9655;</span> RECEIVE TRANSMISSION';
-    btnOverlay.appendChild(btn);
-
     container.appendChild(canvas);
-    container.appendChild(btnOverlay);
     container.appendChild(progressWrap);
     container.appendChild(statusEl);
 
     // --- Meter geometry ---
     var cx = W / 2;
-    var cy = H * 1.05;
-    var needleLen = H * 0.88;
-    var arcRadius = needleLen * 0.78;
-    var minAngle = -0.60;
-    var maxAngle = 0.60;
-    var clipY = H - 6; // mechanical stop — needle can't go below this
+    var cy = H + 20; // pivot below canvas
+    var needleLen = H * 0.95;
+    var arcRadius = needleLen * 0.80;
+    var minAngle = -0.65;
+    var maxAngle = 0.65;
+    var clipY = H - 4; // mechanical stop
     var dbMarks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3];
+
+    // REC indicator geometry
+    var recX = W - 58;
+    var recY = 12;
+    var recW = 48;
+    var recH = 16;
 
     function dbToAngle(db) {
         var normalized = (db + 20) / 23;
@@ -84,56 +78,53 @@
         return minAngle + normalized * (maxAngle - minAngle);
     }
 
+    // Clip a line from (x0,y0)→(x1,y1) so endpoint doesn't exceed maxY
+    function clipLine(x0, y0, x1, y1, maxY) {
+        if (y1 <= maxY) return { x: x1, y: y1 };
+        if (y0 >= maxY) return { x: x0, y: maxY };
+        var t = (maxY - y0) / (y1 - y0);
+        return { x: x0 + t * (x1 - x0), y: maxY };
+    }
+
     // --- Draw ---
     function draw() {
+        time++;
         ctx.clearRect(0, 0, W, H);
 
-        // Save state for clipping
-        ctx.save();
-
         // Face background
-        var faceGrad = ctx.createRadialGradient(cx - 60, cy - H * 0.6, 10, cx, cy, H * 1.1);
+        var faceGrad = ctx.createRadialGradient(cx - 60, cy - H * 1.2, 10, cx, cy, H * 1.4);
         faceGrad.addColorStop(0, '#1e1b14');
         faceGrad.addColorStop(0.5, '#171510');
         faceGrad.addColorStop(1, '#0f0e0c');
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Warm backlight — brighter, falls off toward right
-        var backlightGrad = ctx.createRadialGradient(cx - 80, cy - H * 0.5, 0, cx - 80, cy - H * 0.5, W * 0.55);
-        var backlightAlpha = 0.12 + glowIntensity * 0.08;
-        backlightGrad.addColorStop(0, 'rgba(210, 175, 90, ' + backlightAlpha + ')');
-        backlightGrad.addColorStop(0.4, 'rgba(196, 163, 90, ' + (backlightAlpha * 0.5) + ')');
-        backlightGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = backlightGrad;
+        // Warm backlight — left-biased
+        var blAlpha = 0.10 + glowIntensity * 0.08;
+        var blGrad = ctx.createRadialGradient(cx - 80, H * 0.35, 0, cx - 80, H * 0.35, W * 0.55);
+        blGrad.addColorStop(0, 'rgba(210, 175, 90, ' + blAlpha + ')');
+        blGrad.addColorStop(0.4, 'rgba(196, 163, 90, ' + (blAlpha * 0.45) + ')');
+        blGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = blGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Additional warm wash from left
-        var warmGrad = ctx.createLinearGradient(0, 0, W, 0);
-        warmGrad.addColorStop(0, 'rgba(200, 165, 80, ' + (0.04 + glowIntensity * 0.03) + ')');
-        warmGrad.addColorStop(0.6, 'transparent');
-        ctx.fillStyle = warmGrad;
+        // Left-to-right falloff
+        var warmLR = ctx.createLinearGradient(0, 0, W, 0);
+        warmLR.addColorStop(0, 'rgba(200, 165, 80, ' + (0.035 + glowIntensity * 0.025) + ')');
+        warmLR.addColorStop(0.6, 'transparent');
+        ctx.fillStyle = warmLR;
         ctx.fillRect(0, 0, W, H);
 
         // Bezel
-        ctx.strokeStyle = 'rgba(60, 55, 42, 0.6)';
+        ctx.strokeStyle = 'rgba(60, 55, 42, 0.5)';
         ctx.lineWidth = 1;
         ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
-
-        // Hover glow
-        if (hoverGlow > 0.01 && !hasStarted) {
-            var hGrad = ctx.createRadialGradient(cx, cy * 0.4, 0, cx, cy * 0.4, W * 0.4);
-            hGrad.addColorStop(0, 'rgba(196, 163, 90, ' + (hoverGlow * 0.04) + ')');
-            hGrad.addColorStop(1, 'transparent');
-            ctx.fillStyle = hGrad;
-            ctx.fillRect(0, 0, W, H);
-        }
 
         // VU label
         ctx.font = '500 10px "JetBrains Mono", monospace';
         ctx.fillStyle = 'rgba(196, 163, 90, 0.2)';
         ctx.textAlign = 'center';
-        ctx.fillText('VU', cx, 22);
+        ctx.fillText('VU', cx, 24);
 
         // Scale arc
         ctx.strokeStyle = 'rgba(196, 163, 90, 0.3)';
@@ -142,7 +133,7 @@
         ctx.arc(cx, cy, arcRadius, Math.PI + minAngle, Math.PI + maxAngle);
         ctx.stroke();
 
-        // Red zone background
+        // Red zone
         var redStart = dbToAngle(0);
         ctx.beginPath();
         ctx.arc(cx, cy, arcRadius + 7, Math.PI + redStart, Math.PI + maxAngle);
@@ -161,18 +152,26 @@
             var markOuter = arcRadius + 4;
             var textR = arcRadius + 15;
 
-            ctx.beginPath();
-            ctx.moveTo(cx + Math.cos(Math.PI + a) * markInner, cy + Math.sin(Math.PI + a) * markInner);
-            ctx.lineTo(cx + Math.cos(Math.PI + a) * markOuter, cy + Math.sin(Math.PI + a) * markOuter);
-            ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.4)' : 'rgba(196, 163, 90, 0.3)';
-            ctx.lineWidth = db === 0 || db === -20 ? 1 : 0.5;
-            ctx.stroke();
+            var mx1 = cx + Math.cos(Math.PI + a) * markInner;
+            var my1 = cy + Math.sin(Math.PI + a) * markInner;
+            var mx2 = cx + Math.cos(Math.PI + a) * markOuter;
+            var my2 = cy + Math.sin(Math.PI + a) * markOuter;
 
+            if (my1 < clipY && my2 < clipY) {
+                ctx.beginPath();
+                ctx.moveTo(mx1, my1);
+                ctx.lineTo(mx2, my2);
+                ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.4)' : 'rgba(196, 163, 90, 0.3)';
+                ctx.lineWidth = db === 0 || db === -20 ? 1 : 0.5;
+                ctx.stroke();
+            }
+
+            var tx = cx + Math.cos(Math.PI + a) * textR;
             var ty = cy + Math.sin(Math.PI + a) * textR + 3;
-            if (ty < H - 2) {
+            if (ty < clipY - 4) {
                 ctx.fillStyle = db >= 0 ? 'rgba(180, 60, 50, 0.45)' : 'rgba(196, 163, 90, 0.4)';
                 var label = db === 0 ? '0' : db > 0 ? '+' + db : String(db);
-                ctx.fillText(label, cx + Math.cos(Math.PI + a) * textR, ty);
+                ctx.fillText(label, tx, ty);
             }
         }
 
@@ -182,95 +181,138 @@
             var sa = dbToAngle(d);
             var si1 = arcRadius - 2;
             var si2 = arcRadius + 2;
-            var sy1 = cy + Math.sin(Math.PI + sa) * si1;
-            if (sy1 < H - 2) {
+            var stx1 = cx + Math.cos(Math.PI + sa) * si1;
+            var sty1 = cy + Math.sin(Math.PI + sa) * si1;
+            var stx2 = cx + Math.cos(Math.PI + sa) * si2;
+            var sty2 = cy + Math.sin(Math.PI + sa) * si2;
+            if (sty1 < clipY && sty2 < clipY) {
                 ctx.beginPath();
-                ctx.moveTo(cx + Math.cos(Math.PI + sa) * si1, sy1);
-                ctx.lineTo(cx + Math.cos(Math.PI + sa) * si2, cy + Math.sin(Math.PI + sa) * si2);
+                ctx.moveTo(stx1, sty1);
+                ctx.lineTo(stx2, sty2);
                 ctx.strokeStyle = d >= 0 ? 'rgba(180, 60, 50, 0.15)' : 'rgba(196, 163, 90, 0.12)';
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
             }
         }
 
-        // --- Needle (clipped to meter bounds) ---
+        // --- Needle ---
         var needleTipX = cx + Math.cos(Math.PI + needleAngle) * needleLen;
         var needleTipY = cy + Math.sin(Math.PI + needleAngle) * needleLen;
 
-        // If tip would go below clipY, calculate intersection
-        var drawTipX = needleTipX;
-        var drawTipY = needleTipY;
-        if (needleTipY > clipY) {
-            // Find where needle crosses clipY
-            var t = (clipY - cy) / (needleTipY - cy);
-            drawTipX = cx + t * (needleTipX - cx);
-            drawTipY = clipY;
-        }
+        // Clip both ends to visible area
+        var baseY = Math.min(cy, clipY);
+        var tip = clipLine(cx, baseY, needleTipX, needleTipY, clipY);
+        var drawTipX = needleTipY <= clipY ? needleTipX : tip.x;
+        var drawTipY = needleTipY <= clipY ? needleTipY : tip.y;
+        var drawBaseY = baseY;
 
         // Needle shadow
         ctx.beginPath();
-        ctx.moveTo(cx + 1.5, Math.min(cy + 1.5, clipY));
-        ctx.lineTo(drawTipX + 1.5, drawTipY + 1.5);
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.1)';
-        ctx.lineWidth = 2;
+        ctx.moveTo(cx + 2, drawBaseY + 1);
+        ctx.lineTo(drawTipX + 2, drawTipY + 1);
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.12)';
+        ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
         ctx.stroke();
 
-        // Needle
+        // Needle body
         ctx.beginPath();
-        ctx.moveTo(cx, Math.min(cy, clipY));
+        ctx.moveTo(cx, drawBaseY);
         ctx.lineTo(drawTipX, drawTipY);
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.85)';
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.9)';
         ctx.lineWidth = 1.5;
         ctx.lineCap = 'round';
         ctx.stroke();
 
-        // Needle tip glow
-        if (glowIntensity > 0.1) {
-            var tipGrad = ctx.createRadialGradient(drawTipX, drawTipY, 0, drawTipX, drawTipY, 6);
+        // Needle tip glow when active
+        if (glowIntensity > 0.1 && drawTipY < clipY - 2) {
+            var tipGrad = ctx.createRadialGradient(drawTipX, drawTipY, 0, drawTipX, drawTipY, 8);
             tipGrad.addColorStop(0, 'rgba(196, 163, 90, ' + (glowIntensity * 0.25) + ')');
             tipGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = tipGrad;
             ctx.beginPath();
-            ctx.arc(drawTipX, drawTipY, 6, 0, Math.PI * 2);
+            ctx.arc(drawTipX, drawTipY, 8, 0, Math.PI * 2);
             ctx.fill();
         }
 
         // Peak hold
         if (peakAngle > minAngle + 0.05) {
-            var peakTipX = cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.9);
-            var peakTipY = cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.9);
-            var peakBaseX = cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.6);
-            var peakBaseY = cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.6);
-            if (peakTipY < clipY && peakBaseY < clipY) {
+            var pkTipX = cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.9);
+            var pkTipY = cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.9);
+            var pkBaseX = cx + Math.cos(Math.PI + peakAngle) * (needleLen * 0.6);
+            var pkBaseY = cy + Math.sin(Math.PI + peakAngle) * (needleLen * 0.6);
+            if (pkTipY < clipY && pkBaseY < clipY) {
                 ctx.beginPath();
-                ctx.moveTo(peakBaseX, peakBaseY);
-                ctx.lineTo(peakTipX, peakTipY);
-                ctx.strokeStyle = 'rgba(196, 163, 90, 0.1)';
+                ctx.moveTo(pkBaseX, pkBaseY);
+                ctx.lineTo(pkTipX, pkTipY);
+                ctx.strokeStyle = 'rgba(196, 163, 90, 0.12)';
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
         }
 
-        // Pivot cap (at bottom edge)
-        var pivotY = Math.min(cy, clipY);
+        // Pivot cap at bottom
         ctx.beginPath();
-        ctx.arc(cx, pivotY, 4, 0, Math.PI * 2);
+        ctx.arc(cx, clipY + 2, 5, Math.PI, 0);
         ctx.fillStyle = '#2a2520';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.15)';
+        ctx.beginPath();
+        ctx.arc(cx, clipY + 2, 5, Math.PI, 0);
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.12)';
         ctx.lineWidth = 0.5;
         ctx.stroke();
 
-        // Bottom edge line (mechanical stop visual)
-        ctx.beginPath();
-        ctx.moveTo(0, H - 1);
-        ctx.lineTo(W, H - 1);
-        ctx.strokeStyle = 'rgba(60, 55, 42, 0.4)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        // --- REC indicator (upper right, inside meter) ---
+        if (!hasStarted) {
+            // Flashing
+            var flash = Math.sin(time * 0.08) * 0.5 + 0.5;
+            var recAlpha = 0.15 + flash * 0.35;
 
-        ctx.restore();
+            // Background
+            ctx.fillStyle = 'rgba(140, 45, 40, ' + (recAlpha * 0.25) + ')';
+            ctx.fillRect(recX, recY, recW, recH);
+
+            // Border
+            ctx.strokeStyle = 'rgba(160, 55, 45, ' + (recAlpha * 0.5) + ')';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(recX, recY, recW, recH);
+
+            // Dot
+            ctx.beginPath();
+            ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(180, 60, 50, ' + recAlpha + ')';
+            ctx.fill();
+
+            // Text
+            ctx.font = '500 7px "JetBrains Mono", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(180, 65, 55, ' + (recAlpha * 0.9) + ')';
+            ctx.fillText('REC', recX + 16, recY + recH / 2 + 2.5);
+        } else if (isPlaying) {
+            // Solid, not flashing
+            ctx.fillStyle = 'rgba(140, 45, 40, 0.12)';
+            ctx.fillRect(recX, recY, recW, recH);
+            ctx.strokeStyle = 'rgba(160, 55, 45, 0.2)';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(recX, recY, recW, recH);
+
+            ctx.beginPath();
+            ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(180, 60, 50, 0.5)';
+            ctx.fill();
+
+            ctx.font = '500 7px "JetBrains Mono", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(180, 65, 55, 0.4)';
+            ctx.fillText('REC', recX + 16, recY + recH / 2 + 2.5);
+        }
+
+        // Inner bezel shadow (top edge)
+        var ibGrad = ctx.createLinearGradient(0, 0, 0, 6);
+        ibGrad.addColorStop(0, 'rgba(0, 0, 0, 0.15)');
+        ibGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = ibGrad;
+        ctx.fillRect(1, 1, W - 2, 6);
     }
 
     // --- Audio setup ---
@@ -283,11 +325,7 @@
 
         audio.addEventListener('ended', function() {
             isPlaying = false;
-            statusEl.textContent = 'TRANSMISSION COMPLETE \u2014 CLICK METER TO REPLAY';
-        });
-
-        audio.addEventListener('canplay', function() {
-            isLoaded = true;
+            statusEl.textContent = 'TRANSMISSION COMPLETE \u2014 CLICK TO REPLAY';
         });
 
         audio.addEventListener('timeupdate', function() {
@@ -316,7 +354,6 @@
         audio.play().then(function() {
             isPlaying = true;
             hasStarted = true;
-            btnOverlay.classList.add('hidden');
             statusEl.textContent = 'RECEIVING TRANSMISSION';
         }).catch(function() {
             statusEl.textContent = 'SIGNAL ERROR \u2014 TRY AGAIN';
@@ -331,7 +368,7 @@
         if (isPlaying) {
             audio.pause();
             isPlaying = false;
-            statusEl.textContent = 'PAUSED \u2014 CLICK METER TO RESUME';
+            statusEl.textContent = 'PAUSED \u2014 CLICK TO RESUME';
         } else {
             audio.play().then(function() {
                 isPlaying = true;
@@ -340,16 +377,24 @@
         }
     }
 
-    // --- Interaction ---
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        startPlayback();
+    // --- Click handling ---
+    canvas.addEventListener('click', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        var scaleX = W / rect.width;
+        var scaleY = H / rect.height;
+        var mx = (e.clientX - rect.left) * scaleX;
+        var my = (e.clientY - rect.top) * scaleY;
+
+        // Check if click is on REC indicator
+        if (!hasStarted && mx >= recX && mx <= recX + recW && my >= recY && my <= recY + recH) {
+            startPlayback();
+            return;
+        }
+
+        togglePlay();
     });
 
-    canvas.addEventListener('click', togglePlay);
-    canvas.addEventListener('mouseenter', function() { hoverGlow = 0.5; });
-    canvas.addEventListener('mouseleave', function() { hoverGlow = 0; });
-
+    // Progress bar seeking
     progressWrap.addEventListener('click', function(e) {
         if (!audio || !audio.duration) return;
         var rect = progressWrap.getBoundingClientRect();
@@ -388,11 +433,6 @@
             if (peakDecay <= 0) {
                 peakAngle += (minAngle - peakAngle) * 0.03;
             }
-        }
-
-        // Ease hover glow
-        if (!canvas.matches(':hover')) {
-            hoverGlow *= 0.9;
         }
 
         draw();
