@@ -67,7 +67,7 @@
 
         var label = document.createElement('span');
         label.className = 'clearance-label';
-        label.textContent = 'CLEARANCE';
+        label.textContent = 'SPOILER CLEARANCE';
 
         var control = document.createElement('div');
         control.className = 'clearance-control';
