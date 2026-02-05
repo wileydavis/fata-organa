@@ -394,6 +394,22 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.log-link {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-dim);
+    text-decoration: none;
+    margin-left: 0.5rem;
+    transition: color 0.2s;
+}
+
+.log-link:hover {
+    color: var(--accent);
+}
+
 .log-entries {
     font-family: var(--mono);
     font-size: 0.75rem;
