@@ -65,10 +65,28 @@ section.redacted * {
 
 /* Inline redaction (for spans within text) */
 span[data-spoiler].redacted {
-    background: rgba(20, 20, 22, 0.97);
     color: transparent !important;
-    padding: 0.1em 0.3em;
+    display: inline-block;
+    width: var(--redact-w, 4em);
+    height: 1.05em;
+    vertical-align: baseline;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    cursor: default;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(25, 25, 28, 0.97) 0px,
+        rgba(25, 25, 28, 0.97) 4px,
+        rgba(35, 35, 38, 0.90) 4px,
+        rgba(35, 35, 38, 0.90) 5px
+    );
     border-radius: 1px;
+    margin: 0 0.1em;
+}
+
+span[data-spoiler].redacted * {
+    color: transparent !important;
 }
 
 span[data-spoiler].redacted::after {
@@ -76,13 +94,7 @@ span[data-spoiler].redacted::after {
 }
 
 span[data-spoiler].redacted::before {
-    content: '████';
-    position: static;
-    transform: none;
-    color: rgba(30, 30, 35, 1);
-    font-size: inherit;
-    letter-spacing: -0.05em;
-    background: none;
+    display: none;
 }
 
 /* --- Declassified (revealed) --- */
