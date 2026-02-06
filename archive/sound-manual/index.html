@@ -8,6 +8,421 @@
     <link rel="stylesheet" href="/css/document.css">
     <link rel="stylesheet" href="/css/spoiler.css">
     <link rel="stylesheet" href="/css/layers.css">
+    <style>
+    /* --- Layer 2: Appendix Panel --- */
+    .panel-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    .panel-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+    }
+    .appendix-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(560px, calc(100vw - 40px));
+        height: 100vh;
+        background: #111113;
+        border-left: 1px solid var(--border);
+        z-index: 201;
+        transform: translateX(100%);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+    }
+    .appendix-panel.open {
+        transform: translateX(0);
+    }
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+    .panel-title {
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: rgba(196, 163, 90, 0.7);
+        letter-spacing: 0.08em;
+    }
+    .panel-close {
+        background: none;
+        border: 1px solid var(--border);
+        color: rgba(230, 225, 215, 0.5);
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s, border-color 0.2s;
+    }
+    .panel-close:hover {
+        color: rgba(230, 225, 215, 0.8);
+        border-color: rgba(196, 163, 90, 0.3);
+    }
+    .panel-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex: 1;
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        line-height: 1.8;
+        color: rgba(230, 225, 215, 0.8);
+    }
+    .panel-body h4 {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: rgba(196, 163, 90, 0.6);
+        margin: 1.5rem 0 0.5rem;
+    }
+    .panel-body h4:first-child {
+        margin-top: 0;
+    }
+    .panel-body ol {
+        margin: 0.5rem 0 1rem 1.2rem;
+        font-size: 0.72rem;
+        line-height: 1.8;
+    }
+    .panel-body li {
+        margin-bottom: 0.5rem;
+    }
+    .panel-body p {
+        margin-bottom: 0.75rem;
+        text-indent: 0 !important;
+    }
+    .panel-body .kbd {
+        display: inline-block;
+        padding: 1px 5px;
+        font-size: 0.6rem;
+        background: rgba(30, 30, 33, 0.8);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        color: rgba(230, 225, 215, 0.8);
+        font-family: var(--mono);
+    }
+    .panel-body .param-table {
+        width: 100%;
+        margin: 0.5rem 0 1rem;
+        font-size: 0.68rem;
+    }
+    .panel-body .param-table td {
+        padding: 0.3rem 0.6rem;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.3);
+    }
+    .panel-body .param-table td:first-child {
+        color: rgba(196, 163, 90, 0.5);
+        white-space: nowrap;
+        width: 140px;
+    }
+    .panel-body .warning {
+        padding: 0.75rem;
+        background: rgba(196, 163, 90, 0.04);
+        border-left: 2px solid rgba(196, 163, 90, 0.2);
+        font-size: 0.68rem;
+        color: rgba(230, 225, 215, 0.5);
+        margin: 0.75rem 0;
+        line-height: 1.7;
+    }
+    .panel-body .cross-ref {
+        color: rgba(123, 164, 201, 0.7);
+        cursor: pointer;
+        border-bottom: 1px dashed rgba(123, 164, 201, 0.4);
+    }
+    .panel-body .cross-ref:hover {
+        color: rgba(163, 196, 224, 0.9);
+    }
+
+    /* --- Layer 2: Ref links --- */
+    .ref-link {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: rgba(123, 164, 201, 0.6);
+        cursor: pointer;
+        border-bottom: 1px dashed rgba(123, 164, 201, 0.3);
+        transition: color 0.2s;
+    }
+    .ref-link:hover {
+        color: rgba(163, 196, 224, 0.9);
+    }
+
+    /* --- Layer 2: Tables --- */
+    [data-layer="2"] table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        margin: 0.75rem 0 1.25rem;
+    }
+    [data-layer="2"] th {
+        text-align: left;
+        padding: 0.4rem 0.6rem;
+        border-bottom: 1px solid rgba(196, 163, 90, 0.15);
+        color: rgba(196, 163, 90, 0.5);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.6rem;
+    }
+    [data-layer="2"] td {
+        padding: 0.4rem 0.6rem;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.3);
+        color: rgba(230, 225, 215, 0.7);
+    }
+
+    /* --- Layer 2: Chain diagram --- */
+    .chain-diagram {
+        margin: 1rem 0 1.5rem;
+        padding: 1rem;
+        background: rgba(10, 10, 11, 0.5);
+        border: 1px solid var(--border);
+    }
+    .chain-row {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.3rem;
+    }
+    .chain-label {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        width: 100%;
+        margin-bottom: 0.3rem;
+    }
+    .chain-label-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        margin-right: 0.4rem;
+        vertical-align: middle;
+    }
+    .chain-a .chain-label-dot { background: rgba(123, 201, 123, 0.6); }
+    .chain-a .chain-label { color: rgba(123, 201, 123, 0.7); }
+    .chain-b .chain-label-dot { background: rgba(123, 164, 201, 0.6); }
+    .chain-b .chain-label { color: rgba(123, 164, 201, 0.7); }
+    .chain-c .chain-label-dot { background: rgba(201, 123, 123, 0.6); }
+    .chain-c .chain-label { color: rgba(201, 123, 123, 0.7); }
+    .chain-device {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--border);
+        background: rgba(24, 24, 27, 0.8);
+        color: rgba(230, 225, 215, 0.6);
+    }
+    .chain-arrow {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        color: rgba(196, 163, 90, 0.3);
+    }
+    .chain-selector-visual {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+    .selector-bar {
+        display: flex;
+        height: 24px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .zone-a {
+        flex: 0.43;
+        background: rgba(123, 201, 123, 0.08);
+        color: rgba(123, 201, 123, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px dashed rgba(123, 201, 123, 0.2);
+    }
+    .zone-b {
+        flex: 0.32;
+        background: rgba(123, 164, 201, 0.08);
+        color: rgba(123, 164, 201, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px dashed rgba(201, 123, 123, 0.2);
+    }
+    .zone-c {
+        flex: 0.25;
+        background: rgba(201, 123, 123, 0.08);
+        color: rgba(201, 123, 123, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .selector-labels {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        color: rgba(230, 225, 215, 0.25);
+        margin-top: 0.2rem;
+    }
+
+    /* --- Layer 2: Voice state demo --- */
+    .voice-state-demo {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: rgba(10, 10, 11, 0.5);
+        border: 1px solid var(--border);
+    }
+    .voice-state-label {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(196, 163, 90, 0.5);
+        margin-bottom: 0.75rem;
+    }
+    .voice-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+    }
+    .voice-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        background: rgba(196, 163, 90, 0.8);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .voice-slider::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        background: rgba(196, 163, 90, 0.8);
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+    }
+    .voice-state-display {
+        margin-top: 0.75rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    .voice-state-info .label {
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        color: rgba(230, 225, 215, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .voice-state-info .value {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: rgba(230, 225, 215, 0.7);
+        margin-top: 0.15rem;
+    }
+
+    /* --- Layer 2: Energy arc --- */
+    .energy-arc {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        margin: 1rem 0 1.5rem;
+        padding: 1rem 1.25rem;
+        background: rgba(10, 10, 11, 0.5);
+        border: 1px solid var(--border);
+        height: 120px;
+    }
+    .energy-bar {
+        flex: 1;
+        background: rgba(196, 163, 90, 0.5);
+        border-radius: 1px 1px 0 0;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        cursor: pointer;
+        position: relative;
+    }
+    .energy-bar:hover { opacity: 1; }
+    .energy-bar .tip {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #18181b;
+        border: 1px solid var(--border);
+        padding: 4px 8px;
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        color: rgba(230, 225, 215, 0.7);
+        white-space: nowrap;
+        z-index: 10;
+        pointer-events: none;
+    }
+    .energy-bar:hover .tip { display: block; }
+
+    /* --- Layer 2: MIDI tags --- */
+    .midi-tag {
+        display: inline-block;
+        padding: 1px 5px;
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        font-weight: 500;
+    }
+    .midi-tag.loop {
+        background: rgba(123, 201, 123, 0.08);
+        color: rgba(123, 201, 123, 0.6);
+    }
+    .midi-tag.oneshot {
+        background: rgba(201, 123, 123, 0.08);
+        color: rgba(201, 123, 123, 0.6);
+    }
+
+    /* --- Layer 2: Session meta --- */
+    .session-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin: 1rem 0 0.5rem;
+        flex-wrap: wrap;
+    }
+    .session-meta-item {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        color: rgba(230, 225, 215, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .session-meta-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(196, 163, 90, 0.35);
+    }
+    </style>
 </head>
 <body>
     <div class="scanline-overlay"></div>
@@ -66,76 +481,101 @@
 
         <p><strong>Source:</strong> The original sound event — a voice, a footstep, wind across rock. In the zone, this is the closest thing to unmediated reality. But even the source is maintained; air itself must be consciously held in a state capable of transmitting vibration.</p>
 
-        <p><strong>Shape:</strong> The filtering and envelope of a sound — how it rises, sustains, falls. In stable maintained reality, this mirrors physics as we knew it. In unstable zones, shaping becomes unpredictable. Sounds may sustain indefinitely, refusing to decay. Attacks may precede their sources. Transients may arrive without any signal to follow.</p>
+        <p><strong>Shape:</strong> The filtering and envelope of a sound — how it rises, sustains, falls. In stable maintained reality, this mirrors physics as we knew it. In unstable zones, shaping becomes unpredictable. Sounds may sustain indefinitely, refusing to decay. Attacks may precede their sources.</p>
 
-        <p><strong>Space:</strong> The acoustic environment — the room, the open air, the reverberant space that gives a sound its context. In the zone, space is the most vulnerable layer. When a Mind's concentration wavers, spatial coherence degrades first. Sounds lose their sense of location. Reverberation becomes impossible or infinite. Echoes return from distances that don't exist.</p>
+        <p><strong>Space:</strong> The acoustic environment. In the zone, space is the most vulnerable layer. When a Mind's concentration wavers, spatial coherence degrades first. Echoes return from distances that don't exist.</p>
 
-        <p><strong>Destroy:</strong> Distortion, degradation, the breaking-down of signal integrity. In the zone, destruction is not an effect applied to sound — it is the natural state of unmaintained acoustic reality. Sounds <em>want</em> to fragment. Coherence requires effort. When that effort fails, you hear the destruction as distortion, granular dissolution, frequency shifting, or the horrifying blur between tone and noise.</p>
+        <p><strong>Destroy:</strong> Distortion, degradation, the breaking-down of signal integrity. In the zone, destruction is not an effect applied to sound — it is the natural state of unmaintained acoustic reality. Sounds <em>want</em> to fragment. Coherence requires effort.</p>
 
-        <p><strong>Space again:</strong> The placement of degraded sound into a new context. In the zone, this manifests as layered acoustic realities — a voice that sounds simultaneously close and impossibly distant. The zone's acoustics are palimpsests: one space written over another, neither fully erased.</p>
+        <p><strong>Space again:</strong> The placement of degraded sound into a new context. The zone's acoustics are palimpsests: one space written over another, neither fully erased.</p>
 
         </div><div data-spoiler="2"><h2>III. The Frequency Spectrum as Consciousness Map</h2>
 
-        <p>Different frequency ranges correlate with different aspects of maintained reality. Field observers have noted consistent patterns:</p>
+        <p>Different frequency ranges correlate with different aspects of maintained reality.</p>
 
-        <p><strong>Sub-bass (20–60 Hz):</strong> Felt more than heard. Corresponds to the deepest layer of reality maintenance — gravity, mass, the fundamental forces. When sub-bass disappears, the ground itself becomes uncertain. When it surges, something vast is being held together by enormous effort.</p>
+        <p><strong>Sub-bass (20–60 Hz):</strong> Felt more than heard. Corresponds to the deepest layer of reality maintenance — gravity, mass, the fundamental forces.</p>
 
-        <p><strong>Low-mids (200–500 Hz):</strong> The "body" of acoustic reality. Warmth, enclosure, the sense of being inside a coherent space. Buildup in this range indicates overlapping maintenance fields, multiple Minds trying to hold the same space in slightly different configurations.</p>
+        <p><strong>Low-mids (200–500 Hz):</strong> The "body" of acoustic reality. Buildup in this range indicates overlapping maintenance fields.</p>
 
-        <p><strong>Upper-mids (2–5 kHz):</strong> The danger zone. The frequencies of human speech, of crying, of distress calls. Evolution made this range impossible for the human ear to ignore. In the zone, this range carries the voices of trapped minds — eternal awareness broadcast on frequencies your brain cannot tune out.</p>
+        <p><strong>Upper-mids (2–5 kHz):</strong> The frequencies of human speech, of distress calls. This range carries the voices of trapped minds — eternal awareness broadcast on frequencies your brain cannot tune out.</p>
 
-        <p><strong>High frequencies (5–10 kHz):</strong> Brilliance, presence, the sharp edge of reality. When maintained reality is stable, this range provides clarity and definition. When it degrades, it becomes brittle, glassy, harsh — the acoustic equivalent of looking through cracked glass.</p>
+        <p><strong>High frequencies (5–10 kHz):</strong> When maintained reality degrades, it becomes brittle, glassy, harsh — the acoustic equivalent of looking through cracked glass.</p>
 
-        <p><strong>Air (10–20 kHz):</strong> The shimmer at the top of perception. In the zone, this range is where consciousness bleeding becomes audible — the faint impression of other Minds' realities leaking into yours.</p>
+        <p><strong>Air (10–20 kHz):</strong> Where consciousness bleeding becomes audible — the faint impression of other Minds' realities leaking into yours.</p>
 
         </div><div data-spoiler="3"><h2>IV. Rhythmic Phenomena</h2>
 
         <p>Rhythm in the zone is not decorative. It is structural.</p>
 
-        <p>The automations that once governed time's passage left residual patterns when they were destroyed. These patterns manifest as pulse: a rhythmic insistence embedded in the zone's acoustic environment, like the heartbeat of a machine that no longer exists but whose rhythm continues.</p>
+        <p><strong>Mechanical inevitability:</strong> A steady, relentless pulse. The rhythm of automated systems still running in fragments — time trying to maintain itself through repetition.</p>
 
-        <p><strong>Mechanical inevitability:</strong> A steady, relentless pulse that conveys not music but process. The rhythm of automated systems still running in fragments — time trying to maintain itself through repetition.</p>
+        <p><strong>Implied rhythm:</strong> No audible pulse, but a sense of rhythmic structure embedded in texture. Your body entrains to rhythms that aren't there.</p>
 
-        <p><strong>Implied rhythm:</strong> No audible pulse, but a sense of rhythmic structure embedded in texture. Your body entrains to rhythms that aren't there — or that are there in a dimension of sound you can't consciously perceive.</p>
-
-        <p><strong>Breath rhythm:</strong> The pulse of maintained reality itself — the sidechain compression of consciousness. When a Mind maintains reality, everything in their maintained space <em>breathes</em> with their attention.</p>
+        <p><strong>Breath rhythm:</strong> The pulse of maintained reality itself — the sidechain compression of consciousness. Everything in a Mind's maintained space <em>breathes</em> with their attention.</p>
 
         </div><div data-spoiler="2"><h2>V. The Sound of Trapped Minds</h2>
 
-        <p>Trapped minds broadcast continuously on frequencies that occupy the boundary between sound and thought. They are not speaking. They are not screaming. They are simply <em>being</em>, and that being has an acoustic signature.</p>
-
-        <p>Common elements include: a whispered chorus at the threshold of hearing, tonal presences that seem to occupy space without originating from any point, harmonic content that shifts when attended to, and intervals of pure silence that feel louder than the sounds that surround them.</p>
+        <p>Trapped minds broadcast continuously on frequencies that occupy the boundary between sound and thought. Common elements: a whispered chorus at the threshold of hearing, tonal presences that occupy space without originating from any point, harmonic content that shifts when attended to.</p>
 
         </div><div data-spoiler="3"><h2>VI. Convolution and Impossible Spaces</h2>
 
-        <p>In stable reality, the acoustic character of a space is determined by physical geometry. In the zone, acoustic space is determined by consciousness. A Mind can impose the acoustic character of one space onto another — or impose the resonant character of an <em>object</em> onto a space.</p>
-
-        <p>This is not metaphor. Within the zone, acoustic space is as malleable as visual space — and often the first sign that reality is being actively shaped by a nearby consciousness.</p>
+        <p>In the zone, acoustic space is determined by consciousness. A Mind can impose the acoustic character of one space onto another — or the resonant character of an <em>object</em> onto a space. This is not metaphor.</p>
 
         </div><div class="document-note" style="margin-top: 3rem;">
-            <p><em>This manual will be updated as new acoustic data is recovered from the zone. Sections on granular dissolution, resampling degradation, and multi-generational signal decay are in preparation.</em></p>
+            <p><em>This manual will be updated as new acoustic data is recovered from the zone.</em></p>
         </div>
 
         </div>
 
-        <!-- ==================== LAYER 2: PRODUCTION NOTES ==================== -->
+        <!-- ==================== LAYER 2: PRODUCTION GUIDE ==================== -->
         <div data-layer="2" data-layer-name="PRODUCTION GUIDE — ABLETON LIVE WORKFLOW" data-layer-classification="PRODUCTION NOTES — OPEN">
 
         <div class="document-note">
-            <p><em>This is the real production guide for the Fata Organa score. Built in Ableton Live, key of D# minor, 120 BPM. Reference artists: Kangding Ray (Solens Arc), Gas (Pop), Ben Frost (A U R O R A). The in-world field manual above describes the same concepts in narrative language — the signal flow is identical, the framing is different.</em></p>
+            <p><em>The production guide for the Fata Organa score. Everything above describes the same concepts in narrative language — the signal flow is identical, the framing is different. Click any → Appendix link to open step-by-step instructions.</em></p>
         </div>
 
-        <h2>I. Project Overview</h2>
+        <div class="session-meta">
+            <span class="session-meta-item"><span class="session-meta-dot"></span>D# minor</span>
+            <span class="session-meta-item"><span class="session-meta-dot"></span>120 BPM</span>
+            <span class="session-meta-item"><span class="session-meta-dot"></span>Ableton Live</span>
+        </div>
 
-        <p>Fata Organa's score operates as a <strong>narrative state machine</strong> with three modes: <strong>Analytical</strong> (voice forward, music as background), <strong>Receptive</strong> (voice and music fused, repetition and drone inducing trance-like receptivity), and <strong>Transitional</strong> (the seamless blend between states — if the listener notices the transition, the spell breaks).</p>
+        <h2>1. Project Overview</h2>
 
-        <p>The aesthetic treats rhythm as texture, texture as environment, and timbral evolution as the primary compositional tool. Track lengths target six to ten minutes, with eight minutes as the working template.</p>
+        <p>Fata Organa is a 12-episode audio drama. The score draws from ambient, drone, and techno to serve a specific narrative function: controlling the listener's psychological state. The music operates as a state machine with three modes: <strong>Analytical</strong> (voice forward, music as background), <strong>Receptive</strong> (voice and music fused, entrainment inducing trance), and <strong>Transitional</strong> (seamless blend — if the listener notices, the spell breaks).</p>
 
-        <h2>II. Session Setup &amp; Signal Flow</h2>
+        <p>Reference artists: Kangding Ray (<em>Solens Arc</em>), Gas (<em>Pop</em>), Ben Frost (<em>A U R O R A</em>) — music that treats rhythm as texture, texture as environment, and timbral evolution as the primary compositional tool.</p>
 
-        <p>The session is organized into bus groups using Ableton's group tracks. Core groups: Sub Bass, Kick, High Frequency Percussion, Claps, Lead Synths, Pads/Drones, Atmospheres, Voice. Each group has its own processing chain for cohesion.</p>
+        <h2>2. The Listener's Brain</h2>
 
-        <p>The fundamental signal path for every sound in the project:</p>
+        <p><strong>Rhythmic entrainment:</strong> After 4–8 minutes of steady pulse, neural oscillations synchronize with external rhythm. Heart rate adjusts. Breathing shifts. The analytical mind quiets. 120 BPM is close to double resting heart rate — natural and driving. For hypnotic sections, half-time feel (body syncs to 60 BPM) induces calmer receptivity while the 120 grid continues underneath.</p>
+
+        <p><strong>Semantic satiation:</strong> A word repeated 3–7 times loses meaning. What remains is phoneme, rhythm, timbre. The brain shifts from language processing to music processing — a literal neurological mode shift. Choose repeated words by sonic properties, not just meaning. Hard consonants become percussive. Sustained vowels become tonal.</p>
+
+        <p><strong>Frequency &amp; spatial perception:</strong> Voice intelligibility lives between 1–4 kHz. Filtering below this transforms speech from language to texture. Reverb transforms a voice from "person speaking to me" to "environmental presence." These are continuous axes you can automate.</p>
+
+        <h2>3. Setting Up the Session</h2>
+
+        <p><strong>Track groups</strong> — organized into bus groups, each with its own effects chain. <span class="ref-link" onclick="openPanel('a')">→ Appendix A: Creating Bus Groups</span></p>
+
+        <table>
+            <thead><tr><th>Group</th><th>Contents</th><th>Role</th></tr></thead>
+            <tbody>
+                <tr><td>Kick</td><td>Kick drum</td><td>Anchor pulse</td></tr>
+                <tr><td>Bass</td><td>Sub bass</td><td>Weight, physical presence</td></tr>
+                <tr><td>Low Freq Effects</td><td>Rumbles, sub drones</td><td>World-building below conscious hearing</td></tr>
+                <tr><td>Ambient Texture</td><td>Pads, drones, reverb tails, field recordings</td><td>Environment</td></tr>
+                <tr><td>High Freq Percussion</td><td>Hi-hats, claps, textural percussion</td><td>Rhythmic detail</td></tr>
+                <tr><td>Lead Synths / Violin</td><td>Riff, melody, drone transitions</td><td>Emotional narrative</td></tr>
+                <tr><td>Narration</td><td>Voice and processed vocal textures</td><td>Story and musical element</td></tr>
+            </tbody>
+        </table>
+
+        <p><strong>Shared space via return tracks</strong> — multiple groups sharing reverb and delay sends. <span class="ref-link" onclick="openPanel('b')">→ Appendix B: Return Tracks</span>. The Containment Zone gets its own dedicated convolution reverb using a custom impulse response. <span class="ref-link" onclick="openPanel('n')">→ Appendix N</span></p>
+
+        <p><strong>Gain staging:</strong> Individual tracks peak around -10 to -6 dB. Group buses: -6 to -3 dB. Master output: -1 to 0 dB after processing. Target loudness: -10 to -8 LUFS integrated. Put a Utility plugin as the first device on every track. <span class="ref-link" onclick="openPanel('k')">→ Appendix K: Master Chain</span></p>
+
+        <h2>4. Signal Flow &amp; Sound Architecture</h2>
 
         <div class="signal-flow">
             <span class="flow-node">Source</span>
@@ -149,47 +589,149 @@
             <span class="flow-node">Space again</span>
         </div>
 
-        <p><strong>Source:</strong> Raw sound — synth oscillator, sample, field recording, voice. <strong>Shape:</strong> Filters, envelopes, EQ. Carve the frequency profile. <strong>Space:</strong> First reverb/delay — places the sound in an environment. <strong>Destroy:</strong> Saturation, distortion, erosion, bit reduction — adds complexity and the texture of degradation. <strong>Space again:</strong> Second reverb/delay on the processed signal. Destruction artifacts get their own spatial context. A single reverb pass sounds flat; multiple generations create the sense that a sound exists in a world.</p>
+        <p><strong>Source:</strong> raw sound. <strong>Shape:</strong> filters, envelopes, EQ. <strong>Space:</strong> first reverb/delay. <strong>Destroy:</strong> saturation, distortion, erosion, bit reduction. <strong>Space again:</strong> second reverb/delay on the processed signal. A single reverb pass sounds flat; multiple generations create the sense that a sound exists in a world.</p>
 
-        <p><strong>Bus processing:</strong> Each group receives gentle bus compression (Glue Compressor, 2:1, slow attack, 1–3 dB reduction), corrective EQ (subtractive — cut problems, don't boost), subtle saturation for warmth, and Soothe2 on the Lead Synths and High Frequency Percussion groups.</p>
+        <p><strong>Bus processing:</strong> Each group receives gentle bus compression (Glue Compressor, 2:1, slow attack, 1–3 dB reduction), corrective EQ, subtle saturation, and Soothe2 on Lead Synths and High Freq Percussion. <span class="ref-link" onclick="openPanel('l')">→ Appendix L: Soothe2 Config</span></p>
 
-        <p><strong>Gain staging:</strong> Individual tracks peak around -10 to -6 dB, group buses at -6 to -3 dB, master output at -1 to 0 dB after processing. Target loudness: -10 to -8 LUFS integrated. Put a Utility plugin as the first device on every track.</p>
+        <p><strong>Sidechain routing</strong> — three relationships that make the mix breathe. <span class="ref-link" onclick="openPanel('h')">→ Appendix H: Sidechain Setup</span>. Ambient textures → kick (atmosphere breathes with rhythm). Reverb tails → percussion (keeps mix clean). Music mid-range 1–4 kHz → voice (automatic spectral pocket, 2–3 dB ducking).</p>
 
-        <h2>III. The Frequency Spectrum</h2>
+        <h2>5. Building Sounds from Nothing</h2>
 
-        <p><strong>Sub-bass (20–60 Hz):</strong> Foundation. High-pass everything that doesn't belong here. Keep this range clean and powerful — it's the physical grounding of the entire mix.</p>
+        <p><strong>Resampling</strong> — the core technique. <span class="ref-link" onclick="openPanel('j')">→ Appendix J</span>. Generate → record to audio → transform → record again → repeat. By generation 3–4, the sound bears no resemblance to its source.</p>
 
-        <p><strong>Low-mids (200–500 Hz):</strong> The danger zone for mud. Carve surgical cuts here with EQ Eight when elements compete. Buildup in this range is the most common mixing problem — when it clouds, the whole mix loses definition.</p>
+        <p><strong>Reverb tail harvesting:</strong> Send a single hit to a reverb with 10+ second decay. Record the tail. Filter it, distort it, reverse it. The tail becomes a pad.</p>
 
-        <p><strong>Upper-mids (2–5 kHz):</strong> Voice lives here. The narrator's intelligibility depends on this range being clean. Sidechain the music's mid-range (1–4 kHz) to the voice bus — 2–3 dB of ducking creates a spectral pocket. The listener hears clarity, not the ducking.</p>
+        <p><strong>Granular decomposition:</strong> Load audio into Simpler (Texture mode) or Granulator II. Manipulate grain size and flux. Record.</p>
 
-        <p><strong>High frequencies (5–10 kHz):</strong> Presence and detail. Apply Soothe2 here to tame harsh synth overtones. When this range is controlled, the mix sounds expensive. When it's not, it sounds brittle and fatiguing.</p>
+        <p><strong>Convolution for impossible spaces:</strong> Load any audio as an impulse response in Hybrid Reverb. <span class="ref-link" onclick="openPanel('n')">→ Appendix N</span></p>
 
-        <p><strong>Air (10–20 kHz):</strong> Shimmer. Use subtle high-shelf boosts on reverb returns to add airiness. This range separates "professional" from "bedroom" — not by being loud, but by being present.</p>
+        <table>
+            <thead><tr><th>Target</th><th>Signal Chain</th></tr></thead>
+            <tbody>
+                <tr><td>Metallic drone</td><td>Operator (FM) → Corpus → long reverb → Saturator → reverb</td></tr>
+                <tr><td>Grainy texture</td><td>Source → Granulator II → Erosion → Echo (high feedback)</td></tr>
+                <tr><td>Industrial percussion</td><td>Noise burst → Pedal (Distort) → Corpus → gate</td></tr>
+                <tr><td>Atmospheric pad</td><td>Chord → flatten → reverse → reverb → flatten → layer</td></tr>
+                <tr><td>Containment Zone</td><td>Field recording → custom IR → Granulator II → Erosion</td></tr>
+                <tr><td>Dissolved voice</td><td>Voice → Paulstretch / granular → reverb → filter automation</td></tr>
+            </tbody>
+        </table>
 
-        <h2>IV. Rhythm &amp; Composition</h2>
+        <h2>6. Composing with Transformation</h2>
 
-        <p>The rhythmic approach uses three layers that correspond to narrative states. <strong>Mechanical pulse:</strong> Four-on-the-floor kick at 120 BPM — not decorative but structural scaffolding. This is the rhythmic entrainment mechanism that synchronizes the listener's nervous system and allows increasing abstraction above it. <strong>Implied rhythm:</strong> Textural elements with periodic modulation — LFO-driven filter sweeps, granular density patterns. The body entrains even without an explicit beat. <strong>Breath rhythm:</strong> Sidechain compression creates a pumping, breathing quality across the mix — the acoustic environment pulses as a single organism.</p>
+        <p>You don't write new parts to change energy. You transform existing parts. A single sound can carry an entire section's arc through processing alone. The five variables: <strong>density</strong> (how many elements), <strong>frequency content</strong> (filter position), <strong>spatial depth</strong> (reverb amount), <strong>dynamic range</strong> (compression), <strong>timbral character</strong> (distortion amount).</p>
 
-        <p><strong>Sidechain routing:</strong> Ambient textures sidechained to kick (textures duck on each hit, atmosphere breathes with rhythm). Reverb tails sidechained to percussion (tails duck on transients, keeps mix clean). Music mid-range sidechained to voice (automatic spectral pocket for narrator).</p>
+        <p><strong>Automation as composition:</strong> Long, slow curves across 16–32 bars replace traditional song structure. Build racks where one macro controls filter cutoff, reverb send, distortion drive, and wavetable position simultaneously. Automate one knob. <span class="ref-link" onclick="openPanel('d')">→ Appendix D: Mapping Macros</span> <span class="ref-link" onclick="openPanel('m')">→ Appendix M: Automation Workflow</span></p>
 
-        <p><strong>Track structure template (8 minutes / 960 bars at 120 BPM):</strong> Bars 1–64: Atmosphere only, establish space. 65–128: Kick enters, sub bass, rhythmic foundation. 129–256: Build — layers accumulate, filters open. 257–320: Peak energy — all elements present, maximum density. 321–384: Breakdown — elements strip away. 385–448: Second build with variation. 449–480: Peak with riff/melodic content. 481–512: Decline — riff dissolves into drone. Velocity and density fade.</p>
+        <h3>Energy Arc</h3>
+        <div class="energy-arc" id="energyArc"></div>
 
-        <h2>V. Voice Processing</h2>
+        <p><strong>Transformation techniques:</strong> <em>Emergence</em> — keep a part filtered to near-inaudibility, open the filter over 16 bars. <em>Reverb freeze</em> — sustain a reverb tail indefinitely as a drone. <em>Parallel distortion blend</em> — clean and distorted chains, crossfade between them. <span class="ref-link" onclick="openPanel('c')">→ Appendix C</span>. <em>Rhythmic gating</em> — run a drone through a gate sidechained to a rhythmic source.</p>
 
-        <p>Voice exists in three states across the project. <strong>Clear narration:</strong> Minimal processing — compression, de-essing, EQ for presence. Voice is dominant, music serves. <strong>Transitional:</strong> Gradual effects — increasing reverb sends, subtle pitch wobble, stereo widening. The listener begins to lose the boundary between narrator and score. <strong>Dissolved:</strong> Voice becomes texture — Paulstretch, extreme granular processing, vocoder, spectral freeze. Words become tonal, meaning becomes feeling.</p>
+        <h3>Track Structure Template</h3>
+        <p>8 minutes at 120 BPM = 240 bars.</p>
+        <table>
+            <thead><tr><th>Section</th><th>Bars</th><th>Time</th><th>Function</th></tr></thead>
+            <tbody>
+                <tr><td>Establish</td><td>1–16</td><td>0:00–0:32</td><td>Fundamental texture, no rhythm</td></tr>
+                <tr><td>Introduce Pulse</td><td>17–32</td><td>0:32–1:04</td><td>Kick enters low</td></tr>
+                <tr><td>First Accumulation</td><td>33–64</td><td>1:04–2:08</td><td>Layers added per 8-bar phrase</td></tr>
+                <tr><td>Plateau</td><td>65–96</td><td>2:08–3:12</td><td>Hold steady, timbral evolution</td></tr>
+                <tr><td>Subtract</td><td>97–112</td><td>3:12–3:44</td><td>Tide pulling back</td></tr>
+                <tr><td>Second Accumulation</td><td>113–144</td><td>3:44–4:48</td><td>Rebuild differently</td></tr>
+                <tr><td>Peak Density</td><td>145–176</td><td>4:48–5:52</td><td>Maximum density</td></tr>
+                <tr><td>Long Decay</td><td>177–208</td><td>5:52–6:56</td><td>Gradual removal</td></tr>
+                <tr><td>Return</td><td>209–240</td><td>6:56–8:00</td><td>Drone and texture</td></tr>
+            </tbody>
+        </table>
 
-        <p>Build this as an Instrument Rack with three chains and a chain selector mapped to a macro. Chain A: clean voice path. Chain B: processed (delays, modulation, reverb). Chain C: destroyed (granular, spectral, unrecognizable). Automate the chain selector to sweep between states. The listener cannot feel the seam.</p>
+        <h2>7. Voice &amp; Score Integration</h2>
 
-        <h2>VI. Spatial Design &amp; Convolution</h2>
+        <p>The voice exists on a continuum from clear speech to pure texture. First, determine whether D# minor is harmonically compatible with your speaking voice. <span class="ref-link" onclick="openPanel('g')">→ Appendix G: Finding Vocal Fundamental</span></p>
 
-        <p>Shared reverb returns create cohesion — multiple tracks sending to the same reverb inhabit the same acoustic space. The Containment Zone should have its own dedicated convolution reverb using a custom impulse response, creating an acoustic signature the listener associates with "we are inside now." The outside world uses a different reverb. The transition between them is an acoustic threshold.</p>
+        <h3>The Voice Processing Rack</h3>
+        <p>Three parallel chains controlled by a single macro. <span class="ref-link" onclick="openPanel('f')">→ Appendix F: Full Build Instructions</span>. <span class="ref-link" onclick="openPanel('e')">→ Appendix E: Chain Selector</span></p>
 
-        <p><strong>Key instruments:</strong> Wavetable for evolving textures (map wavetable position to LFO or macro). Operator for metallic, FM-synthesis percussion. Drift for analog-imperfect drones. Simpler in Slice mode for chopping field recordings into rhythmic material. The resampling cycle: generate → record to audio → transform → record again → repeat. This is how you create textures that don't sound like presets.</p>
-
-        <div class="document-note" style="margin-top: 3rem;">
-            <p><em>Appendices with step-by-step Ableton procedures (bus groups, return tracks, rack building, macro mapping, chain selector crossfading, voice processing rack, sidechain setup, frequency sweeping, resampling, master chain, Soothe2 configuration, automation workflow, custom impulse responses) are in preparation.</em></p>
+        <div class="chain-diagram">
+            <div class="chain-row chain-a"><div class="chain-label"><span class="chain-label-dot"></span>Chain A — Clarity</div></div>
+            <div class="chain-row">
+                <div class="chain-device">Compressor 2:1</div><span class="chain-arrow">→</span>
+                <div class="chain-device">EQ8 +2dB @ 8kHz</div><span class="chain-arrow">→</span>
+                <div class="chain-device">Reverb 0.5s</div>
+            </div>
+            <div class="chain-row chain-b" style="margin-top: 14px;"><div class="chain-label"><span class="chain-label-dot"></span>Chain B — Texture</div></div>
+            <div class="chain-row">
+                <div class="chain-device">Reverb 3–5s</div><span class="chain-arrow">→</span>
+                <div class="chain-device">Echo</div><span class="chain-arrow">→</span>
+                <div class="chain-device">LP Filter</div><span class="chain-arrow">→</span>
+                <div class="chain-device">Erosion</div>
+            </div>
+            <div class="chain-row chain-c" style="margin-top: 14px;"><div class="chain-label"><span class="chain-label-dot"></span>Chain C — Rhythm</div></div>
+            <div class="chain-row">
+                <div class="chain-device">Compressor 8:1</div><span class="chain-arrow">→</span>
+                <div class="chain-device">Saturator</div><span class="chain-arrow">→</span>
+                <div class="chain-device">Gate ⇐ Kick</div><span class="chain-arrow">→</span>
+                <div class="chain-device">Delay 1/16</div>
+            </div>
+            <div class="chain-selector-visual">
+                <div style="font-family: var(--mono); font-size: 0.5rem; color: rgba(230,225,215,0.3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">Chain Selector → Macro 1 "Voice State"</div>
+                <div class="selector-bar">
+                    <div class="zone-a">Clarity</div>
+                    <div class="zone-b">Texture</div>
+                    <div class="zone-c">Rhythm</div>
+                </div>
+                <div class="selector-labels">
+                    <span>0</span><span>40–55 crossfade</span><span>80–95 crossfade</span><span>127</span>
+                </div>
+            </div>
         </div>
+
+        <h3>Interactive: Voice State</h3>
+        <div class="voice-state-demo">
+            <div class="voice-state-label">Macro 1 — Voice State</div>
+            <input type="range" class="voice-slider" id="voiceSlider" min="0" max="127" value="0">
+            <div class="voice-state-display">
+                <div class="voice-state-info"><div class="label">Value</div><div class="value" id="vsValue">0</div></div>
+                <div class="voice-state-info"><div class="label">State</div><div class="value" id="vsState">Clear narration</div></div>
+                <div class="voice-state-info"><div class="label">Clarity</div><div class="value" id="vsClar">100%</div></div>
+                <div class="voice-state-info"><div class="label">Texture</div><div class="value" id="vsTex">0%</div></div>
+            </div>
+        </div>
+
+        <p><strong>The three transitions:</strong> (1) Narration retreats, music advances (8–16 bars) — voice reverb send increases, low-pass closes, music filter opens. (2) Music retreats, narration advances (16–32 bars) — slower, introduce voice as texture first, gradually clarify. (3) The simultaneous state — voice and music as equal partners, dynamic EQ sidechained to voice creates automatic spectral pocket. <span class="ref-link" onclick="openPanel('h')">→ Appendix H</span></p>
+
+        <h2>8. Mixing for Clarity</h2>
+
+        <p>Cut problems, don't boost solutions. <span class="ref-link" onclick="openPanel('i')">→ Appendix I: Frequency Sweeping</span></p>
+
+        <table>
+            <thead><tr><th>Frequency</th><th>Issue</th><th>Fix</th></tr></thead>
+            <tbody>
+                <tr><td>20–60 Hz</td><td>Sub rumble eating headroom</td><td>High-pass everything except kick and bass</td></tr>
+                <tr><td>100–250 Hz</td><td>Mud, elements blurring</td><td>Cut from elements that don't need this range</td></tr>
+                <tr><td>200–500 Hz</td><td>Boxiness</td><td>Wide Q cuts</td></tr>
+                <tr><td>2–5 kHz</td><td>Harshness, ear fatigue</td><td>Moderate Q cuts, Soothe2</td></tr>
+                <tr><td>6–10 kHz</td><td>Brittle digital sheen</td><td>Gentle shelf cut</td></tr>
+            </tbody>
+        </table>
+
+        <p><strong>Soothe2 strategy:</strong> Apply per bus group. <span class="ref-link" onclick="openPanel('l')">→ Appendix L</span>. <strong>Master chain:</strong> <span class="ref-link" onclick="openPanel('k')">→ Appendix K</span></p>
+
+        <h2>9. MIDI Asset Library</h2>
+
+        <p>All files in D# minor at 120 BPM.</p>
+        <table>
+            <thead><tr><th>File</th><th>Description</th><th>Type</th><th>Role</th></tr></thead>
+            <tbody>
+                <tr><td>acceptance_melody.mid</td><td>16-bar descending melody</td><td><span class="midi-tag oneshot">one-shot</span></td><td>Breakdown</td></tr>
+                <tr><td>contentment_tired_4bar.mid</td><td>Tired acceptance melody</td><td><span class="midi-tag loop">4-bar loop</span></td><td>Main melodic loop</td></tr>
+                <tr><td>bass_minimal_4bar.mid</td><td>D#-D#-D#-F#, one note/bar</td><td><span class="midi-tag loop">4-bar loop</span></td><td>Bass throughout</td></tr>
+                <tr><td>hihat_4bar.mid</td><td>Offbeat 8ths + ghost notes</td><td><span class="midi-tag loop">4-bar loop</span></td><td>Rhythmic texture</td></tr>
+                <tr><td>clap_4bar.mid</td><td>Beats 2 &amp; 4, ghost variations</td><td><span class="midi-tag loop">4-bar loop</span></td><td>Backbeat</td></tr>
+                <tr><td>riff_2bar.mid</td><td>Angular melodic figure</td><td><span class="midi-tag loop">2-bar loop</span></td><td>Peak energy</td></tr>
+                <tr><td>riff_to_drone_16bar.mid</td><td>Riff dissolving to drone</td><td><span class="midi-tag oneshot">one-shot</span></td><td>Peak → decline</td></tr>
+            </tbody>
+        </table>
 
         </div>
 
@@ -198,11 +740,101 @@
         </div>
     </main>
 
+    <!-- APPENDIX PANEL -->
+    <div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+    <aside class="appendix-panel" id="appendixPanel">
+        <div class="panel-header">
+            <div class="panel-title" id="panelTitle"></div>
+            <button class="panel-close" onclick="closePanel()">✕</button>
+        </div>
+        <div class="panel-body" id="panelBody"></div>
+    </aside>
+
     <footer class="site-footer">
         <p>FATA ORGANA is a work of fiction. The transmissions are not real. The Containment Zone does not exist.</p>
         <p class="footer-sub">Created by Wiley Davis</p>
     </footer>
     <script src="/js/spoiler.js"></script>
     <script src="/js/layers.js"></script>
+    <script>
+    // ── APPENDIX DATA ──
+    var appendices = {
+      a: { title: 'Appendix A — Creating Bus Groups', html: '<ol><li>Select the tracks you want to group in Session or Arrangement View (<span class="kbd">Cmd</span>+click to select multiple).</li><li>Press <span class="kbd">Cmd+G</span>. A new Group track appears containing the selected tracks.</li><li>Rename the group by clicking its title bar.</li><li>The group track now has its own volume fader, pan, sends, and device chain. Effects placed on the group process the summed output.</li><li><strong>Nesting:</strong> Select multiple groups and press <span class="kbd">Cmd+G</span> again.</li></ol><div class="warning">Watch gain staging on nested groups. Compressing at sub-group AND parent level means double compression. Start with inner groups, add parent processing only for glue.</div>' },
+      b: { title: 'Appendix B — Return Tracks for Shared Space', html: '<ol><li>In the mixer, go far right. <strong>Create → Insert Return Track</strong> (<span class="kbd">Cmd+Alt+T</span>).</li><li>Rename it (e.g., "Main Reverb," "Dub Delay," "CZ Verb").</li><li>Drop your effect on the return track. Set to <strong>100% wet</strong>.</li><li>On any track or group, turn up the corresponding <strong>Send knob</strong> (A, B, C…).</li><li>Multiple tracks sharing one reverb creates cohesion — they inhabit the same space.</li><li><strong>Automate send levels</strong> in Arrangement View to push elements deeper into effects over time.</li></ol>' },
+      c: { title: 'Appendix C — Parallel Chains Rack', html: '<ol><li>Drop any audio effect onto a track.</li><li>Select the effect and press <span class="kbd">Cmd+G</span> to group into an Audio Effect Rack.</li><li>Click the <strong>Chain</strong> button to reveal the Chain List.</li><li>Right-click in chain list → <strong>"Create Chain"</strong>. Repeat for more.</li><li>Rename each chain by double-clicking.</li><li>Add effects to each chain by selecting it and dropping devices in.</li><li>Each chain has its own <strong>Volume</strong> and <strong>Pan</strong>.</li><li>All chains receive the same input. Outputs are summed.</li></ol><h4>For Parallel Processing</h4><p>Put no effects on Chain 1 (dry passthrough), distortion on Chain 2. Adjust chain volumes to blend.</p>' },
+      d: { title: 'Appendix D — Mapping Macros to Multiple Parameters', html: '<ol><li>In an Audio Effect Rack, the <strong>Macro Controls</strong> panel is at the top. You have 8 knobs.</li><li><strong>Right-click any parameter</strong> in the rack → <strong>"Map to Macro 1"</strong>.</li><li>Repeat for additional parameters. One macro controls as many as you want.</li><li>Click the <strong>"Map" button</strong> on the rack to enter Map Mode. Set <strong>Min</strong> and <strong>Max</strong> for each.</li><li>Example: Macro 1 at 0 = filter at 200 Hz, reverb at -inf. Macro 1 at 127 = filter at 8 kHz, reverb at +6 dB.</li><li><strong>Rename macros</strong> by right-clicking (e.g., "Dissolve," "Space").</li><li><strong>Automate the macro</strong> in Arrangement View. One lane controls every mapped parameter.</li></ol>' },
+      e: { title: 'Appendix E — Chain Selector for Crossfading', html: '<p>The Chain Selector determines which chains are active based on a value (0–127). Overlapping zones create crossfades.</p><ol><li>In your rack, open the <strong>Chain List</strong>.</li><li>Click the <strong>chain selector ruler icon</strong> to reveal the zone editor.</li><li>Narrow zones by dragging <strong>edges</strong> of each zone bar.</li><li>Drag the <strong>small fade handles</strong> at each edge for crossfade regions.</li></ol><h4>Three-Chain Setup</h4><table class="param-table"><tr><td>Chain A (Clarity)</td><td>Zone 0–55, fade-out 40–55</td></tr><tr><td>Chain B (Texture)</td><td>Zone 40–95, fade-in 40–55, fade-out 80–95</td></tr><tr><td>Chain C (Rhythm)</td><td>Zone 80–127, fade-in 80–95</td></tr></table><ol start="5"><li>Overlapping regions are where crossfading happens.</li><li><strong>Map Chain Selector to macro:</strong> Right-click the small orange "Chain" text → "Map to Macro 1."</li><li>Macro 1 now sweeps all three states.</li><li><strong>Automate Macro 1</strong> in Arrangement View.</li></ol>' },
+      f: { title: 'Appendix F — Building the Voice Processing Rack', html: '<h4>Prerequisites</h4><ol><li><strong>EQ Eight:</strong> High-pass at 80 Hz. Gentle cuts at resonant frequencies.</li><li><strong>Compressor:</strong> Ratio 3:1, attack 10–30 ms, auto release.</li></ol><h4>Build the Rack</h4><p>After EQ and Compressor, create an Audio Effect Rack (<span class="cross-ref" onclick="openPanel(\'c\')">Appendix C</span>). Three chains: Clarity, Texture, Rhythm.</p><h4>Chain A — Clarity</h4><table class="param-table"><tr><td>Compressor</td><td>Ratio 2:1, slow attack (30 ms), auto release</td></tr><tr><td>EQ Eight</td><td>High shelf, +2 dB at 8 kHz</td></tr><tr><td>Reverb</td><td>Decay 0.5–1.0s, wet 15–20%</td></tr></table><h4>Chain B — Texture</h4><table class="param-table"><tr><td>Reverb</td><td>Decay 3–5s, wet 70–90%</td></tr><tr><td>Echo</td><td>Sync, 3/16 or 1/4, feedback 40–60%</td></tr><tr><td>EQ Eight</td><td>Low-pass, cutoff starts at 8 kHz (automate down)</td></tr><tr><td>Erosion</td><td>Amount 5–15</td></tr></table><h4>Chain C — Rhythm</h4><table class="param-table"><tr><td>Compressor</td><td>Ratio 8:1+, attack 1–5 ms, release 20–50 ms</td></tr><tr><td>Saturator</td><td>Drive 5–10 dB</td></tr><tr><td>Gate</td><td>Sidechain → Kick track (<span class="cross-ref" onclick="openPanel(\'h\')">Appendix H</span>)</td></tr><tr><td>Simple Delay</td><td>1/16 note, feedback 20–30%, dry/wet 25%</td></tr></table><h4>Chain Selector</h4><p>Follow <span class="cross-ref" onclick="openPanel(\'e\')">Appendix E</span>. Map to Macro 1, rename "Voice State."</p><h4>Usage</h4><table class="param-table"><tr><td>0</td><td>Clear narration</td></tr><tr><td>20–40</td><td>Slightly spacious, beginning to dissolve</td></tr><tr><td>50</td><td>Equal clarity and texture</td></tr><tr><td>70–80</td><td>Mostly texture, words barely intelligible</td></tr><tr><td>90</td><td>Texture/rhythm blend</td></tr><tr><td>127</td><td>Fully rhythmic, locked to kick</td></tr></table>' },
+      g: { title: 'Appendix G — Finding Your Vocal Fundamental', html: '<h4>Method 1: Tuner Plugin</h4><ol><li>Drop Ableton\'s <strong>Tuner</strong> onto your narration track.</li><li>Play back narration or speak in real time.</li><li>Watch where the needle settles most often.</li><li>Note the pitch name and octave (e.g., A2, G#2, D#2).</li></ol><h4>Method 2: Spectrum Analyzer</h4><ol><li>Drop <strong>Spectrum</strong> onto your vocal track.</li><li>Increase the <strong>Avg</strong> parameter.</li><li>The lowest prominent, consistent peak = your fundamental range.</li></ol><h4>Interpreting</h4><p>Most male speaking voices: 85–155 Hz (F2 to D#3). If near D#: D# minor is ideal. Otherwise check if your fundamental is a chord tone (D#, F#, G#, A#, B, C#).</p>' },
+      h: { title: 'Appendix H — Sidechain Compression Setup', html: '<h4>Basic Sidechain (Ambient Texture → Kick)</h4><ol><li>On the <strong>Ambient Texture</strong> group, drop a <strong>Compressor</strong>.</li><li>Click the small <strong>triangle</strong> at top-left to expand sidechain section.</li><li>Toggle <strong>"Sidechain"</strong> on.</li><li><strong>"Audio From"</strong> → select the <strong>Kick</strong> track, <strong>"Post FX"</strong>.</li></ol><table class="param-table"><tr><td>Ratio</td><td>4:1</td></tr><tr><td>Attack</td><td>0.1–1 ms</td></tr><tr><td>Release</td><td>100–200 ms</td></tr><tr><td>Threshold</td><td>2–4 dB reduction on kick hits</td></tr></table><h4>Spectral Sidechain (Music 1–4 kHz → Voice)</h4><ol><li>On music bus, use a dynamic EQ (TDR Nova is free).</li><li>Band at 2.5 kHz, wide Q covering 1–4 kHz.</li><li>Set to compress/duck. Sidechain from Narration track.</li><li>Threshold: 2–3 dB ducking when narrator speaks.</li></ol><div class="warning">Ableton workaround: Compressor on music bus, sidechain from Narration, enable sidechain EQ set to bandpass around 2.5 kHz.</div>' },
+      i: { title: 'Appendix I — Frequency Sweeping with EQ Eight', html: '<ol><li>Drop <strong>EQ Eight</strong> on the track or group.</li><li>Activate one band. Set to <strong>Bell</strong> mode.</li><li>Set <strong>Gain</strong> to +12 to +15 dB. <strong>Q</strong> to 4–8.</li><li>Play the track during a representative section.</li><li>Slowly <strong>drag the frequency</strong> from low to high.</li><li>Frequencies that become unbearable when boosted = your problems.</li><li>Flip to a <strong>cut:</strong> -2 to -6 dB at that frequency.</li><li>Adjust Q: wider for broad issues, narrower for specific resonances.</li><li><strong>A/B test</strong> by toggling EQ on/off.</li></ol>' },
+      j: { title: 'Appendix J — Resampling in Ableton', html: '<ol><li>Create a new <strong>Audio track</strong>.</li><li>Set <strong>"Audio From"</strong> to the source track. Choose <strong>"Post FX"</strong>.</li><li><strong>Arm</strong> the new audio track.</li><li>Press <strong>Record</strong>. Play the source material.</li><li>Stop. You now have audio to manipulate independently.</li><li><strong>Transform:</strong> Apply effects, chop, reverse, timestretch, load into Simpler.</li><li><strong>Resample again.</strong> Each generation compounds processing.</li></ol>' },
+      k: { title: 'Appendix K — The Master Chain', html: '<p>Place in order on the <strong>Master</strong> track:</p><h4>1. EQ Eight (corrective)</h4><table class="param-table"><tr><td>High-pass</td><td>30 Hz, 24 dB/octave</td></tr></table><h4>2. Glue Compressor</h4><table class="param-table"><tr><td>Ratio</td><td>2:1</td></tr><tr><td>Attack</td><td>10–30 ms</td></tr><tr><td>Release</td><td>Auto</td></tr><tr><td>Threshold</td><td>1–3 dB reduction</td></tr></table><h4>3. Saturator (optional)</h4><table class="param-table"><tr><td>Mode</td><td>"Soft Clip"</td></tr><tr><td>Drive</td><td>0–3 dB</td></tr></table><h4>4. Limiter</h4><table class="param-table"><tr><td>Ceiling</td><td>-0.3 dB</td></tr><tr><td>Gain</td><td>2–4 dB reduction on peaks</td></tr></table><div class="warning">If seeing 6+ dB of limiting, back off. The compressor should handle more.</div><h4>5. Loudness Meter</h4><p>Youlean (free) or Ableton\'s built-in. Target: -10 to -8 LUFS.</p>' },
+      l: { title: 'Appendix L — Soothe2 Config per Bus Group', html: '<h4>Where to Apply</h4><table class="param-table"><tr><td>Lead Synths</td><td><strong>Yes</strong> — primary. Focus 1.5–8 kHz</td></tr><tr><td>High Freq Perc</td><td><strong>Yes</strong> — gentle. Focus 3–10 kHz</td></tr><tr><td>Ambient Texture</td><td>Maybe — A/B test. Focus 2–8 kHz</td></tr><tr><td>Narration</td><td>Consider for sibilance. 4–9 kHz</td></tr><tr><td>Bass / Kick / LFE</td><td>No</td></tr></table><h4>Settings</h4><ol><li>Insert Soothe2 on the group bus.</li><li>Roll off processing below 500 Hz.</li><li>Set <strong>Depth</strong> to 0. Play a dense section.</li><li>Raise Depth until harshness tames.</li><li>Check <strong>Delta</strong> — should sound like ringy garbage, not music.</li></ol><table class="param-table"><tr><td>Sharpness</td><td>5–7</td></tr><tr><td>Selectivity</td><td>4–6</td></tr></table><div class="warning">8+ dB of constant reduction = over-processing. Bypass frequently.</div>' },
+      m: { title: 'Appendix M — Automation Workflow', html: '<ol><li>Switch to <strong>Arrangement View</strong> (<span class="kbd">Tab</span>).</li><li>Press <span class="kbd">A</span> to toggle automation view.</li><li>Click the <strong>automation lane chooser</strong> dropdown on any track.</li><li>Navigate: device name → parameter.</li><li><strong>Draw:</strong> Click to create breakpoints. Drag to set values.</li><li><strong>Curves:</strong> Right-click a segment → curve shape. Or <span class="kbd">Alt</span>+drag to bend.</li><li><strong>Long arcs:</strong> Two breakpoints far apart (e.g., bar 33 and bar 64). This is the primary compositional tool.</li><li><strong>Multiple lanes:</strong> Click <strong>+</strong> at bottom of lane to add more.</li><li>Macro automation: listed under rack device as "Macro 1," "Macro 2," etc.</li></ol>' },
+      n: { title: 'Appendix N — Custom Impulse Response', html: '<h4>Recording an IR</h4><ol><li>Find a sharp, loud, broadband sound (balloon pop, clap, snare).</li><li>Place a recorder in the space you want to capture.</li><li>Trigger the sound. Record full decay to silence.</li><li>In Ableton: trim to start at transient, end when tail decays.</li><li>Normalize (right-click → "Normalize").</li></ol><h4>Synthesizing an IR</h4><ol><li>Create a short burst (noise, metallic clang, vocal fricative).</li><li>Process: Corpus, filter, stretch, distort.</li><li>Export as audio.</li></ol><h4>Using the IR</h4><ol><li>Drop <strong>Hybrid Reverb</strong> on a return track.</li><li>In the <strong>Convolution</strong> side, load your IR file.</li><li>Blend knob fully to convolution. Set <strong>100% wet</strong>.</li><li>Send tracks to this return.</li></ol><h4>For the Containment Zone</h4><p>Create an IR that feels otherworldly. Use this return <strong>exclusively</strong> for CZ scenes. Outside world uses a different return. The switch between them is the acoustic threshold.</p>' }
+    };
+
+    function openPanel(id) {
+      var data = appendices[id];
+      if (!data) return;
+      document.getElementById('panelTitle').textContent = data.title;
+      document.getElementById('panelBody').innerHTML = data.html;
+      document.getElementById('appendixPanel').classList.add('open');
+      document.getElementById('panelOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePanel() {
+      document.getElementById('appendixPanel').classList.remove('open');
+      document.getElementById('panelOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closePanel();
+    });
+
+    // ── ENERGY ARC ──
+    var arcData = [
+      {label:'Establish',h:15},{label:'Establish',h:18},{label:'Intro Pulse',h:25},{label:'Intro Pulse',h:30},
+      {label:'Accumulate',h:38},{label:'Accumulate',h:45},{label:'Accumulate',h:52},{label:'Accumulate',h:58},
+      {label:'Plateau',h:62},{label:'Plateau',h:60},{label:'Plateau',h:63},{label:'Plateau',h:61},
+      {label:'Subtract',h:50},{label:'Subtract',h:42},
+      {label:'Accumulate II',h:48},{label:'Accumulate II',h:55},{label:'Accumulate II',h:65},{label:'Accumulate II',h:72},
+      {label:'Peak',h:82},{label:'Peak',h:90},{label:'Peak',h:95},{label:'Peak',h:92},
+      {label:'Decay',h:80},{label:'Decay',h:68},{label:'Decay',h:55},{label:'Decay',h:42},{label:'Decay',h:32},{label:'Decay',h:25},
+      {label:'Return',h:20},{label:'Return',h:16}
+    ];
+    var arcEl = document.getElementById('energyArc');
+    if (arcEl) {
+      for (var i = 0; i < arcData.length; i++) {
+        var bar = document.createElement('div');
+        bar.className = 'energy-bar';
+        bar.style.height = arcData[i].h + '%';
+        bar.innerHTML = '<div class="tip">' + arcData[i].label + '</div>';
+        arcEl.appendChild(bar);
+      }
+    }
+
+    // ── VOICE STATE SLIDER ──
+    var slider = document.getElementById('voiceSlider');
+    if (slider) {
+      slider.addEventListener('input', function() {
+        var v = parseInt(slider.value);
+        document.getElementById('vsValue').textContent = v;
+        var state, clarity, texture;
+        if (v <= 20) { state = 'Clear narration'; clarity = 100; texture = 0; }
+        else if (v <= 40) { state = 'Slightly spacious, dissolving'; clarity = Math.round(100 - ((v-20)/20)*50); texture = Math.round(((v-20)/20)*40); }
+        else if (v <= 55) { state = 'Clarity ↔ Texture crossfade'; clarity = Math.round(60 - ((v-40)/15)*60); texture = Math.round(40 + ((v-40)/15)*40); }
+        else if (v <= 80) { state = 'Mostly texture, words blur'; clarity = 0; texture = Math.round(80 + ((v-55)/25)*20); }
+        else if (v <= 95) { state = 'Texture ↔ Rhythm crossfade'; clarity = 0; texture = Math.round(100 - ((v-80)/15)*60); }
+        else { state = 'Fully rhythmic, locked to kick'; clarity = 0; texture = Math.round(40 - ((v-95)/32)*40); }
+        document.getElementById('vsState').textContent = state;
+        document.getElementById('vsClar').textContent = clarity + '%';
+        document.getElementById('vsTex').textContent = texture + '%';
+      });
+    }
+    </script>
 </body>
 </html>
