@@ -1,0 +1,236 @@
+/* ============================================
+   FATA ORGANA — Layers of Reality
+   ============================================ */
+
+/* --- Control Bar --- */
+.layer-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    margin: 1.5rem 0;
+    border: 1px solid rgba(196, 163, 90, 0.15);
+    background: rgba(196, 163, 90, 0.03);
+    flex-wrap: wrap;
+}
+
+.layer-gauge {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.layer-gauge-label {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(196, 163, 90, 0.5);
+    white-space: nowrap;
+}
+
+.layer-gauge-pips {
+    display: flex;
+    gap: 4px;
+}
+
+.layer-pip {
+    width: 8px;
+    height: 8px;
+    border: 1px solid rgba(196, 163, 90, 0.2);
+    background: transparent;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.layer-pip.active {
+    background: rgba(196, 163, 90, 0.5);
+    border-color: rgba(196, 163, 90, 0.4);
+}
+
+.layer-info {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(230, 225, 215, 0.5);
+    flex: 1;
+    min-width: 100px;
+}
+
+.layer-btn {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid rgba(196, 163, 90, 0.2);
+    background: transparent;
+    color: rgba(196, 163, 90, 0.6);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+
+.layer-btn:hover:not(:disabled) {
+    color: rgba(196, 163, 90, 0.9);
+    border-color: rgba(196, 163, 90, 0.4);
+    background: rgba(196, 163, 90, 0.05);
+}
+
+.layer-btn:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
+.layer-btn-deeper {
+    border-color: rgba(196, 163, 90, 0.3);
+    animation: deeperPulse 3s ease-in-out infinite;
+}
+
+.layer-btn-deeper:disabled {
+    animation: none;
+}
+
+@keyframes deeperPulse {
+    0%, 100% { border-color: rgba(196, 163, 90, 0.2); }
+    50% { border-color: rgba(196, 163, 90, 0.45); }
+}
+
+/* --- Transition Animations --- */
+
+/* Phase 1: Dissolve — text scrambles and breaks apart */
+@keyframes dissolve {
+    0% {
+        opacity: 1;
+        filter: none;
+        transform: none;
+    }
+    20% {
+        opacity: 0.9;
+        filter: blur(0px);
+        transform: translateX(0);
+    }
+    40% {
+        opacity: 0.7;
+        filter: blur(1px);
+        transform: translateX(-2px);
+    }
+    50% {
+        opacity: 0.5;
+        filter: blur(1px) contrast(1.5);
+        transform: translateX(3px) skewX(-0.5deg);
+    }
+    65% {
+        opacity: 0.3;
+        filter: blur(2px) contrast(2);
+        transform: translateX(-4px) skewX(1deg);
+    }
+    80% {
+        opacity: 0.15;
+        filter: blur(3px) contrast(3) saturate(0);
+        transform: translateX(2px) skewX(-0.5deg);
+    }
+    100% {
+        opacity: 0;
+        filter: blur(4px) contrast(4) saturate(0);
+        transform: translateX(0);
+    }
+}
+
+.layer-dissolving {
+    animation: dissolve 0.7s ease-in forwards;
+    pointer-events: none;
+}
+
+/* Horizontal tear lines during dissolve */
+.layer-dissolving::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 3px,
+        rgba(196, 163, 90, 0.04) 3px,
+        rgba(196, 163, 90, 0.04) 4px
+    );
+    animation: tearLines 0.1s steps(2) infinite;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes tearLines {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-1px); }
+    100% { transform: translateY(1px); }
+}
+
+/* Phase 3: Reform — text assembles from noise */
+@keyframes reform {
+    0% {
+        opacity: 0;
+        filter: blur(4px) contrast(3) saturate(0);
+        transform: translateX(0);
+    }
+    15% {
+        opacity: 0.1;
+        filter: blur(3px) contrast(2.5) saturate(0);
+        transform: translateX(3px);
+    }
+    30% {
+        opacity: 0.3;
+        filter: blur(2px) contrast(2);
+        transform: translateX(-2px) skewX(0.5deg);
+    }
+    50% {
+        opacity: 0.5;
+        filter: blur(1px) contrast(1.5);
+        transform: translateX(2px) skewX(-0.3deg);
+    }
+    70% {
+        opacity: 0.7;
+        filter: blur(0.5px) contrast(1.2);
+        transform: translateX(-1px);
+    }
+    85% {
+        opacity: 0.9;
+        filter: blur(0px);
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 1;
+        filter: none;
+        transform: none;
+    }
+}
+
+.layer-forming {
+    animation: reform 0.8s ease-out forwards;
+}
+
+/* Content layers need relative positioning for tear lines */
+[data-layer] {
+    position: relative;
+}
+
+/* --- Responsive --- */
+@media (max-width: 600px) {
+    .layer-control {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .layer-info {
+        order: -1;
+        width: 100%;
+    }
+
+    .layer-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
