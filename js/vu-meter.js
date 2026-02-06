@@ -28,8 +28,8 @@
     // --- Canvas setup ---
     var canvas = document.createElement('canvas');
     var dpr = window.devicePixelRatio || 1;
-    var W = 380;
-    var H = 180;
+    var W = 480;
+    var H = 220;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width = W + 'px';
