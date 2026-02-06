@@ -70,10 +70,51 @@
                 el.classList.add('declassified');
                 el.setAttribute('aria-hidden', 'false');
             } else {
+                // For inline spans, measure text width before redacting
+                if (el.tagName === 'SPAN' && !el.classList.contains('redacted')) {
+                    measureAndStoreWidth(el);
+                }
                 el.classList.add('redacted');
                 el.classList.remove('declassified');
                 el.setAttribute('aria-hidden', 'true');
             }
+        }
+    }
+
+    // Measure the rendered text width of an inline span and store it
+    // so the redaction bar can match proportionally
+    function measureAndStoreWidth(el) {
+        // If already measured, skip
+        if (el.getAttribute('data-redact-width')) return;
+
+        var text = el.textContent || '';
+        if (!text.trim()) return;
+
+        // Create an offscreen measurer with the same font context
+        var measurer = document.createElement('span');
+        measurer.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;pointer-events:none;';
+        // Copy computed font properties
+        var cs = window.getComputedStyle(el);
+        measurer.style.font = cs.font;
+        measurer.style.letterSpacing = cs.letterSpacing;
+        measurer.textContent = text;
+
+        el.parentNode.insertBefore(measurer, el);
+        var w = measurer.getBoundingClientRect().width;
+        el.parentNode.removeChild(measurer);
+
+        // Add slight randomness (±8%) to look like real redaction
+        var jitter = 0.92 + Math.random() * 0.16;
+        var finalW = Math.max(12, Math.round(w * jitter));
+        el.style.setProperty('--redact-w', finalW + 'px');
+        el.setAttribute('data-redact-width', String(finalW));
+    }
+
+    // On first load, pre-measure all inline spans before they get hidden
+    function preMeasureSpans() {
+        var spans = document.querySelectorAll('span[data-spoiler]');
+        for (var i = 0; i < spans.length; i++) {
+            measureAndStoreWidth(spans[i]);
         }
     }
 
@@ -247,6 +288,7 @@
     }
 
     // --- Init ---
+    preMeasureSpans();
     buildToggle();
     applyRedactions(getLevel());
     showOnboarding();
