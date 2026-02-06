@@ -83,6 +83,7 @@ Where the site was built and is maintained. Lives at **fata-organa.pages.dev**, 
 │   ├── sound-manual/       # Sound Manual (2 artifice layers)
 │   ├── terminology/        # Terminology Index (68 entries, spoiler-gated)
 │   ├── writing-process/    # Writing Process methodology
+│   ├── continuity-protocol/ # Project context (2 artifice layers, spoiler-gated)
 │   └── dev-log/            # Full transmission/development log
 ├── about/
 │   └── index.html          # About page with AI transparency
