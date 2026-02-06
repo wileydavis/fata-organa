@@ -95,42 +95,38 @@
         ctx.clearRect(0, 0, W, H);
 
         // Face background
-        var faceGrad = ctx.createRadialGradient(cx - 60, cy - H * 0.6, 10, cx, cy, H * 1.2);
-        faceGrad.addColorStop(0, '#1e1b14');
-        faceGrad.addColorStop(0.5, '#171510');
-        faceGrad.addColorStop(1, '#0f0e0c');
+        var faceGrad = ctx.createRadialGradient(cx, cy - H * 0.3, 10, cx, cy, H * 1.3);
+        faceGrad.addColorStop(0, '#252018');
+        faceGrad.addColorStop(0.5, '#1a1710');
+        faceGrad.addColorStop(1, '#111010');
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Warm backlight — left-biased
-        var blAlpha = 0.10 + glowIntensity * 0.08;
-        var blGrad = ctx.createRadialGradient(cx - 80, H * 0.35, 0, cx - 80, H * 0.35, W * 0.55);
-        blGrad.addColorStop(0, 'rgba(210, 175, 90, ' + blAlpha + ')');
-        blGrad.addColorStop(0.4, 'rgba(196, 163, 90, ' + (blAlpha * 0.45) + ')');
+        // Warm backlight — centered
+        var blAlpha = 0.16 + glowIntensity * 0.12;
+        var blGrad = ctx.createRadialGradient(cx, H * 0.35, 0, cx, H * 0.35, W * 0.55);
+        blGrad.addColorStop(0, 'rgba(215, 180, 95, ' + blAlpha + ')');
+        blGrad.addColorStop(0.35, 'rgba(196, 163, 90, ' + (blAlpha * 0.5) + ')');
         blGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = blGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Left-to-right falloff
+        // Subtle warm wash across face
         var warmLR = ctx.createLinearGradient(0, 0, W, 0);
-        warmLR.addColorStop(0, 'rgba(200, 165, 80, ' + (0.035 + glowIntensity * 0.025) + ')');
-        warmLR.addColorStop(0.6, 'transparent');
+        warmLR.addColorStop(0, 'rgba(200, 165, 80, ' + (0.03 + glowIntensity * 0.02) + ')');
+        warmLR.addColorStop(0.5, 'rgba(200, 165, 80, ' + (0.04 + glowIntensity * 0.03) + ')');
+        warmLR.addColorStop(1, 'rgba(200, 165, 80, ' + (0.02 + glowIntensity * 0.015) + ')');
         ctx.fillStyle = warmLR;
         ctx.fillRect(0, 0, W, H);
 
-        // Bezel
-        ctx.strokeStyle = 'rgba(60, 55, 42, 0.5)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
-
         // VU label
-        ctx.font = '500 10px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(196, 163, 90, 0.2)';
+        ctx.font = '500 11px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(196, 163, 90, 0.3)';
         ctx.textAlign = 'center';
         ctx.fillText('VU', cx, cy - needleLen + 20);
 
         // Scale arc
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.3)';
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.45)';
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.arc(cx, cy, arcRadius, toCanvas(minAngle), toCanvas(maxAngle));
@@ -142,11 +138,11 @@
         ctx.arc(cx, cy, arcRadius + 7, toCanvas(redStart), toCanvas(maxAngle));
         ctx.arc(cx, cy, arcRadius - 3, toCanvas(maxAngle), toCanvas(redStart), true);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(180, 60, 50, 0.2)';
+        ctx.fillStyle = 'rgba(180, 60, 50, 0.3)';
         ctx.fill();
 
         // DB markings
-        ctx.font = '9px "JetBrains Mono", monospace';
+        ctx.font = '10px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         for (var i = 0; i < dbMarks.length; i++) {
             var db = dbMarks[i];
@@ -158,11 +154,11 @@
             ctx.beginPath();
             ctx.moveTo(inner.x, inner.y);
             ctx.lineTo(outer.x, outer.y);
-            ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.4)' : 'rgba(196, 163, 90, 0.3)';
-            ctx.lineWidth = db === 0 || db === -20 ? 1 : 0.5;
+            ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.55)' : 'rgba(196, 163, 90, 0.45)';
+            ctx.lineWidth = db === 0 || db === -20 ? 1.2 : 0.6;
             ctx.stroke();
 
-            ctx.fillStyle = db >= 0 ? 'rgba(180, 60, 50, 0.45)' : 'rgba(196, 163, 90, 0.4)';
+            ctx.fillStyle = db >= 0 ? 'rgba(180, 60, 50, 0.6)' : 'rgba(196, 163, 90, 0.55)';
             var label = db === 0 ? '0' : db > 0 ? '+' + db : String(db);
             ctx.fillText(label, text.x, text.y + 3);
         }
@@ -176,7 +172,7 @@
             ctx.beginPath();
             ctx.moveTo(si.x, si.y);
             ctx.lineTo(so.x, so.y);
-            ctx.strokeStyle = d >= 0 ? 'rgba(180, 60, 50, 0.15)' : 'rgba(196, 163, 90, 0.12)';
+            ctx.strokeStyle = d >= 0 ? 'rgba(180, 60, 50, 0.22)' : 'rgba(196, 163, 90, 0.18)';
             ctx.lineWidth = 0.5;
             ctx.stroke();
         }
@@ -188,7 +184,7 @@
         ctx.beginPath();
         ctx.moveTo(cx + 2, cy + 1);
         ctx.lineTo(nt.x + 2, nt.y + 1);
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.12)';
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.15)';
         ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
         ctx.stroke();
@@ -197,19 +193,19 @@
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(nt.x, nt.y);
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.9)';
+        ctx.strokeStyle = 'rgba(210, 178, 100, 0.95)';
         ctx.lineWidth = 1.5;
         ctx.lineCap = 'round';
         ctx.stroke();
 
         // Tip glow
         if (glowIntensity > 0.1) {
-            var tipGrad = ctx.createRadialGradient(nt.x, nt.y, 0, nt.x, nt.y, 8);
-            tipGrad.addColorStop(0, 'rgba(196, 163, 90, ' + (glowIntensity * 0.25) + ')');
+            var tipGrad = ctx.createRadialGradient(nt.x, nt.y, 0, nt.x, nt.y, 10);
+            tipGrad.addColorStop(0, 'rgba(210, 178, 100, ' + (glowIntensity * 0.3) + ')');
             tipGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = tipGrad;
             ctx.beginPath();
-            ctx.arc(nt.x, nt.y, 8, 0, Math.PI * 2);
+            ctx.arc(nt.x, nt.y, 10, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -220,7 +216,7 @@
             ctx.beginPath();
             ctx.moveTo(pkBase.x, pkBase.y);
             ctx.lineTo(pkTip.x, pkTip.y);
-            ctx.strokeStyle = 'rgba(196, 163, 90, 0.12)';
+            ctx.strokeStyle = 'rgba(196, 163, 90, 0.18)';
             ctx.lineWidth = 1;
             ctx.stroke();
         }
@@ -230,54 +226,48 @@
         ctx.arc(cx, cy, 5, 0, Math.PI * 2);
         ctx.fillStyle = '#2a2520';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.12)';
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.18)';
         ctx.lineWidth = 0.5;
         ctx.stroke();
 
         // --- RECEIVE indicator ---
         if (!hasStarted) {
             var flash = Math.sin(time * 0.08) * 0.5 + 0.5;
-            var recAlpha = 0.3 + flash * 0.45;
+            var recAlpha = 0.35 + flash * 0.5;
 
-            ctx.fillStyle = 'rgba(50, 140, 60, ' + (recAlpha * 0.3) + ')';
+            ctx.fillStyle = 'rgba(50, 140, 60, ' + (recAlpha * 0.35) + ')';
             ctx.fillRect(recX, recY, recW, recH);
-            ctx.strokeStyle = 'rgba(60, 160, 70, ' + (recAlpha * 0.55) + ')';
+            ctx.strokeStyle = 'rgba(60, 160, 70, ' + (recAlpha * 0.6) + ')';
             ctx.lineWidth = 0.5;
             ctx.strokeRect(recX, recY, recW, recH);
 
             ctx.beginPath();
             ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(70, 180, 80, ' + recAlpha + ')';
+            ctx.fillStyle = 'rgba(70, 190, 80, ' + recAlpha + ')';
             ctx.fill();
 
-            ctx.font = '500 6px "JetBrains Mono", monospace';
+            ctx.font = '500 7px "JetBrains Mono", monospace';
             ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(70, 175, 80, ' + (recAlpha * 0.9) + ')';
-            ctx.fillText('RECEIVE TRANSMISSION', recX + 16, recY + recH / 2 + 2);
+            ctx.fillStyle = 'rgba(70, 185, 80, ' + (recAlpha * 0.95) + ')';
+            ctx.fillText('RECEIVE TRANSMISSION', recX + 16, recY + recH / 2 + 2.5);
         } else if (isPlaying) {
-            ctx.fillStyle = 'rgba(50, 140, 60, 0.15)';
+            ctx.fillStyle = 'rgba(50, 140, 60, 0.2)';
             ctx.fillRect(recX, recY, recW, recH);
-            ctx.strokeStyle = 'rgba(60, 160, 70, 0.25)';
+            ctx.strokeStyle = 'rgba(60, 160, 70, 0.35)';
             ctx.lineWidth = 0.5;
             ctx.strokeRect(recX, recY, recW, recH);
 
             ctx.beginPath();
             ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(70, 180, 80, 0.55)';
+            ctx.fillStyle = 'rgba(70, 190, 80, 0.65)';
             ctx.fill();
 
-            ctx.font = '500 6px "JetBrains Mono", monospace';
+            ctx.font = '500 7px "JetBrains Mono", monospace';
             ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(70, 175, 80, 0.45)';
-            ctx.fillText('RECEIVING', recX + 16, recY + recH / 2 + 2);
+            ctx.fillStyle = 'rgba(70, 185, 80, 0.55)';
+            ctx.fillText('RECEIVING', recX + 16, recY + recH / 2 + 2.5);
         }
 
-        // Inner bezel shadow
-        var ibGrad = ctx.createLinearGradient(0, 0, 0, 6);
-        ibGrad.addColorStop(0, 'rgba(0, 0, 0, 0.15)');
-        ibGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = ibGrad;
-        ctx.fillRect(1, 1, W - 2, 6);
     }
 
     // --- Audio ---
