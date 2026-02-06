@@ -88,7 +88,8 @@ Where the site was built and is maintained. Lives at **fata-organa.pages.dev**, 
 ├── about/
 │   └── index.html          # About page with AI transparency
 └── _project/
-    └── CONTEXT.md          # This file
+    ├── CONTEXT.md          # This file
+    └── docs/               # All working documents (bible, beat map, etc.)
 ```
 
 ### Design Principles
@@ -161,20 +162,22 @@ The 12 episodes are Marcus performing his past confusion to bring both Isla and 
 
 ---
 
-## Key Documents to Request from User
+## Key Documents
 
-If starting fresh, ask the user if they have local copies of:
-- `fata_organa_bible.md`
-- `fata_organa_beat_map.md`
-- `fata_organa_terminology.md`
-- `story_threads_overview.md`
-- `isla_and_leo_backstory.md`
-- `fata_organa_transmission_grid.md`
-- `writing_process_meta.md`
-- `fata_organa_sound_notebook.md`
-- `fata_organa_sound_manual.html` (the standalone version with its own sidebar/layout)
+All working documents are version-controlled in `_project/docs/` in the repo:
 
-These were all output as downloadable files from previous chats. The website itself contains most of this content in HTML form, but the markdown originals are more useful as working references.
+- `fata_organa_bible.md` — complete world mechanics, characters, locations
+- `fata_organa_beat_map.md` — episode-by-episode breakdown, 12 episodes
+- `fata_organa_terminology.md` — 68 entries, 11 categories
+- `story_threads_overview.md` — 4 primary threads, 9 subplots
+- `isla_and_leo_backstory.md` — Isla, Leo, child mind mechanics
+- `fata_organa_transmission_grid.md` — hidden loop structure
+- `fata_organa_episode_1_guide.md` — Episode 1 scene-by-scene map
+- `writing_process_meta.md` — human/AI collaboration methodology
+- `writing_process_starter_prompt.md` — prompt for initiating writing sessions
+- `writing_process_slides.md` — 3-minute presentation on the process
+
+When documents are updated in any workstream chat, they should be pushed to `_project/docs/` using `gh_push.py` to keep the repo as single source of truth.
 
 ---
 
