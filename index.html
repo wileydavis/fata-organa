@@ -8,6 +8,539 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/spoiler.css">
     <link rel="alternate" type="application/rss+xml" title="Fata Organa" href="/feed.xml">
+    <style>
+    /* === TRANSMITTER INTERFACE === */
+
+    /* Lock viewport — no scroll */
+    html.transmitter-page,
+    html.transmitter-page body {
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .transmitter-page .site-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 200;
+    }
+
+    /* Full-viewport layout */
+    .transmitter {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        padding: 60px var(--gutter) 0;
+    }
+
+    /* === HEADER === */
+    .tx-header {
+        text-align: center;
+        flex-shrink: 0;
+        margin-bottom: clamp(0.5rem, 2vh, 1.5rem);
+    }
+
+    .tx-signal {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--signal-green);
+        margin-bottom: 0.75rem;
+    }
+
+    .tx-signal .signal-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--signal-green);
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .tx-title {
+        font-family: var(--mono);
+        font-size: clamp(1.8rem, 5vw, 3.2rem);
+        font-weight: 300;
+        letter-spacing: 0.3em;
+        color: var(--text-bright);
+        margin-bottom: 0.4rem;
+    }
+
+    .tx-title:hover {
+        animation: glitch 0.3s ease-in-out;
+    }
+
+    .tx-subtitle {
+        font-family: var(--serif);
+        font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+        font-style: italic;
+        color: var(--accent-dim);
+    }
+
+    /* === TRANSMITTER PANEL === */
+    .tx-panel {
+        width: 100%;
+        max-width: 580px;
+        flex-shrink: 0;
+    }
+
+    /* Frequency / episode selector bar */
+    .tx-frequency-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(196, 163, 90, 0.12);
+        border-bottom: none;
+        background: rgba(196, 163, 90, 0.02);
+    }
+
+    .tx-freq-label {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: rgba(196, 163, 90, 0.35);
+    }
+
+    .tx-episode-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tx-ep-btn {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        background: none;
+        border: 1px solid rgba(196, 163, 90, 0.15);
+        color: rgba(196, 163, 90, 0.4);
+        padding: 0.2rem 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .tx-ep-btn:hover:not(:disabled) {
+        color: rgba(196, 163, 90, 0.8);
+        border-color: rgba(196, 163, 90, 0.4);
+    }
+
+    .tx-ep-btn:disabled {
+        opacity: 0.2;
+        cursor: default;
+    }
+
+    .tx-ep-current {
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        color: rgba(196, 163, 90, 0.6);
+        min-width: 3rem;
+        text-align: center;
+    }
+
+    /* VU meter container */
+    .tx-meter {
+        text-align: center;
+        border: 1px solid rgba(196, 163, 90, 0.12);
+        background: rgba(10, 10, 12, 0.6);
+        padding: clamp(0.75rem, 2vh, 1.5rem) clamp(0.75rem, 2vw, 1.5rem);
+    }
+
+    .tx-meter #vu-player {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .tx-meter #vu-player canvas {
+        border: none;
+        display: block;
+        width: min(480px, 100%) !important;
+        height: auto !important;
+    }
+
+    .tx-meter .vu-progress-wrap {
+        width: min(480px, 100%);
+        height: 3px;
+        background: rgba(42, 42, 47, 0.8);
+        cursor: pointer;
+    }
+
+    .tx-meter .vu-progress-bar {
+        height: 100%;
+        width: 0%;
+        background: rgba(196, 163, 90, 0.4);
+        transition: width 0.1s linear;
+    }
+
+    .tx-meter .vu-status {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: rgba(196, 163, 90, 0.35);
+        margin-top: 0.6rem;
+        min-height: 1.2em;
+    }
+
+    /* Status strip below meter */
+    .tx-status-strip {
+        display: flex;
+        border: 1px solid rgba(196, 163, 90, 0.12);
+        border-top: none;
+        background: rgba(196, 163, 90, 0.02);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+    }
+
+    .tx-status-cell {
+        flex: 1;
+        padding: 0.55rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border-right: 1px solid rgba(196, 163, 90, 0.08);
+    }
+
+    .tx-status-cell:last-child {
+        border-right: none;
+    }
+
+    .tx-status-key {
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        font-size: 0.6rem;
+        white-space: nowrap;
+    }
+
+    .tx-status-val {
+        color: var(--text-primary);
+        font-size: 0.7rem;
+        text-align: right;
+    }
+
+    .tx-status-val.blink {
+        animation: blink 3s ease-in-out infinite;
+    }
+
+    /* === PANEL BUTTONS === */
+    .tx-panel-buttons {
+        display: flex;
+        gap: 1px;
+        margin-top: clamp(0.75rem, 1.5vh, 1.25rem);
+        max-width: 580px;
+        width: 100%;
+    }
+
+    .tx-drawer-btn {
+        flex: 1;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        padding: 0.6rem 1rem;
+        border: 1px solid rgba(196, 163, 90, 0.12);
+        background: rgba(196, 163, 90, 0.02);
+        color: rgba(196, 163, 90, 0.45);
+        cursor: pointer;
+        transition: all 0.25s;
+        text-align: center;
+    }
+
+    .tx-drawer-btn:hover {
+        color: rgba(196, 163, 90, 0.8);
+        border-color: rgba(196, 163, 90, 0.3);
+        background: rgba(196, 163, 90, 0.05);
+    }
+
+    .tx-drawer-btn.active {
+        color: rgba(196, 163, 90, 0.9);
+        border-color: rgba(196, 163, 90, 0.35);
+        background: rgba(196, 163, 90, 0.06);
+    }
+
+    /* === TAGLINE === */
+    .tx-tagline {
+        font-family: var(--serif);
+        font-size: clamp(0.85rem, 1.2vw, 1rem);
+        font-style: italic;
+        color: rgba(138, 115, 64, 0.5);
+        text-align: center;
+        margin-top: clamp(0.75rem, 1.5vh, 1.25rem);
+    }
+
+    /* === FOOTER (minimal, inline) === */
+    .tx-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        padding: 0.6rem var(--gutter);
+        opacity: 0.4;
+        z-index: 2;
+    }
+
+    /* === SLIDE-OUT DRAWERS === */
+    .tx-drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(10, 10, 12, 0.7);
+        z-index: 300;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .tx-drawer-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .tx-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        width: min(420px, 85vw);
+        background: var(--bg-surface);
+        border-left: 1px solid rgba(196, 163, 90, 0.15);
+        z-index: 301;
+        transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .tx-drawer.open {
+        transform: translateX(0);
+    }
+
+    .tx-drawer-left {
+        left: 0;
+        right: auto;
+        border-left: none;
+        border-right: 1px solid rgba(196, 163, 90, 0.15);
+        transform: translateX(-100%);
+    }
+
+    .tx-drawer-left.open {
+        transform: translateX(0);
+    }
+
+    .tx-drawer-right {
+        right: 0;
+    }
+
+    /* Drawer content */
+    .tx-drawer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        background: var(--bg-surface);
+        z-index: 10;
+    }
+
+    .tx-drawer-title {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent);
+    }
+
+    .tx-drawer-close {
+        font-family: var(--mono);
+        font-size: 1rem;
+        background: none;
+        border: none;
+        color: var(--text-dim);
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: color 0.2s;
+    }
+
+    .tx-drawer-close:hover {
+        color: var(--text-bright);
+    }
+
+    .tx-drawer-body {
+        padding: 1.5rem;
+    }
+
+    /* Drawer: Transmissions list */
+    .tx-list-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.5);
+        font-family: var(--mono);
+        cursor: default;
+    }
+
+    .tx-list-item.available {
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .tx-list-item.available:hover {
+        color: var(--text-bright);
+    }
+
+    .tx-list-item.active {
+        color: var(--accent);
+    }
+
+    .tx-list-num {
+        font-size: 0.7rem;
+        color: var(--text-dim);
+        min-width: 2rem;
+    }
+
+    .tx-list-title {
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .tx-list-status {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+    }
+
+    .tx-list-item.available .tx-list-status {
+        color: var(--signal-green);
+    }
+
+    /* Drawer: Archive list */
+    .tx-archive-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .tx-archive-section-title {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-dim);
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0.5rem;
+    }
+
+    .tx-archive-link {
+        display: block;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.3);
+        text-decoration: none;
+        color: var(--text-primary);
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        transition: color 0.2s;
+    }
+
+    .tx-archive-link:hover {
+        color: var(--text-bright);
+    }
+
+    .tx-archive-meta {
+        display: block;
+        font-size: 0.6rem;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 0.2rem;
+    }
+
+    /* Drawer: Log entries */
+    .tx-log-entry {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.3);
+        font-family: var(--mono);
+        font-size: 0.75rem;
+    }
+
+    .tx-log-date {
+        font-size: 0.6rem;
+        color: var(--text-dim);
+        margin-bottom: 0.15rem;
+    }
+
+    .tx-log-msg {
+        color: var(--text-primary);
+        line-height: 1.5;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 600px) {
+        .tx-status-strip {
+            flex-direction: column;
+        }
+
+        .tx-status-cell {
+            border-right: none;
+            border-bottom: 1px solid rgba(196, 163, 90, 0.08);
+            padding: 0.4rem 1rem;
+        }
+
+        .tx-status-cell:last-child {
+            border-bottom: none;
+        }
+
+        .tx-panel-buttons {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-height: 680px) {
+        .tx-header {
+            margin-bottom: 0.25rem;
+        }
+
+        .tx-signal {
+            margin-bottom: 0.25rem;
+        }
+
+        .tx-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .tx-subtitle {
+            font-size: 0.85rem;
+        }
+    }
+    </style>
 </head>
 <body>
     <div class="scanline-overlay"></div>
@@ -22,125 +555,300 @@
         </div>
     </nav>
 
-    <main class="landing">
-        <header class="hero">
-            <div class="signal-indicator">
-                <span class="signal-dot"></span>
-                <span class="signal-label">SIGNAL ACTIVE</span>
-            </div>
-            <h1 class="title glitch" data-text="FATA ORGANA">FATA ORGANA</h1>
-            <p class="subtitle">An audio drama in twelve transmissions</p>
-            <p class="tagline">They thought it was a weapon. But it's a gift.</p>
-        </header>
+    <div class="transmitter">
 
-        <section class="hook">
-            <div class="vu-player-wrapper">
-                <span class="fragment-label">INTERCEPTED — EMERGENCY FREQUENCY 7.83 MHz</span>
+        <div class="tx-header">
+            <div class="tx-signal">
+                <span class="signal-dot"></span>
+                <span>SIGNAL ACTIVE</span>
+            </div>
+            <h1 class="tx-title" data-text="FATA ORGANA">FATA ORGANA</h1>
+            <p class="tx-subtitle">An audio drama in twelve transmissions</p>
+        </div>
+
+        <div class="tx-panel">
+            <!-- Frequency bar / episode selector -->
+            <div class="tx-frequency-bar">
+                <span class="tx-freq-label">FREQUENCY 7.83 MHz</span>
+                <div class="tx-episode-nav">
+                    <button class="tx-ep-btn" id="ep-prev" disabled>&#9666;</button>
+                    <span class="tx-ep-current" id="ep-display">TEASER</span>
+                    <button class="tx-ep-btn" id="ep-next" disabled>&#9656;</button>
+                </div>
+            </div>
+
+            <!-- VU Meter -->
+            <div class="tx-meter">
                 <div id="vu-player" data-src="/audio/teaser.mp3"></div>
             </div>
-        </section>
 
-        <section class="status-block">
-            <div class="status-row">
-                <span class="status-key">STATUS</span>
-                <span class="status-value blink">IN DEVELOPMENT</span>
-            </div>
-            <div class="status-row">
-                <span class="status-key">TRANSMISSIONS RECOVERED</span>
-                <span class="status-value">0 / 12</span>
-            </div>
-            <div class="status-row">
-                <span class="status-key">LAST SIGNAL</span>
-                <span class="status-value" id="last-signal">—</span>
-            </div>
-        </section>
-
-        <section class="entry-points">
-            <a href="/transmissions/" class="entry-card">
-                <h2>Transmissions</h2>
-                <p>Recovered audio from within the zone. Updated as new signals are decoded.</p>
-                <span class="entry-status">AWAITING FIRST SIGNAL</span>
-            </a>
-            <a href="/archive/" class="entry-card">
-                <h2>Archive</h2>
-                <p>Field manuals, recovered documents, and decoded materials. A living record of an ongoing investigation.</p>
-                <span class="entry-status">DOCUMENTS AVAILABLE</span>
-            </a>
-            <a href="/about/" class="entry-card">
-                <h2>About This Project</h2>
-                <p>What is Fata Organa. How it is being made. What it means.</p>
-                <span class="entry-status">READ MORE</span>
-            </a>
-        </section>
-
-        <section class="dev-log">
-            <h2>Transmission Log</h2>
-            <p class="dev-log-note">This site is a living document. It updates as the project develops — documenting the creation of Fata Organa in real time. <a href="/archive/dev-log/" class="log-link">Full log →</a></p>
-            <div class="log-entries">
-                <div class="log-entry">
-                    <span class="log-date">2026.02.06</span>
-                    <span class="log-message">Recovered document: Continuity Protocol — <span data-spoiler="2">a specification for maintaining causal coherence across discontinuity events. Or: how to keep a project alive when memory resets.</span></span>
+            <!-- Status strip -->
+            <div class="tx-status-strip">
+                <div class="tx-status-cell">
+                    <span class="tx-status-key">Status</span>
+                    <span class="tx-status-val blink">In Development</span>
                 </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.06</span>
-                    <span class="log-message">Artifice system online. Archive documents now have layers — strip the fiction away, find the production reality underneath.</span>
+                <div class="tx-status-cell">
+                    <span class="tx-status-key">Recovered</span>
+                    <span class="tx-status-val">0 / 12</span>
                 </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.06</span>
-                    <span class="log-message">Sound Manual expanded: Artifice 0 layer added. Full Ableton workflow, <span data-spoiler="0">linked appendix with 14 step-by-step procedures, interactive voice state controls.</span></span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.05</span>
-                    <span class="log-message">Process document archived: <span data-spoiler="0">the methodology — how human and AI write a story together without the AI writing the story.</span></span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.05</span>
-                    <span class="log-message">Audio teaser recovered. Signal meter calibrated. VU display online.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.05</span>
-                    <span class="log-message">Spoiler clearance system operational. Archive documents redacted by episode. Interstitial checkpoint deployed.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.05</span>
-                    <span class="log-message">Recovered document: Terminology Index — 68 entries across 11 categories. Cross-references intact.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.05</span>
-                    <span class="log-message">Recovered document: Sound Manual — Signal Processing &amp; Acoustic Phenomena Within the Containment Zone.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.02.05</span>
-                    <span class="log-message">Site initialized. Signal monitoring begins. Atmospheric interference detected.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.01.23</span>
-                    <span class="log-message">World bible compiled. 12-episode beat map complete. Terminology dictionary finalized. Story threads mapped.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.01.15</span>
-                    <span class="log-message">Episode 1 script drafted. <span data-spoiler="1">Marcus Reed's first transmission taking shape.</span> Opening monologue recorded as test.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2026.01.04</span>
-                    <span class="log-message">Scoring methodology established. Rhythmic entrainment framework. Ambient-techno production techniques catalogued.</span>
-                </div>
-                <div class="log-entry">
-                    <span class="log-date">2025.12.31</span>
-                    <span class="log-message">Core premise locked. <span data-spoiler="2">Automations.</span> <span data-spoiler="3">The weapon. The gift.</span> <span data-spoiler="2">Consciousness as medium.</span> First signal received.</span>
+                <div class="tx-status-cell">
+                    <span class="tx-status-key">Last Signal</span>
+                    <span class="tx-status-val" id="last-signal">&mdash;</span>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
 
-    <footer class="site-footer">
-        <p>FATA ORGANA is a work of fiction. The transmissions are not real. The Containment Zone does not exist.</p>
-        <p class="footer-sub">Created by Wiley Davis</p>
-    </footer>
+        <!-- Panel buttons -->
+        <div class="tx-panel-buttons">
+            <button class="tx-drawer-btn" id="btn-transmissions">Transmissions</button>
+            <button class="tx-drawer-btn" id="btn-archive">Archive</button>
+            <button class="tx-drawer-btn" id="btn-log">Transmission Log</button>
+        </div>
+
+        <p class="tx-tagline">They thought it was a weapon. But it's a gift.</p>
+    </div>
+
+    <!-- Overlay -->
+    <div class="tx-drawer-overlay" id="drawer-overlay"></div>
+
+    <!-- Drawer: Transmissions (slides from left) -->
+    <div class="tx-drawer tx-drawer-left" id="drawer-transmissions">
+        <div class="tx-drawer-header">
+            <span class="tx-drawer-title">Transmissions</span>
+            <button class="tx-drawer-close" data-close>&#10005;</button>
+        </div>
+        <div class="tx-drawer-body">
+            <div class="tx-list-item available active">
+                <span class="tx-list-num">&mdash;</span>
+                <span class="tx-list-title">Audio Teaser</span>
+                <span class="tx-list-status">&#9679; Available</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">01</span>
+                <span class="tx-list-title">First Transmission</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">02</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">03</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">04</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">05</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">06</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">07</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Flagged</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">08</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Flagged</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">09</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Classified</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">10</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Classified</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">11</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Classified</span>
+            </div>
+            <div class="tx-list-item">
+                <span class="tx-list-num">12</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">&mdash;</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer: Archive (slides from right) -->
+    <div class="tx-drawer tx-drawer-right" id="drawer-archive">
+        <div class="tx-drawer-header">
+            <span class="tx-drawer-title">Archive</span>
+            <button class="tx-drawer-close" data-close>&#10005;</button>
+        </div>
+        <div class="tx-drawer-body">
+            <div class="tx-archive-section">
+                <div class="tx-archive-section-title">Field Manuals</div>
+                <a href="/archive/sound-manual/" class="tx-archive-link">
+                    Sound Manual &mdash; Signal Processing &amp; Acoustic Phenomena
+                    <span class="tx-archive-meta">Draft &mdash; In Progress</span>
+                </a>
+                <a href="/archive/continuity-protocol/" class="tx-archive-link">
+                    Continuity Protocol &mdash; Automation Maintenance
+                    <span class="tx-archive-meta">Active</span>
+                </a>
+            </div>
+            <div class="tx-archive-section">
+                <div class="tx-archive-section-title">Reference Documents</div>
+                <a href="/archive/terminology/" class="tx-archive-link">
+                    Terminology Index &mdash; Containment Zone Lexicon
+                    <span class="tx-archive-meta">68 Entries</span>
+                </a>
+            </div>
+            <div class="tx-archive-section">
+                <div class="tx-archive-section-title">Process Documents</div>
+                <a href="/archive/writing-process/" class="tx-archive-link">
+                    The Writing Process &mdash; Human/AI Collaborative Construction
+                    <span class="tx-archive-meta">Living Document</span>
+                </a>
+            </div>
+            <div class="tx-archive-section">
+                <div class="tx-archive-section-title">Development Notes</div>
+                <a href="/archive/dev-log/" class="tx-archive-link">
+                    Transmission Log &mdash; Full Project Record
+                    <span class="tx-archive-meta">Ongoing</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer: Transmission Log (slides from right) -->
+    <div class="tx-drawer tx-drawer-right" id="drawer-log">
+        <div class="tx-drawer-header">
+            <span class="tx-drawer-title">Transmission Log</span>
+            <button class="tx-drawer-close" data-close>&#10005;</button>
+        </div>
+        <div class="tx-drawer-body">
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.06</div>
+                <div class="tx-log-msg">Recovered document: Continuity Protocol &mdash; <span data-spoiler="2">a specification for maintaining causal coherence across discontinuity events.</span></div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.06</div>
+                <div class="tx-log-msg">Artifice system online. Archive documents now have layers &mdash; strip the fiction away, find the production reality underneath.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.06</div>
+                <div class="tx-log-msg">Sound Manual expanded: Artifice 0 layer added. Full Ableton workflow, <span data-spoiler="0">linked appendix with 14 step-by-step procedures, interactive voice state controls.</span></div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.05</div>
+                <div class="tx-log-msg">Process document archived: <span data-spoiler="0">the methodology &mdash; how human and AI write a story together without the AI writing the story.</span></div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.05</div>
+                <div class="tx-log-msg">Audio teaser recovered. Signal meter calibrated. VU display online.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.05</div>
+                <div class="tx-log-msg">Spoiler clearance system operational. Archive documents redacted by episode.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.05</div>
+                <div class="tx-log-msg">Recovered document: Terminology Index &mdash; 68 entries across 11 categories.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.05</div>
+                <div class="tx-log-msg">Recovered document: Sound Manual &mdash; Signal Processing &amp; Acoustic Phenomena Within the Containment Zone.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.02.05</div>
+                <div class="tx-log-msg">Site initialized. Signal monitoring begins. Atmospheric interference detected.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.01.23</div>
+                <div class="tx-log-msg">World bible compiled. 12-episode beat map complete. Terminology dictionary finalized.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.01.15</div>
+                <div class="tx-log-msg">Episode 1 script drafted. <span data-spoiler="1">Marcus Reed's first transmission taking shape.</span></div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2026.01.04</div>
+                <div class="tx-log-msg">Scoring methodology established. Rhythmic entrainment framework.</div>
+            </div>
+            <div class="tx-log-entry">
+                <div class="tx-log-date">2025.12.31</div>
+                <div class="tx-log-msg">Core premise locked. <span data-spoiler="2">Automations.</span> <span data-spoiler="3">The weapon. The gift.</span> First signal received.</div>
+            </div>
+            <p style="margin-top: 1.5rem;"><a href="/archive/dev-log/" class="tx-archive-link" style="color: var(--accent-dim); font-size: 0.75rem;">Full log &#8594;</a></p>
+        </div>
+    </div>
+
+    <div class="tx-footer">
+        FATA ORGANA is a work of fiction &middot; Created by Wiley Davis
+    </div>
 
     <script src="/js/atmosphere.js"></script>
     <script src="/js/vu-meter.js"></script>
-    <script src="/js/main.js"></script>
     <script src="/js/spoiler.js"></script>
+    <script>
+    // Lock viewport
+    document.documentElement.classList.add('transmitter-page');
+
+    // Drawer logic
+    (function() {
+        var overlay = document.getElementById('drawer-overlay');
+        var drawers = {
+            transmissions: document.getElementById('drawer-transmissions'),
+            archive: document.getElementById('drawer-archive'),
+            log: document.getElementById('drawer-log')
+        };
+        var buttons = {
+            transmissions: document.getElementById('btn-transmissions'),
+            archive: document.getElementById('btn-archive'),
+            log: document.getElementById('btn-log')
+        };
+        var currentOpen = null;
+
+        function openDrawer(name) {
+            if (currentOpen === name) { closeAll(); return; }
+            closeAll();
+            drawers[name].classList.add('open');
+            buttons[name].classList.add('active');
+            overlay.classList.add('visible');
+            currentOpen = name;
+        }
+
+        function closeAll() {
+            Object.keys(drawers).forEach(function(k) {
+                drawers[k].classList.remove('open');
+                buttons[k].classList.remove('active');
+            });
+            overlay.classList.remove('visible');
+            currentOpen = null;
+        }
+
+        buttons.transmissions.addEventListener('click', function() { openDrawer('transmissions'); });
+        buttons.archive.addEventListener('click', function() { openDrawer('archive'); });
+        buttons.log.addEventListener('click', function() { openDrawer('log'); });
+        overlay.addEventListener('click', closeAll);
+
+        document.querySelectorAll('[data-close]').forEach(function(btn) {
+            btn.addEventListener('click', closeAll);
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAll();
+        });
+    })();
+    </script>
 </body>
 </html>
