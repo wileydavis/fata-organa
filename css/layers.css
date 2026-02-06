@@ -91,6 +91,10 @@
     animation: none;
 }
 
+.layer-btn-surface:not(:disabled) {
+    border-color: rgba(196, 163, 90, 0.25);
+}
+
 @keyframes deeperPulse {
     0%, 100% { border-color: rgba(196, 163, 90, 0.2); }
     50% { border-color: rgba(196, 163, 90, 0.45); }
