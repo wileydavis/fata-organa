@@ -1,13 +1,12 @@
 /* ============================================
-   FATA ORGANA — Layers of Reality
+   FATA ORGANA — Layers of Artifice
    
-   Documents can have multiple layers.
-   Layer 1: In-world (field manual, recovered doc)
-   Layer 2: Production notes (real techniques)
-   Layer 3+: Raw notes, scratchpad
+   Documents present the most constructed version
+   first (highest artifice) and can be peeled back
+   toward raw production materials (artifice zero).
    
-   Transition: text dissolves into signal noise,
-   then reforms as the deeper layer.
+   Highest number = most artifice (in-world, fictional)
+   Zero = no artifice (raw notes, scratchpad)
    ============================================ */
 
 (function() {
@@ -17,8 +16,9 @@
     if (!container) return;
 
     var layers = {};
-    var currentLayer = 1;
-    var totalLayers = 0;
+    var maxLayer = -1;
+    var minLayer = Infinity;
+    var currentLayer = -1;
     var isTransitioning = false;
 
     // Collect layer content
@@ -27,17 +27,26 @@
         var el = layerEls[i];
         var num = parseInt(el.getAttribute('data-layer'), 10);
         layers[num] = el;
-        totalLayers = Math.max(totalLayers, num);
-        if (num !== 1) el.style.display = 'none';
+        if (num > maxLayer) maxLayer = num;
+        if (num < minLayer) minLayer = num;
     }
 
-    if (totalLayers < 2) return;
+    // Start at highest artifice
+    currentLayer = maxLayer;
 
-    // --- Build layer controls ---
+    // Hide all but the starting layer
+    for (var key in layers) {
+        var k = parseInt(key, 10);
+        if (k !== currentLayer) layers[k].style.display = 'none';
+    }
+
+    var layerCount = maxLayer - minLayer + 1;
+    if (layerCount < 2) return;
+
+    // --- Build controls ---
     var controlBar = document.createElement('div');
     controlBar.className = 'layer-control';
 
-    // Depth gauge
     var gauge = document.createElement('div');
     gauge.className = 'layer-gauge';
 
@@ -46,9 +55,9 @@
 
     var gaugePips = document.createElement('div');
     gaugePips.className = 'layer-gauge-pips';
-    for (var p = 1; p <= totalLayers; p++) {
+    for (var p = maxLayer; p >= minLayer; p--) {
         var pip = document.createElement('span');
-        pip.className = 'layer-pip' + (p === 1 ? ' active' : '');
+        pip.className = 'layer-pip' + (p === currentLayer ? ' active' : '');
         pip.setAttribute('data-pip', p);
         gaugePips.appendChild(pip);
     }
@@ -56,26 +65,23 @@
     gauge.appendChild(gaugeLabel);
     gauge.appendChild(gaugePips);
 
-    // Layer info
     var layerInfo = document.createElement('div');
     layerInfo.className = 'layer-info';
 
-    // Buttons
-    var btnUp = document.createElement('button');
-    btnUp.className = 'layer-btn layer-btn-surface';
-    btnUp.textContent = '↑ SURFACE';
-    btnUp.disabled = true;
+    var btnAdd = document.createElement('button');
+    btnAdd.className = 'layer-btn layer-btn-surface';
+    btnAdd.textContent = '\u2191 MORE ARTIFICE';
+    btnAdd.disabled = true;
 
-    var btnDown = document.createElement('button');
-    btnDown.className = 'layer-btn layer-btn-deeper';
-    btnDown.innerHTML = '↓ GO DEEPER';
+    var btnRemove = document.createElement('button');
+    btnRemove.className = 'layer-btn layer-btn-deeper';
+    btnRemove.innerHTML = '\u2193 LESS ARTIFICE';
 
     controlBar.appendChild(gauge);
     controlBar.appendChild(layerInfo);
-    controlBar.appendChild(btnUp);
-    controlBar.appendChild(btnDown);
+    controlBar.appendChild(btnAdd);
+    controlBar.appendChild(btnRemove);
 
-    // Insert control bar after document header
     var header = container.querySelector('.document-header');
     if (header && header.nextSibling) {
         header.parentNode.insertBefore(controlBar, header.nextSibling);
@@ -85,22 +91,18 @@
 
     updateDisplay();
 
-    // --- Transition animation ---
     function transition(fromLayer, toLayer) {
         if (isTransitioning) return;
+        if (!layers[fromLayer] || !layers[toLayer]) return;
         isTransitioning = true;
 
         var fromEl = layers[fromLayer];
         var toEl = layers[toLayer];
-        if (!fromEl || !toEl) { isTransitioning = false; return; }
-
         var scrollTarget = controlBar.getBoundingClientRect().top + window.scrollY - 80;
 
-        // Phase 1: Dissolve current content
         fromEl.classList.add('layer-dissolving');
 
         setTimeout(function() {
-            // Phase 2: Swap
             fromEl.style.display = 'none';
             fromEl.classList.remove('layer-dissolving');
 
@@ -112,7 +114,6 @@
 
             window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
 
-            // Phase 3: Reform
             setTimeout(function() {
                 toEl.classList.remove('layer-forming');
                 isTransitioning = false;
@@ -121,28 +122,25 @@
     }
 
     function updateDisplay() {
-        // Layer names from the layer elements
         var activeEl = layers[currentLayer];
-        var layerName = activeEl ? (activeEl.getAttribute('data-layer-name') || 'Layer ' + currentLayer) : '';
+        var layerName = activeEl ? (activeEl.getAttribute('data-layer-name') || '') : '';
 
-        gaugeLabel.textContent = 'DEPTH: ' + currentLayer + ' / ' + totalLayers;
+        gaugeLabel.textContent = 'ARTIFICE: ' + currentLayer;
         layerInfo.textContent = layerName;
 
-        btnUp.disabled = currentLayer <= 1;
-        btnDown.disabled = currentLayer >= totalLayers;
+        btnAdd.disabled = currentLayer >= maxLayer;
+        btnRemove.disabled = currentLayer <= minLayer;
 
-        // Update pips
         var pips = gaugePips.querySelectorAll('.layer-pip');
         for (var i = 0; i < pips.length; i++) {
             var pipNum = parseInt(pips[i].getAttribute('data-pip'), 10);
-            if (pipNum <= currentLayer) {
+            if (pipNum >= currentLayer) {
                 pips[i].classList.add('active');
             } else {
                 pips[i].classList.remove('active');
             }
         }
 
-        // Update classification header
         var classEl = container.querySelector('.document-classification');
         if (classEl && activeEl) {
             var classText = activeEl.getAttribute('data-layer-classification');
@@ -150,15 +148,15 @@
         }
     }
 
-    btnDown.addEventListener('click', function() {
-        if (currentLayer < totalLayers && !isTransitioning) {
-            transition(currentLayer, currentLayer + 1);
+    btnRemove.addEventListener('click', function() {
+        if (currentLayer > minLayer && !isTransitioning) {
+            transition(currentLayer, currentLayer - 1);
         }
     });
 
-    btnUp.addEventListener('click', function() {
-        if (currentLayer > 1 && !isTransitioning) {
-            transition(currentLayer, currentLayer - 1);
+    btnAdd.addEventListener('click', function() {
+        if (currentLayer < maxLayer && !isTransitioning) {
+            transition(currentLayer, currentLayer + 1);
         }
     });
 
