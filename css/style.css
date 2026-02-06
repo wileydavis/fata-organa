@@ -494,12 +494,20 @@ body {
 }
 
 .page-content p {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     color: var(--text-primary);
 }
 
 .page-content p + p {
     text-indent: 1.5rem;
+}
+
+.page-content h2, .page-content h3 {
+    margin-top: 2rem;
+}
+
+.page-content p + h2, .page-content p + h3 {
+    margin-top: 2rem;
 }
 
 /* --- Archive / Document List --- */
