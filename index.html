@@ -7,6 +7,8 @@
     <meta name="description" content="An audio drama in twelve transmissions.">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/spoiler.css">
+    <link rel="stylesheet" href="/css/document.css">
+    <link rel="stylesheet" href="/css/layers.css">
     <link rel="alternate" type="application/rss+xml" title="Fata Organa" href="/feed.xml">
     <style>
     /* === TRANSMITTER INTERFACE === */
@@ -23,7 +25,7 @@
         top: 0;
         left: 0;
         right: 0;
-        z-index: 200;
+        z-index: 600;
     }
 
     /* Full-viewport layout */
@@ -544,6 +546,207 @@
             font-size: 0.85rem;
         }
     }
+
+    /* === DOCUMENT VIEWER OVERLAY === */
+
+    /* When viewer is active, keep body locked */
+    html.doc-viewer-active,
+    html.doc-viewer-active body {
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .doc-viewer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 500;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .doc-viewer-overlay.open {
+        pointer-events: auto;
+        opacity: 1;
+    }
+
+    .doc-viewer-overlay.closing {
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    /* Dark backdrop — transmitter dimly visible behind */
+    .doc-viewer-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(8, 8, 10, 0.88);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Warm glow emanating from center (transmitter projection) */
+    .doc-viewer-glow {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            ellipse 60% 40% at 50% 35%,
+            rgba(196, 163, 90, 0.06) 0%,
+            rgba(196, 163, 90, 0.02) 40%,
+            transparent 70%
+        );
+        pointer-events: none;
+    }
+
+    /* The document panel */
+    .doc-viewer-panel {
+        position: absolute;
+        top: 48px;
+        bottom: 3vh;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px) scale(0.98);
+        width: min(820px, 92vw);
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(196, 163, 90, 0.12);
+        background: rgba(14, 14, 17, 0.97);
+        box-shadow:
+            0 0 60px rgba(196, 163, 90, 0.04),
+            0 0 120px rgba(196, 163, 90, 0.02),
+            inset 0 1px 0 rgba(196, 163, 90, 0.06);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.4s ease;
+        opacity: 0;
+    }
+
+    .doc-viewer-overlay.open .doc-viewer-panel {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .doc-viewer-overlay.closing .doc-viewer-panel {
+        transform: translateX(-50%) translateY(20px) scale(0.98);
+        opacity: 0;
+    }
+
+    /* Top chrome bar */
+    .doc-viewer-chrome {
+        flex-shrink: 0;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid rgba(196, 163, 90, 0.08);
+        background: rgba(196, 163, 90, 0.02);
+    }
+
+    .doc-viewer-close {
+        font-family: var(--mono);
+        font-size: 1.2rem;
+        background: none;
+        border: none;
+        color: rgba(196, 163, 90, 0.4);
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        transition: color 0.2s;
+        line-height: 1;
+    }
+
+    .doc-viewer-close:hover {
+        color: rgba(196, 163, 90, 0.9);
+    }
+
+    /* Scrollable content area */
+    .doc-viewer-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        /* Subtle scanline overlay via gradient */
+        background:
+            repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+    }
+
+    /* Custom scrollbar */
+    .doc-viewer-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .doc-viewer-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .doc-viewer-scroll::-webkit-scrollbar-thumb {
+        background: rgba(196, 163, 90, 0.15);
+        border-radius: 2px;
+    }
+
+    .doc-viewer-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(196, 163, 90, 0.3);
+    }
+
+    /* Content container — inherits document.css styles */
+    .doc-viewer-content {
+        padding: 2rem clamp(1.5rem, 5vw, 3rem) 4rem;
+        min-height: 100%;
+    }
+
+    /* Loading state */
+    .doc-viewer-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40vh;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: rgba(196, 163, 90, 0.4);
+        animation: loadPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes loadPulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.8; }
+    }
+
+    /* Error state */
+    .doc-viewer-error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 40vh;
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: rgba(196, 163, 90, 0.5);
+    }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+        .doc-viewer-panel {
+            top: 0;
+            bottom: 0;
+            width: 100vw;
+            border: none;
+        }
+    }
     </style>
 </head>
 <body>
@@ -848,6 +1051,9 @@
             currentOpen = null;
         }
 
+        // Expose globally so doc-viewer can close drawers
+        window.closeAllDrawers = closeAll;
+
         buttons.transmissions.addEventListener('click', function() { openDrawer('transmissions'); });
         buttons.archive.addEventListener('click', function() { openDrawer('archive'); });
         buttons.log.addEventListener('click', function() { openDrawer('log'); });
@@ -858,9 +1064,13 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeAll();
+            if (e.key === 'Escape') {
+                if (window.docViewer && window.docViewer.isOpen()) return; // doc-viewer handles its own escape
+                closeAll();
+            }
         });
     })();
     </script>
+    <script src="/js/doc-viewer.js"></script>
 </body>
 </html>
