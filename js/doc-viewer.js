@@ -94,8 +94,20 @@
         var needsLayers = !!doc.querySelector('link[href*="layers.css"]');
         var needsDocument = !!doc.querySelector('link[href*="document.css"]');
 
-        // Inject the content
-        content.innerHTML = main.innerHTML;
+        // Inject the content — preserve data-layers attribute if present
+        var hasLayers = main.hasAttribute('data-layers');
+        if (hasLayers) {
+            // Wrap in a div that carries the data-layers attr
+            var wrapper = document.createElement('div');
+            wrapper.setAttribute('data-layers', '');
+            // Copy class from main (e.g., 'page-content document')
+            wrapper.className = main.className || '';
+            wrapper.innerHTML = main.innerHTML;
+            content.innerHTML = '';
+            content.appendChild(wrapper);
+        } else {
+            content.innerHTML = main.innerHTML;
+        }
 
         // Ensure required CSS is loaded
         ensureCSS('/css/document.css');
