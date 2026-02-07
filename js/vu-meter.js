@@ -94,28 +94,66 @@
         time++;
         ctx.clearRect(0, 0, W, H);
 
-        // Face background
+        // Read signal data for backlight
+        var sig = window.vuSignal || {};
+        var energy = sig.smoothRms || 0;
+        var lowE = sig.smoothLow || 0;
+        var playing = sig.isPlaying && sig.hasStarted;
+
+        // Breathing modulation (slow sine, matches ambient-light.js)
+        var breath = Math.sin(time * 0.006 / (60/1000) + 0) * 0.5 + 0.5;
+        // Simpler: use frame count
+        var breathSlow = Math.sin(time * 0.01) * 0.5 + 0.5;
+        var breathMod = 0.85 + breathSlow * 0.15;
+
+        // Color temperature from energy (matches ambient-light.js palette)
+        var cTemp = Math.min(1, energy * 2);
+        var cr, cg, cb;
+        if (cTemp < 0.5) {
+            var t = cTemp * 2;
+            cr = 196 + t * (220 - 196);
+            cg = 163 + t * (190 - 163);
+            cb = 90  + t * (110 - 90);
+        } else {
+            var t2 = (cTemp - 0.5) * 2;
+            cr = 220 + t2 * (240 - 220);
+            cg = 190 + t2 * (220 - 190);
+            cb = 110 + t2 * (170 - 110);
+        }
+
+        // Backlight intensity: base level + audio-driven boost
+        var blBase = playing ? (0.14 + energy * 0.35) : 0.16;
+        var blIntensity = blBase * breathMod;
+
+        // Face background — darken when playing for more contrast
+        var faceBright = playing ? Math.max(0.4, 1 - energy * 0.8) : 1;
         var faceGrad = ctx.createRadialGradient(cx, cy - H * 0.3, 10, cx, cy, H * 1.3);
-        faceGrad.addColorStop(0, '#252018');
-        faceGrad.addColorStop(0.5, '#1a1710');
-        faceGrad.addColorStop(1, '#111010');
+        var fr = Math.round(37 * faceBright);
+        var fg = Math.round(32 * faceBright);
+        var fb = Math.round(24 * faceBright);
+        faceGrad.addColorStop(0, 'rgb(' + fr + ',' + fg + ',' + fb + ')');
+        fr = Math.round(26 * faceBright);
+        fg = Math.round(23 * faceBright);
+        fb = Math.round(16 * faceBright);
+        faceGrad.addColorStop(0.5, 'rgb(' + fr + ',' + fg + ',' + fb + ')');
+        faceGrad.addColorStop(1, 'rgb(' + Math.round(17 * faceBright) + ',' + Math.round(16 * faceBright) + ',' + Math.round(16 * faceBright) + ')');
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Warm backlight — centered
-        var blAlpha = 0.16 + glowIntensity * 0.12;
-        var blGrad = ctx.createRadialGradient(cx, H * 0.35, 0, cx, H * 0.35, W * 0.55);
-        blGrad.addColorStop(0, 'rgba(215, 180, 95, ' + blAlpha + ')');
-        blGrad.addColorStop(0.35, 'rgba(196, 163, 90, ' + (blAlpha * 0.5) + ')');
+        // Warm backlight — signal-driven color and intensity
+        var blGrad = ctx.createRadialGradient(cx, H * 0.35, 0, cx, H * 0.35, W * (0.5 + energy * 0.15));
+        blGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + blIntensity + ')');
+        blGrad.addColorStop(0.35, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.45) + ')');
         blGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = blGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Subtle warm wash across face
+        // Subtle warm wash — also signal-driven
+        var washAlpha = playing ? (0.02 + energy * 0.05) * breathMod : 0.03;
         var warmLR = ctx.createLinearGradient(0, 0, W, 0);
-        warmLR.addColorStop(0, 'rgba(200, 165, 80, ' + (0.03 + glowIntensity * 0.02) + ')');
-        warmLR.addColorStop(0.5, 'rgba(200, 165, 80, ' + (0.04 + glowIntensity * 0.03) + ')');
-        warmLR.addColorStop(1, 'rgba(200, 165, 80, ' + (0.02 + glowIntensity * 0.015) + ')');
+        warmLR.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.8) + ')');
+        warmLR.addColorStop(0.5, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washAlpha + ')');
+        warmLR.addColorStop(1, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.6) + ')');
         ctx.fillStyle = warmLR;
         ctx.fillRect(0, 0, W, H);
 
@@ -199,9 +237,10 @@
         ctx.stroke();
 
         // Tip glow
-        if (glowIntensity > 0.1) {
+        var tipGlowAlpha = playing ? Math.min(0.4, energy * 0.5) : 0;
+        if (tipGlowAlpha > 0.02) {
             var tipGrad = ctx.createRadialGradient(nt.x, nt.y, 0, nt.x, nt.y, 10);
-            tipGrad.addColorStop(0, 'rgba(210, 178, 100, ' + (glowIntensity * 0.3) + ')');
+            tipGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + tipGlowAlpha + ')');
             tipGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = tipGrad;
             ctx.beginPath();
