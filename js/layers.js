@@ -82,6 +82,12 @@
     controlBar.appendChild(btnAdd);
     controlBar.appendChild(btnRemove);
 
+    // Tooltip
+    var tooltip = document.createElement('div');
+    tooltip.className = 'layer-tooltip';
+    tooltip.textContent = 'Archive documents have layers of artifice. The highest layer is in-world fiction. Strip it away to find the real production materials underneath.';
+    controlBar.appendChild(tooltip);
+
     var header = container.querySelector('.document-header');
     if (header && header.nextSibling) {
         header.parentNode.insertBefore(controlBar, header.nextSibling);
