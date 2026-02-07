@@ -138,6 +138,11 @@
         // Re-init spoiler system on injected content
         reinitSpoilers();
 
+        // Notify spoiler system a document was opened (builds toggle, triggers onboarding)
+        if (window.spoilerSystem && window.spoilerSystem.onDocumentOpen) {
+            window.spoilerSystem.onDocumentOpen();
+        }
+
         // Re-init layers system if the document has layers
         if (content.querySelector('[data-layers]')) {
             reinitLayers();
