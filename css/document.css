@@ -143,6 +143,19 @@
     border-top: 1px solid var(--border);
 }
 
+/* --- Content Links --- */
+.page-content a:not(.nav-logo):not(.nav-links a) {
+    color: var(--accent-dim);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(138, 115, 64, 0.25);
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.page-content a:not(.nav-logo):not(.nav-links a):hover {
+    color: var(--accent);
+    border-bottom-color: rgba(196, 163, 90, 0.5);
+}
+
 .document-footer a {
     font-family: var(--mono);
     font-size: 0.75rem;
