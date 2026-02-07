@@ -132,19 +132,22 @@
         // --- Apply ambient glow ---
         if (darkness > 0.01) {
             var glowAlpha = glowEnergy * breathMod * darkness;
-            var innerAlpha = Math.min(0.18, glowAlpha * 0.2);
-            var outerAlpha = Math.min(0.06, glowAlpha * 0.07);
+            var coreAlpha = Math.min(0.22, glowAlpha * 0.25);
+            var cs = c.r + ',' + c.g + ',' + c.b;
 
-            // Radial glow centered on transmitter area
+            // Circle glow with gradual falloff — many stops for smooth fade
+            var radius = 35 + glowEnergy * 25; // % of viewport
             ambientGlow.style.opacity = 1;
             ambientGlow.style.background = ''
                 + 'radial-gradient('
-                + 'ellipse ' + (45 + glowEnergy * 20) + '% ' + (35 + glowEnergy * 15) + '% '
-                + 'at 50% 45%, '
-                + 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + innerAlpha + ') 0%, '
-                + 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + (innerAlpha * 0.4) + ') 40%, '
-                + 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + outerAlpha + ') 70%, '
-                + 'transparent 100%)';
+                + 'circle at 50% 45%, '
+                + 'rgba(' + cs + ',' + coreAlpha + ') 0%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.75) + ') ' + (radius * 0.2) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.5) + ') ' + (radius * 0.4) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.3) + ') ' + (radius * 0.6) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.15) + ') ' + (radius * 0.8) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.05) + ') ' + radius + '%, '
+                + 'transparent ' + (radius * 1.3) + '%)';
         } else {
             ambientGlow.style.opacity = 0;
         }
