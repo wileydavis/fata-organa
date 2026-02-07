@@ -741,11 +741,18 @@
 
     /* Mobile */
     @media (max-width: 600px) {
+        .doc-viewer-overlay {
+            z-index: 700;
+        }
         .doc-viewer-panel {
             top: 0;
             bottom: 0;
             width: 100vw;
             border: none;
+        }
+        .doc-viewer-chrome {
+            padding: 0.6rem 1rem;
+            padding-top: max(0.6rem, env(safe-area-inset-top));
         }
     }
     </style>
