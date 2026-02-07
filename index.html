@@ -920,89 +920,6 @@
         </div>
     </div>
 
-    <!-- Drawer: Project Log (slides from right) -->
-    <div class="tx-drawer tx-drawer-right" id="drawer-log">
-        <div class="tx-drawer-header">
-            <span class="tx-drawer-title">Project Log</span>
-            <button class="tx-drawer-close" data-close>&#10005;</button>
-        </div>
-        <div class="tx-drawer-body">
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.07</div>
-                <div class="tx-log-msg">Document viewer online. Field manuals now project from the transmitter &mdash; no page navigation. Everything returns to the signal.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.07</div>
-                <div class="tx-log-msg">Ambient light system activated. Transmitter reacts to audio signal &mdash; page goes dark during playback, meter becomes the only light source. Color temperature drifts with energy.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.07</div>
-                <div class="tx-log-msg">Spoiler redaction rebuilt at word level. Proportional inline bars. Intelligence-document aesthetic.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.06</div>
-                <div class="tx-log-msg">Homepage rebuilt as transmitter interface. VU meter centerpiece. Slide-out drawers for transmissions, field manuals, and project log. No scrolling. The site is a receiver.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.06</div>
-                <div class="tx-log-msg">Artifice system online. Field manuals now have layers &mdash; strip the fiction away, find the production reality underneath.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.06</div>
-                <div class="tx-log-msg">FM-001 expanded: Artifice 0 layer added. Full <span data-spoiler="0">Ableton workflow</span>, linked appendix with <span data-spoiler="0">14 step-by-step procedures</span>, interactive <span data-spoiler="0">voice state controls</span>.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.06</div>
-                <div class="tx-log-msg">Field manual recovered: FM-002 Continuity Protocol &mdash; <span data-spoiler="2">causal coherence</span> across <span data-spoiler="2">discontinuity events</span>.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.06</div>
-                <div class="tx-log-msg">Project documents committed to repository. Bible, beat map, terminology, backstory, episode guide &mdash; all version-controlled.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.05</div>
-                <div class="tx-log-msg">Field manual catalogued: FM-004 The Writing Process &mdash; how <span data-spoiler="0">human and AI</span> write a story together without the <span data-spoiler="0">AI writing the story</span>.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.05</div>
-                <div class="tx-log-msg">Spoiler clearance system operational. Field manuals redacted by episode.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.05</div>
-                <div class="tx-log-msg">Field manual recovered: FM-003 Terminology Index &mdash; 68 entries across 11 categories.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.05</div>
-                <div class="tx-log-msg">Field manual recovered: FM-001 Sound Manual &mdash; Signal Processing &amp; Acoustic Phenomena.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.05</div>
-                <div class="tx-log-msg">Audio teaser recovered. Signal meter calibrated. VU display online.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.02.05</div>
-                <div class="tx-log-msg">Site initialized. Signal monitoring begins.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.01.23</div>
-                <div class="tx-log-msg">World bible compiled. 12-episode beat map complete. Terminology dictionary finalized.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.01.15</div>
-                <div class="tx-log-msg">Episode 1 script drafted. <span data-spoiler="1">Marcus Reed's</span> first transmission taking shape.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2026.01.04</div>
-                <div class="tx-log-msg">Scoring methodology established. Rhythmic entrainment framework.</div>
-            </div>
-            <div class="tx-log-entry">
-                <div class="tx-log-date">2025.12.31</div>
-                <div class="tx-log-msg">Core premise locked. <span data-spoiler="2">Automations</span>. <span data-spoiler="3">The weapon</span>. <span data-spoiler="9">The gift</span>. <span data-spoiler="2">Consciousness as medium</span>. First signal received.</div>
-            </div>
-            <p style="margin-top: 1.5rem;"><a href="/archive/dev-log/" class="tx-archive-link" style="color: var(--accent-dim); font-size: 0.75rem;">Full log &#8594;</a></p>
-        </div>
-    </div>
-
     <div class="tx-footer">
         FATA ORGANA is a work of fiction &middot; Created by Wiley Davis
     </div>
@@ -1020,13 +937,11 @@
         var overlay = document.getElementById('drawer-overlay');
         var drawers = {
             transmissions: document.getElementById('drawer-transmissions'),
-            archive: document.getElementById('drawer-archive'),
-            log: document.getElementById('drawer-log')
+            archive: document.getElementById('drawer-archive')
         };
         var buttons = {
             transmissions: document.getElementById('btn-transmissions'),
-            archive: document.getElementById('btn-archive'),
-            log: document.getElementById('btn-log')
+            archive: document.getElementById('btn-archive')
         };
         var currentOpen = null;
 
@@ -1053,7 +968,9 @@
 
         buttons.transmissions.addEventListener('click', function() { openDrawer('transmissions'); });
         buttons.archive.addEventListener('click', function() { openDrawer('archive'); });
-        buttons.log.addEventListener('click', function() { openDrawer('log'); });
+        buttons.log.addEventListener('click', function() {
+            if (window.docViewer) window.docViewer.open('/archive/dev-log/');
+        });
         overlay.addEventListener('click', closeAll);
 
         document.querySelectorAll('[data-close]').forEach(function(btn) {
