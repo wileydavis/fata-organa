@@ -50,7 +50,7 @@
     ambientGlow.className = 'ambient-glow';
     ambientGlow.style.cssText = ''
         + 'position:fixed;top:0;left:0;right:0;bottom:0;'
-        + 'pointer-events:none;z-index:1;'
+        + 'pointer-events:none;z-index:2;'
         + 'opacity:0;transition:none;';
     document.body.appendChild(ambientGlow);
 
@@ -59,7 +59,7 @@
     darknessOverlay.className = 'ambient-darkness';
     darknessOverlay.style.cssText = ''
         + 'position:fixed;top:0;left:0;right:0;bottom:0;'
-        + 'pointer-events:none;z-index:0;'
+        + 'pointer-events:none;z-index:1;'
         + 'background:black;opacity:0;';
     document.body.appendChild(darknessOverlay);
 
