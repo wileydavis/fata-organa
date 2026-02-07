@@ -349,23 +349,64 @@
         audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
     });
 
+    // --- Expose signal data for ambient light system ---
+    window.vuSignal = {
+        rms: 0,           // overall level 0-1
+        low: 0,           // low frequency energy 0-1 (kick/drone)
+        high: 0,          // high frequency energy 0-1 (hiss/texture)
+        peak: 0,          // recent peak 0-1
+        isPlaying: false,
+        hasStarted: false,
+        smoothRms: 0,     // heavily smoothed for slow breathing
+        smoothLow: 0      // heavily smoothed low end
+    };
+
     // --- Animate ---
     function animate() {
         if (isPlaying && analyser) {
             var dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(dataArray);
             var sum = 0;
+            var lowSum = 0;
+            var highSum = 0;
             var count = Math.min(dataArray.length, 64);
+            var lowBins = Math.floor(count * 0.2);   // bottom 20% = sub/bass
+            var highStart = Math.floor(count * 0.6);  // top 40% = brightness
             for (var i = 0; i < count; i++) {
-                sum += dataArray[i] * (1 - (i / count) * 0.5);
+                var weighted = dataArray[i] * (1 - (i / count) * 0.5);
+                sum += weighted;
+                if (i < lowBins) lowSum += dataArray[i];
+                if (i >= highStart) highSum += dataArray[i];
             }
             var avg = sum / count / 255;
+            var lowAvg = lowSum / lowBins / 255;
+            var highAvg = highSum / (count - highStart) / 255;
+
             targetAngle = dbToAngle(-20 + avg * 26);
             glowIntensity += (1 - glowIntensity) * 0.05;
+
+            // Update exposed signal data
+            window.vuSignal.rms = avg;
+            window.vuSignal.low = lowAvg;
+            window.vuSignal.high = highAvg;
+            window.vuSignal.peak = Math.max(avg, window.vuSignal.peak * 0.98);
+            window.vuSignal.isPlaying = true;
+            // Slow smoothing for ambient effects (tau ~500ms at 60fps)
+            window.vuSignal.smoothRms += (avg - window.vuSignal.smoothRms) * 0.03;
+            window.vuSignal.smoothLow += (lowAvg - window.vuSignal.smoothLow) * 0.02;
         } else {
             targetAngle = minAngle;
             glowIntensity *= 0.95;
+            window.vuSignal.rms *= 0.95;
+            window.vuSignal.low *= 0.95;
+            window.vuSignal.high *= 0.95;
+            window.vuSignal.peak *= 0.97;
+            window.vuSignal.smoothRms *= 0.98;
+            window.vuSignal.smoothLow *= 0.98;
+            window.vuSignal.isPlaying = false;
         }
+
+        window.vuSignal.hasStarted = hasStarted;
 
         needleAngle += (targetAngle - needleAngle) * 0.15;
 
