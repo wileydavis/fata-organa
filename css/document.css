@@ -156,6 +156,11 @@
     border-bottom-color: rgba(196, 163, 90, 0.5);
 }
 
+.page-content a:not(.nav-logo):not(.nav-links a):visited {
+    color: var(--text-dim);
+    border-bottom-color: rgba(107, 104, 96, 0.2);
+}
+
 .document-footer a {
     font-family: var(--mono);
     font-size: 0.75rem;
