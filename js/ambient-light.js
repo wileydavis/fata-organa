@@ -13,7 +13,7 @@
     'use strict';
 
     // --- Configuration ---
-    var FADE_IN_SPEED  = 0.008;  // how fast darkness comes (per frame)
+    var FADE_IN_SPEED  = 0.0033; // ~5 seconds to full dark at 60fps
     var FADE_OUT_SPEED = 0.012;  // how fast light returns
     var DARKNESS_MAX   = 0.97;   // max darkness of surrounding page
 
@@ -32,6 +32,7 @@
 
     // --- DOM elements to dim ---
     var dimTargets = [
+        '.site-nav',
         '.tx-header',
         '.tx-frequency-bar',
         '.tx-status-strip',
