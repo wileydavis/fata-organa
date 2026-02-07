@@ -130,9 +130,9 @@ span[data-spoiler].redacted::before {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-left: 1.5rem;
-    padding-left: 1.5rem;
-    border-left: 1px solid var(--border);
+    margin-right: auto;
+    padding-right: 1rem;
+    border-right: 1px solid rgba(196, 163, 90, 0.08);
 }
 
 .clearance-label {
@@ -185,7 +185,7 @@ span[data-spoiler].redacted::before {
     display: none;
     position: absolute;
     top: 100%;
-    right: 0;
+    left: 0;
     margin-top: 0.5rem;
     padding: 0.6rem 0.8rem;
     background: var(--bg-elevated);
@@ -195,7 +195,7 @@ span[data-spoiler].redacted::before {
     color: var(--text-dim);
     line-height: 1.5;
     max-width: 220px;
-    z-index: 200;
+    z-index: 600;
     white-space: normal;
 }
 
@@ -205,17 +205,11 @@ span[data-spoiler].redacted::before {
 
 /* --- Responsive --- */
 @media (max-width: 600px) {
-    .clearance-toggle {
-        margin-left: 0.75rem;
-        padding-left: 0.75rem;
-    }
-
     .clearance-label {
         display: none;
     }
 
     .clearance-tooltip {
-        right: -1rem;
         max-width: 180px;
     }
 }
@@ -225,14 +219,14 @@ span[data-spoiler].redacted::before {
    ============================================ */
 
 .clearance-modal-overlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(5, 5, 7, 0.85);
+    background: rgba(5, 5, 7, 0.92);
     backdrop-filter: blur(4px);
-    z-index: 10000;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
