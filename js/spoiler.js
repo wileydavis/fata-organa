@@ -9,6 +9,11 @@
      1  = Episode 1 released (reveals ep1-related lore)
      ...
      12 = All episodes released (fully declassified)
+
+   Clearance controls live inside the document
+   viewer chrome bar. Onboarding modal appears
+   once per session when a document with spoilers
+   is first opened.
    ============================================ */
 
 (function() {
@@ -51,12 +56,6 @@
         } catch(e) {}
     }
 
-    function shouldShowOnboarding() {
-        if (hasBeenOnboarded()) return false;
-        var path = window.location.pathname.replace(/\/+$/, '') || '/';
-        return (path === '' || path === '/' || path === '/archive' || path.indexOf('/archive') === 0);
-    }
-
     // --- Apply redactions ---
     function applyRedactions(level) {
         var elements = document.querySelectorAll('[data-spoiler]');
@@ -70,7 +69,6 @@
                 el.classList.add('declassified');
                 el.setAttribute('aria-hidden', 'false');
             } else {
-                // For inline spans, measure text width before redacting
                 if (el.tagName === 'SPAN' && !el.classList.contains('redacted')) {
                     measureAndStoreWidth(el);
                 }
@@ -81,36 +79,25 @@
         }
     }
 
-    // Measure the rendered text width of an inline span and store it
-    // so the redaction bar can match proportionally
     function measureAndStoreWidth(el) {
-        // If already measured, skip
         if (el.getAttribute('data-redact-width')) return;
-
         var text = el.textContent || '';
         if (!text.trim()) return;
-
-        // Create an offscreen measurer with the same font context
         var measurer = document.createElement('span');
         measurer.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;pointer-events:none;';
-        // Copy computed font properties
         var cs = window.getComputedStyle(el);
         measurer.style.font = cs.font;
         measurer.style.letterSpacing = cs.letterSpacing;
         measurer.textContent = text;
-
         el.parentNode.insertBefore(measurer, el);
         var w = measurer.getBoundingClientRect().width;
         el.parentNode.removeChild(measurer);
-
-        // Add slight randomness (±8%) to look like real redaction
         var jitter = 0.92 + Math.random() * 0.16;
         var finalW = Math.max(12, Math.round(w * jitter));
         el.style.setProperty('--redact-w', finalW + 'px');
         el.setAttribute('data-redact-width', String(finalW));
     }
 
-    // On first load, pre-measure all inline spans before they get hidden
     function preMeasureSpans() {
         var spans = document.querySelectorAll('span[data-spoiler]');
         for (var i = 0; i < spans.length; i++) {
@@ -118,9 +105,85 @@
         }
     }
 
-    // --- First-visit interstitial ---
+    // --- Clearance control in doc-viewer chrome ---
+    var toggleBuilt = false;
+
+    function buildViewerToggle() {
+        if (toggleBuilt) return;
+        var chrome = document.querySelector('.doc-viewer-chrome');
+        if (!chrome) return;
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'clearance-toggle';
+
+        var label = document.createElement('span');
+        label.className = 'clearance-label';
+        label.textContent = 'SPOILER CLEARANCE';
+
+        var control = document.createElement('div');
+        control.className = 'clearance-control';
+
+        var btnDown = document.createElement('button');
+        btnDown.className = 'clearance-btn';
+        btnDown.textContent = '\u2212';
+        btnDown.setAttribute('aria-label', 'Decrease clearance level');
+
+        var display = document.createElement('span');
+        display.className = 'clearance-display';
+        display.id = 'clearance-display';
+
+        var btnUp = document.createElement('button');
+        btnUp.className = 'clearance-btn';
+        btnUp.textContent = '+';
+        btnUp.setAttribute('aria-label', 'Increase clearance level');
+
+        control.appendChild(btnDown);
+        control.appendChild(display);
+        control.appendChild(btnUp);
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(control);
+
+        // Tooltip
+        var tooltip = document.createElement('div');
+        tooltip.className = 'clearance-tooltip';
+        tooltip.textContent = 'Set to the number of episodes you\'ve listened to. Lore documents will be redacted to avoid spoilers.';
+        wrapper.appendChild(tooltip);
+
+        // Insert before the close button
+        var closeBtn = chrome.querySelector('.doc-viewer-close');
+        chrome.insertBefore(wrapper, closeBtn);
+
+        updateToggleDisplay(getLevel());
+
+        btnDown.addEventListener('click', function() {
+            var lvl = getLevel();
+            if (lvl > 0) setLevel(lvl - 1);
+        });
+
+        btnUp.addEventListener('click', function() {
+            var lvl = getLevel();
+            if (lvl < MAX_LEVEL) setLevel(lvl + 1);
+        });
+
+        toggleBuilt = true;
+    }
+
+    function updateToggleDisplay(level) {
+        var display = document.getElementById('clearance-display');
+        if (!display) return;
+        if (level === 0) {
+            display.textContent = '\u25AE\u25AE';
+        } else if (level === MAX_LEVEL) {
+            display.textContent = level + ' \u2713';
+        } else {
+            display.textContent = String(level);
+        }
+    }
+
+    // --- First-visit interstitial (inside doc-viewer) ---
     function showOnboarding() {
-        if (!shouldShowOnboarding()) return;
+        if (hasBeenOnboarded()) return;
 
         var overlay = document.createElement('div');
         overlay.className = 'clearance-modal-overlay';
@@ -139,16 +202,23 @@
             +   '<p>Set your spoiler clearance to the number of transmissions (episodes) you have received. '
             +   'Material will be declassified accordingly.</p>'
             +   '<div class="clearance-modal-control">'
-            +     '<button class="clearance-modal-btn" id="modal-btn-down">−</button>'
+            +     '<button class="clearance-modal-btn" id="modal-btn-down">\u2212</button>'
             +     '<span class="clearance-modal-display" id="modal-display">0</span>'
             +     '<button class="clearance-modal-btn" id="modal-btn-up">+</button>'
             +   '</div>'
-            +   '<p class="clearance-modal-hint">You can change this anytime using the <strong>Spoiler Clearance</strong> control in the navigation bar.</p>'
+            +   '<p class="clearance-modal-hint">You can change this anytime using the <strong>Spoiler Clearance</strong> control at the top of any document.</p>'
             + '</div>'
             + '<button class="clearance-modal-enter" id="modal-enter">Enter Archive</button>';
 
         overlay.appendChild(modal);
-        document.body.appendChild(overlay);
+
+        // Place inside the doc-viewer panel so it overlays the document
+        var viewerPanel = document.querySelector('.doc-viewer-panel');
+        if (viewerPanel) {
+            viewerPanel.appendChild(overlay);
+        } else {
+            document.body.appendChild(overlay);
+        }
 
         // Static noise canvas
         var staticCanvas = document.createElement('canvas');
@@ -178,27 +248,20 @@
         }
         drawStatic();
 
-        // Animate in
         requestAnimationFrame(function() {
             overlay.classList.add('visible');
         });
 
-        // Wire up controls
-        var modalLevel = getLevel();
-        updateModalDisplay(modalLevel);
+        updateModalDisplay(getLevel());
 
         document.getElementById('modal-btn-down').addEventListener('click', function() {
             var lvl = getLevel();
-            if (lvl > 0) {
-                setLevel(lvl - 1);
-            }
+            if (lvl > 0) setLevel(lvl - 1);
         });
 
         document.getElementById('modal-btn-up').addEventListener('click', function() {
             var lvl = getLevel();
-            if (lvl < MAX_LEVEL) {
-                setLevel(lvl + 1);
-            }
+            if (lvl < MAX_LEVEL) setLevel(lvl + 1);
         });
 
         document.getElementById('modal-enter').addEventListener('click', function() {
@@ -206,7 +269,7 @@
             staticRunning = false;
             overlay.classList.remove('visible');
             setTimeout(function() {
-                overlay.parentNode.removeChild(overlay);
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
             }, 500);
         });
     }
@@ -217,80 +280,29 @@
         display.textContent = String(level);
     }
 
-    // --- Build nav toggle ---
-    function buildToggle() {
-        var nav = document.querySelector('.nav-links');
-        if (!nav) return;
+    // --- Document viewer hook ---
+    // Called by doc-viewer.js after content is injected
+    window.spoilerSystem = {
+        init: function() {
+            preMeasureSpans();
+            applyRedactions(getLevel());
+        },
+        onDocumentOpen: function() {
+            // Build the clearance toggle in the viewer chrome (once)
+            buildViewerToggle();
 
-        var wrapper = document.createElement('div');
-        wrapper.className = 'clearance-toggle';
-
-        var label = document.createElement('span');
-        label.className = 'clearance-label';
-        label.textContent = 'SPOILER CLEARANCE';
-
-        var control = document.createElement('div');
-        control.className = 'clearance-control';
-
-        var btnDown = document.createElement('button');
-        btnDown.className = 'clearance-btn';
-        btnDown.textContent = '−';
-        btnDown.setAttribute('aria-label', 'Decrease clearance level');
-
-        var display = document.createElement('span');
-        display.className = 'clearance-display';
-        display.id = 'clearance-display';
-
-        var btnUp = document.createElement('button');
-        btnUp.className = 'clearance-btn';
-        btnUp.textContent = '+';
-        btnUp.setAttribute('aria-label', 'Increase clearance level');
-
-        control.appendChild(btnDown);
-        control.appendChild(display);
-        control.appendChild(btnUp);
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(control);
-
-        // Tooltip
-        var tooltip = document.createElement('div');
-        tooltip.className = 'clearance-tooltip';
-        tooltip.textContent = 'Set to the number of episodes you\'ve listened to. Lore documents will be redacted to avoid spoilers.';
-        wrapper.appendChild(tooltip);
-
-        nav.appendChild(wrapper);
-
-        var currentLevel = getLevel();
-        updateToggleDisplay(currentLevel);
-
-        btnDown.addEventListener('click', function() {
-            var lvl = getLevel();
-            if (lvl > 0) setLevel(lvl - 1);
-        });
-
-        btnUp.addEventListener('click', function() {
-            var lvl = getLevel();
-            if (lvl < MAX_LEVEL) setLevel(lvl + 1);
-        });
-    }
-
-    function updateToggleDisplay(level) {
-        var display = document.getElementById('clearance-display');
-        if (!display) return;
-        if (level === 0) {
-            display.textContent = '\u25AE\u25AE';
-        } else if (level === MAX_LEVEL) {
-            display.textContent = level + ' \u2713';
-        } else {
-            display.textContent = String(level);
+            // Check if this document has spoiler content
+            var viewerContent = document.querySelector('.doc-viewer-content');
+            if (viewerContent && viewerContent.querySelector('[data-spoiler]')) {
+                if (!hasBeenOnboarded()) {
+                    showOnboarding();
+                }
+            }
         }
-    }
+    };
 
-    // --- Init ---
+    // --- Init for homepage (handles homepage spoiler spans like log entries) ---
     preMeasureSpans();
-    buildToggle();
     applyRedactions(getLevel());
-    showOnboarding();
 
 })();
