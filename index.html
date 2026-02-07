@@ -968,14 +968,22 @@
 
         buttons.transmissions.addEventListener('click', function() { openDrawer('transmissions'); });
         buttons.archive.addEventListener('click', function() { openDrawer('archive'); });
-        buttons.log.addEventListener('click', function() {
-            if (window.docViewer) window.docViewer.open('/archive/dev-log/');
-        });
         overlay.addEventListener('click', closeAll);
 
         document.querySelectorAll('[data-close]').forEach(function(btn) {
             btn.addEventListener('click', closeAll);
         });
+
+        // Project Log button opens document in projector (doc-viewer loads after this script)
+        var logBtn = document.getElementById('btn-log');
+        if (logBtn) {
+            logBtn.addEventListener('click', function() {
+                closeAll();
+                if (window.docViewer) {
+                    window.docViewer.open('/archive/dev-log/');
+                }
+            });
+        }
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
