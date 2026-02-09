@@ -114,6 +114,37 @@
         ensureCSS('/css/spoiler.css');
         if (needsLayers) ensureCSS('/css/layers.css');
 
+        // Extract and inject appendix panel system if present
+        var appendixPanel = doc.querySelector('.appendix-panel');
+        var panelOverlay = doc.querySelector('.panel-overlay');
+        if (appendixPanel && panelOverlay) {
+            // Ensure panel CSS is loaded (it's inline in the sound manual <style>)
+            var sourceStyle = doc.querySelector('style');
+            if (sourceStyle) {
+                ensureInlineCSS('sound-manual-panel', sourceStyle.textContent);
+            }
+            // Add panel DOM to the viewer scroll area
+            var panelClone = panelOverlay.cloneNode(true);
+            var asideClone = appendixPanel.cloneNode(true);
+            scrollArea.appendChild(panelClone);
+            scrollArea.appendChild(asideClone);
+        }
+
+        // Execute inline scripts from the fetched page (for appendix data, openPanel, etc.)
+        var scripts = doc.querySelectorAll('script:not([src])');
+        for (var si = 0; si < scripts.length; si++) {
+            var scriptText = scripts[si].textContent;
+            // Skip empty scripts or scripts that are just layout helpers
+            if (scriptText.trim().length > 20) {
+                try {
+                    var fn = new Function(scriptText);
+                    fn();
+                } catch(e) {
+                    console.warn('Doc-viewer: inline script error', e);
+                }
+            }
+        }
+
         // Rewrite internal links to use the viewer
         var links = content.querySelectorAll('a[href]');
         for (var i = 0; i < links.length; i++) {
@@ -172,6 +203,11 @@
         setTimeout(function() {
             overlay.classList.remove('closing');
             content.innerHTML = '';
+            // Clean up any appended panels (e.g. appendix panel from sound manual)
+            var extraPanels = scrollArea.querySelectorAll('.panel-overlay, .appendix-panel');
+            for (var i = 0; i < extraPanels.length; i++) {
+                extraPanels[i].parentNode.removeChild(extraPanels[i]);
+            }
         }, 500);
 
         // Restore URL
@@ -193,6 +229,14 @@
         link.href = href;
         document.head.appendChild(link);
         loadedCSS[href] = true;
+    }
+
+    function ensureInlineCSS(id, cssText) {
+        if (document.getElementById('dv-style-' + id)) return;
+        var style = document.createElement('style');
+        style.id = 'dv-style-' + id;
+        style.textContent = cssText;
+        document.head.appendChild(style);
     }
 
     // --- Reinitialize spoiler system on new content ---
