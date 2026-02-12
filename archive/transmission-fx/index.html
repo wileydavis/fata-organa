@@ -144,6 +144,31 @@
 
         <div data-layer="0" data-layer-name="PRODUCTION — VHF TRANSMISSION FX CHAIN" data-layer-classification="METHODOLOGY — OPEN">
 
+            <style>
+            .fx-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0 1.25rem; font-size: 0.9rem; }
+            .fx-table td { padding: 0.3rem 0.75rem; border-bottom: 1px solid rgba(42, 42, 47, 0.4); vertical-align: top; line-height: 1.5; }
+            .fx-table td:first-child { font-family: var(--mono); font-size: 0.8rem; color: var(--text-bright); white-space: nowrap; width: 35%; }
+            .fx-table tr:last-child td { border-bottom: none; }
+            .fx-device { font-family: var(--mono); font-size: 0.75rem; color: var(--accent-dim); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.25rem 0 0.4rem; }
+            .fx-device:first-child { margin-top: 0; }
+            .fx-chain-label { display: inline-block; font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; padding: 0.15rem 0.5rem; border: 1px solid rgba(196, 163, 90, 0.15); color: var(--accent-dim); background: rgba(196, 163, 90, 0.04); margin-bottom: 0.5rem; }
+            .fx-signal-path { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; padding: 1rem; margin: 1rem 0 1.5rem; background: rgba(196, 163, 90, 0.03); border: 1px solid rgba(196, 163, 90, 0.08); font-family: var(--mono); font-size: 0.75rem; }
+            .fx-signal-path .node { color: var(--text-bright); padding: 0.25rem 0.6rem; border: 1px solid rgba(196, 163, 90, 0.12); background: rgba(10, 10, 12, 0.6); white-space: nowrap; }
+            .fx-signal-path .arrow { color: var(--accent-dim); }
+            .fx-preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.15rem 1.5rem; margin: 0.5rem 0 0.75rem; font-size: 0.9rem; }
+            .fx-preset-grid .fx-param { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); }
+            .fx-preset-grid .fx-val { font-family: var(--mono); font-size: 0.8rem; color: var(--text-bright); }
+            .fx-macro-maps { margin: 0.4rem 0 0.25rem; padding-left: 1.25rem; font-size: 0.9rem; line-height: 1.6; }
+            .fx-macro-maps li { color: var(--text-primary); margin-bottom: 0.15rem; }
+            .fx-macro-range { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); margin: 0.25rem 0 0; }
+            .fx-note { font-family: var(--mono); font-size: 0.7rem; color: var(--accent-dim); margin-top: 0.5rem; letter-spacing: 0.02em; }
+            @media (max-width: 600px) {
+                .fx-table td:first-child { white-space: normal; width: 40%; }
+                .fx-preset-grid { grid-template-columns: 1fr; }
+                .fx-signal-path { font-size: 0.65rem; }
+            }
+            </style>
+
             <div class="document-note">
                 <p><em>This document describes the VHF radio transmission effect chain used for Marcus's voice throughout Fata Organa. It evolves from distant and degraded in early episodes to intimate and present by the finale, while always maintaining broadcast character. Eight macro controls provide real-time creative shaping of the voice without breaking the transmission illusion.</em></p>
             </div>
@@ -152,81 +177,303 @@
 
             <p>The voice needs to feel like it's being transmitted via VHF radio from Marcus's stolen sailboat, with two critical requirements: it evolves over episodes from distant and degraded to close and clear while keeping transmission quality, and it provides emotional shaping tools to match voice processing to musical energy and narrative arc.</p>
 
-            <p>This chain provides macro controls for both technical evolution (signal quality) and emotional expression (warmth, presence, intimacy) without breaking the transmission illusion.</p>
+            <h2>Signal Path</h2>
 
-            <h2>Core FX Chain Architecture</h2>
+            <div class="fx-signal-path">
+                <span class="node">Voice Input</span>
+                <span class="arrow">→</span>
+                <span class="node">EQ Eight</span>
+                <span class="arrow">→</span>
+                <span class="node">Compressor</span>
+                <span class="arrow">→</span>
+                <span class="node">Audio Effect Rack</span>
+                <span class="arrow">→</span>
+                <span class="node">EQ Eight</span>
+                <span class="arrow">→</span>
+                <span class="node">Limiter</span>
+            </div>
 
-            <p>The signal path is: Voice Input → EQ Eight (high-pass) → Compressor → Audio Effect Rack → EQ Eight (final shaping) → Limiter. The Audio Effect Rack contains three parallel processing chains — Clean, Transmission, and Lo-Fi — blended by a chain selector mapped to the primary macro.</p>
+            <p>The Audio Effect Rack contains three parallel processing chains — Clean, Transmission, and Degradation — blended by a chain selector mapped to the primary macro.</p>
 
-            <h2>Step-by-Step Chain Build</h2>
+            <h2>Chain Build</h2>
 
-            <h3>1. EQ Eight (Input Cleanup)</h3>
-            <p>Remove unwanted low frequencies before processing. High-pass at 80–100 Hz, 24 dB/oct to remove room rumble. Optional notch at 50–60 Hz for electrical hum. Leave all other bands off — main EQ comes later.</p>
+            <h3>1. EQ Eight — Input Cleanup</h3>
 
-            <h3>2. Compressor (Input Leveling)</h3>
-            <p>Consistent level into transmission processing. Ratio 3:1 to 4:1, attack 10–20 ms to preserve consonants, release auto or 100–200 ms, threshold set for 3–6 dB reduction on peaks, knee 1–2 for gentle response.</p>
+            <table class="fx-table">
+                <tr><td>High-Pass</td><td>80–100 Hz, 24 dB/oct (room rumble)</td></tr>
+                <tr><td>Notch</td><td>50–60 Hz if needed (electrical hum)</td></tr>
+                <tr><td>All other bands</td><td>Off — main EQ comes later</td></tr>
+            </table>
 
-            <h3>3. Audio Effect Rack (The Transmission Engine)</h3>
+            <h3>2. Compressor — Input Leveling</h3>
+
+            <table class="fx-table">
+                <tr><td>Ratio</td><td>3:1 to 4:1</td></tr>
+                <tr><td>Attack</td><td>10–20 ms (preserve consonants)</td></tr>
+                <tr><td>Release</td><td>Auto or 100–200 ms</td></tr>
+                <tr><td>Threshold</td><td>3–6 dB reduction on peaks</td></tr>
+                <tr><td>Knee</td><td>1–2 (gentle)</td></tr>
+            </table>
+
+            <h3>3. Audio Effect Rack — The Transmission Engine</h3>
+
             <p>Create an Audio Effect Rack with three parallel chains:</p>
 
-            <p><strong>Chain A — Clean (Dry Voice):</strong> Maintains intelligibility and intimacy. EQ Eight with low-mid cut of -2 dB at 200–300 Hz (Q=1), presence boost of +1–2 dB at 2–3 kHz (Q=0.7), and air at +0.5 dB around 8–10 kHz. Optional Saturator at 2–5 dB drive on Soft Clip or Warm curve.</p>
+            <p><span class="fx-chain-label">Chain A — Clean (Dry Voice)</span></p>
+            <p>Maintains intelligibility and intimacy. The anchor signal.</p>
+            <p class="fx-device">EQ Eight</p>
+            <table class="fx-table">
+                <tr><td>Low-Mid Cut</td><td>-2 dB at 200–300 Hz, Q=1 (reduce muddiness)</td></tr>
+                <tr><td>Presence Boost</td><td>+1–2 dB at 2–3 kHz, Q=0.7 (clarity)</td></tr>
+                <tr><td>Air</td><td>+0.5 dB at 8–10 kHz, Q=0.7 (openness)</td></tr>
+            </table>
+            <p class="fx-device">Saturator (optional)</p>
+            <table class="fx-table">
+                <tr><td>Drive</td><td>2–5 dB</td></tr>
+                <tr><td>Curve</td><td>"Soft Clip" or "Warm"</td></tr>
+                <tr><td>Output</td><td>Compensate for drive</td></tr>
+            </table>
 
-            <p><strong>Chain B — Transmission (VHF Radio Character):</strong> Creates the radio transmission effect. EQ Eight with high-pass at 150–200 Hz (12 dB/oct), low-pass at 3–4 kHz (12 dB/oct) for classic radio bandwidth, mid boost of +2–4 dB at 1–2 kHz (Q=1.5), and a characteristic radio scoop notch of -3 dB at 400–500 Hz (Q=2). Saturator at 8–15 dB drive on "A Bit Warmer" or "Digital" curve. Auto Filter set to low pass at 2.5–3.5 kHz with 5–15% resonance and very slow rate (0.1–0.5 Hz) for subtle movement. Vinyl with crackle at 5–15%, noise at 2–8%, warp at 0–5%, 33 RPM, elliptical tracing model.</p>
+            <p><span class="fx-chain-label">Chain B — Transmission (VHF Radio Character)</span></p>
+            <p>Creates the radio transmission effect. The core voice of the project.</p>
+            <p class="fx-device">EQ Eight (Radio Curve)</p>
+            <table class="fx-table">
+                <tr><td>High-Pass</td><td>150–200 Hz, 12 dB/oct</td></tr>
+                <tr><td>Low-Pass</td><td>3–4 kHz, 12 dB/oct (classic radio bandwidth)</td></tr>
+                <tr><td>Mid Boost</td><td>+2–4 dB at 1–2 kHz, Q=1.5 (radio presence)</td></tr>
+                <tr><td>Notch</td><td>-3 dB at 400–500 Hz, Q=2 (characteristic radio scoop)</td></tr>
+            </table>
+            <p class="fx-device">Saturator</p>
+            <table class="fx-table">
+                <tr><td>Drive</td><td>8–15 dB</td></tr>
+                <tr><td>Curve</td><td>"A Bit Warmer" or "Digital"</td></tr>
+                <tr><td>Output</td><td>Compensate for drive</td></tr>
+            </table>
+            <p class="fx-device">Auto Filter</p>
+            <table class="fx-table">
+                <tr><td>Type</td><td>Low Pass</td></tr>
+                <tr><td>Frequency</td><td>2.5–3.5 kHz</td></tr>
+                <tr><td>Resonance</td><td>5–15% (slight radio resonance)</td></tr>
+                <tr><td>Amount</td><td>20–40%</td></tr>
+                <tr><td>Rate</td><td>0.1–0.5 Hz (very slow, subtle movement)</td></tr>
+            </table>
+            <p class="fx-device">Vinyl (Lo-Fi Effect)</p>
+            <table class="fx-table">
+                <tr><td>Crackle</td><td>5–15%</td></tr>
+                <tr><td>Noise</td><td>2–8%</td></tr>
+                <tr><td>Warp</td><td>0–5%</td></tr>
+                <tr><td>RPM</td><td>33 RPM</td></tr>
+                <tr><td>Tracing</td><td>Elliptical</td></tr>
+            </table>
 
-            <p><strong>Chain C — Degradation (Distance/Interference):</strong> Adds atmospheric degradation and distance. EQ Eight with high-pass at 250–300 Hz (6 dB/oct), low-pass at 2–2.5 kHz (6 dB/oct), and mid cut of -2–4 dB at 800–1000 Hz. Chorus-Ensemble with slow rates (0.1–0.5 Hz), amounts of 5–20%, feedback 5–10%, dry/wet 15–30%. Ping Pong Delay synced to 1/16 or 1/8 note with 15–25% feedback, high cut at 2 kHz, dry/wet 10–20%. Redux with downsample 4–8 and bit reduction 2–6 bits on soft mode.</p>
+            <p><span class="fx-chain-label">Chain C — Degradation (Distance / Interference)</span></p>
+            <p>Atmospheric degradation and distance. Fades out as the series progresses.</p>
+            <p class="fx-device">EQ Eight (Distance EQ)</p>
+            <table class="fx-table">
+                <tr><td>High-Pass</td><td>250–300 Hz, 6 dB/oct</td></tr>
+                <tr><td>Low-Pass</td><td>2–2.5 kHz, 6 dB/oct (extreme filtering)</td></tr>
+                <tr><td>Mid Cut</td><td>-2–4 dB at 800–1000 Hz, Q=0.8</td></tr>
+            </table>
+            <p class="fx-device">Chorus-Ensemble</p>
+            <table class="fx-table">
+                <tr><td>Rate 1 / Rate 2</td><td>0.2–0.5 Hz / 0.1–0.3 Hz</td></tr>
+                <tr><td>Amount 1 / Amount 2</td><td>10–20% / 5–15%</td></tr>
+                <tr><td>Feedback</td><td>5–10%</td></tr>
+                <tr><td>Dry/Wet</td><td>15–30%</td></tr>
+            </table>
+            <p class="fx-device">Ping Pong Delay</p>
+            <table class="fx-table">
+                <tr><td>Sync</td><td>On — 1/16 or 1/8 note (right offset slightly)</td></tr>
+                <tr><td>Feedback</td><td>15–25%</td></tr>
+                <tr><td>Filter</td><td>High cut at 2 kHz</td></tr>
+                <tr><td>Dry/Wet</td><td>10–20%</td></tr>
+            </table>
+            <p class="fx-device">Redux</p>
+            <table class="fx-table">
+                <tr><td>Downsample</td><td>4–8</td></tr>
+                <tr><td>Bit Reduction</td><td>2–6 bits</td></tr>
+                <tr><td>Mode</td><td>Soft</td></tr>
+            </table>
 
             <h3>4. Chain Selector Setup</h3>
-            <p>Chain volume balance: Clean at 0 dB (reference), Transmission at -3 to -6 dB, Degradation at -6 to -12 dB. Chain selector zones: Clean 0–85 (primary range for later episodes), Transmission 20–100 (active across most settings), Degradation 0–60 (fades out as transmission improves). Overlapping regions create smooth crossfades between chains.</p>
 
-            <h3>5. EQ Eight (Final Shaping)</h3>
-            <p>Overall tonal character and musical integration. Low shelf at ±2 dB at 200 Hz for warmth control, low-mid at ±2 dB at 500–800 Hz for presence or distance, high-mid at ±2 dB at 2–3 kHz for clarity and brightness, high shelf at ±2 dB at 6–8 kHz for air and openness.</p>
+            <p class="fx-device">Volume Balance</p>
+            <table class="fx-table">
+                <tr><td>Clean</td><td>0 dB (reference level)</td></tr>
+                <tr><td>Transmission</td><td>-3 to -6 dB</td></tr>
+                <tr><td>Degradation</td><td>-6 to -12 dB</td></tr>
+            </table>
+            <p class="fx-device">Selector Zones</p>
+            <table class="fx-table">
+                <tr><td>Clean</td><td>0–85 (primary range for later episodes)</td></tr>
+                <tr><td>Transmission</td><td>20–100 (active across most settings)</td></tr>
+                <tr><td>Degradation</td><td>0–60 (fades out as signal improves)</td></tr>
+            </table>
+            <p class="fx-note">Overlapping regions create smooth crossfades between chains.</p>
 
-            <h3>6. Limiter (Output Protection)</h3>
-            <p>Catch peaks and provide broadcast limiting. Release 10–50 ms (fast but not pumping), gain set so peaks just touch limiter, lookahead 5–10 ms.</p>
+            <h3>5. EQ Eight — Final Shaping</h3>
+
+            <table class="fx-table">
+                <tr><td>Low Shelf</td><td>±2 dB at 200 Hz (warmth)</td></tr>
+                <tr><td>Low-Mid</td><td>±2 dB at 500–800 Hz (presence/distance)</td></tr>
+                <tr><td>High-Mid</td><td>±2 dB at 2–3 kHz (clarity/brightness)</td></tr>
+                <tr><td>High Shelf</td><td>±2 dB at 6–8 kHz (air/openness)</td></tr>
+            </table>
+
+            <h3>6. Limiter — Output Protection</h3>
+
+            <table class="fx-table">
+                <tr><td>Release</td><td>10–50 ms (fast but not pumping)</td></tr>
+                <tr><td>Gain</td><td>Peaks just touching limiter</td></tr>
+                <tr><td>Lookahead</td><td>5–10 ms</td></tr>
+            </table>
 
             <h2>Macro Control Setup</h2>
 
-            <p>Map these parameters to the Audio Effect Rack's eight macros for performance control:</p>
+            <p>Map these parameters to the Audio Effect Rack's eight macros:</p>
 
-            <p><strong>Macro 1 — Signal Quality (Evolution Control):</strong> The primary evolution mechanism. Maps to chain selector (0 = distant/degraded, 127 = close/clear), transmission chain auto filter frequency (2–4 kHz), degradation chain redux downsample (8→0), and final EQ high shelf (-3 to +2 dB). Episodes 1–3 at 10–30 (very degraded), 4–6 at 30–50 (improving), 7–9 at 50–70 (clearer), 10–12 at 70–90 (intimate but still broadcast-like).</p>
+            <h3>Macro 1 — Signal Quality</h3>
+            <p>The primary evolution mechanism. Moves from distant/degraded to close/clear across episodes.</p>
+            <ul class="fx-macro-maps">
+                <li>Chain Selector: 0 (degraded) → 127 (clear)</li>
+                <li>Transmission Chain → Auto Filter → Frequency: 2 kHz → 4 kHz</li>
+                <li>Degradation Chain → Redux → Downsample: 8 → 0</li>
+                <li>Final EQ → High Shelf: -3 dB → +2 dB</li>
+            </ul>
+            <p class="fx-macro-range">Ep 1–3: 10–30 · Ep 4–6: 30–50 · Ep 7–9: 50–70 · Ep 10–12: 70–90</p>
 
-            <p><strong>Macro 2 — Warmth (Emotional Character):</strong> Adjusts emotional tone without breaking transmission effect. Maps to final EQ low shelf 200 Hz (-2 to +3 dB), clean chain saturator drive (0–8 dB), and transmission chain saturator drive (5–15 dB). 0–30 is cold and technical, 40–60 is neutral, 70–100 is warm and intimate.</p>
+            <h3>Macro 2 — Warmth</h3>
+            <p>Emotional tone. Cold/technical → warm/intimate without breaking transmission character.</p>
+            <ul class="fx-macro-maps">
+                <li>Final EQ → Low Shelf 200 Hz: -2 dB → +3 dB</li>
+                <li>Clean Chain → Saturator → Drive: 0 dB → 8 dB</li>
+                <li>Transmission Chain → Saturator → Drive: 5 dB → 15 dB</li>
+            </ul>
+            <p class="fx-macro-range">0–30: cold · 40–60: neutral · 70–100: warm</p>
 
-            <p><strong>Macro 3 — Presence (Musical Integration):</strong> Cut through or sit behind the arrangement. Maps to final EQ high-mid 2.5 kHz (-3 to +4 dB), clean chain EQ presence (0 to +3 dB), and compressor threshold (more compression = more presence). 0–40 sits behind music, 40–70 is balanced, 70–127 cuts through.</p>
+            <h3>Macro 3 — Presence</h3>
+            <p>Musical integration. Controls whether voice cuts through or sits behind the arrangement.</p>
+            <ul class="fx-macro-maps">
+                <li>Final EQ → High-Mid 2.5 kHz: -3 dB → +4 dB</li>
+                <li>Clean Chain → EQ → Presence: 0 dB → +3 dB</li>
+                <li>Compressor → Threshold: higher → lower (more compression = more presence)</li>
+            </ul>
+            <p class="fx-macro-range">0–40: behind music · 40–70: balanced · 70–127: cuts through</p>
 
-            <p><strong>Macro 4 — Atmospheric (Environmental Feel):</strong> Controls sense of space and distance. Maps to degradation chain ping pong delay dry/wet (0–30%), degradation chain chorus dry/wet (0–40%), and final EQ high shelf (+2 to -2 dB, distant = darker).</p>
+            <h3>Macro 4 — Atmospheric</h3>
+            <p>Space and distance. Controls the environmental feel around the voice.</p>
+            <ul class="fx-macro-maps">
+                <li>Degradation Chain → Ping Pong Delay → Dry/Wet: 0% → 30%</li>
+                <li>Degradation Chain → Chorus → Dry/Wet: 0% → 40%</li>
+                <li>Final EQ → High Shelf: +2 dB → -2 dB (distant = darker)</li>
+            </ul>
 
-            <p><strong>Macro 5 — Clarity (Intelligibility Control):</strong> Emergency intelligibility without changing character. Maps to clean chain volume (-6 to +3 dB), transmission chain EQ mid boost (0 to +4 dB), and final EQ low-mid cut (0 to -4 dB).</p>
+            <h3>Macro 5 — Clarity</h3>
+            <p>Emergency intelligibility. Boosts legibility without changing character.</p>
+            <ul class="fx-macro-maps">
+                <li>Clean Chain Volume: -6 dB → +3 dB</li>
+                <li>Transmission Chain → EQ → Mid Boost: 0 dB → +4 dB</li>
+                <li>Final EQ → Low-Mid Cut: 0 dB → -4 dB</li>
+            </ul>
 
-            <p><strong>Macro 6 — Intimacy (Emotional Distance):</strong> How close and personal the voice feels. Maps to clean chain volume (-9 to +3 dB, inverse relationship), degradation chain volume (0 to -15 dB), and final EQ high shelf (-2 to +3 dB).</p>
+            <h3>Macro 6 — Intimacy</h3>
+            <p>Emotional distance. How close and personal the voice feels.</p>
+            <ul class="fx-macro-maps">
+                <li>Clean Chain Volume: -9 dB → +3 dB</li>
+                <li>Degradation Chain Volume: 0 dB → -15 dB (inverse)</li>
+                <li>Final EQ → High Shelf: -2 dB → +3 dB</li>
+            </ul>
 
-            <p><strong>Macro 7 — Tension (Emotional State):</strong> Match voice to musical intensity. Maps to transmission chain auto filter resonance (0–25%), clean chain saturator drive (0–10 dB), and compressor ratio (2:1 to 6:1).</p>
+            <h3>Macro 7 — Tension</h3>
+            <p>Emotional state. Match voice intensity to the music.</p>
+            <ul class="fx-macro-maps">
+                <li>Transmission Chain → Auto Filter → Resonance: 0% → 25%</li>
+                <li>Clean Chain → Saturator → Drive: 0 dB → 10 dB</li>
+                <li>Compressor → Ratio: 2:1 → 6:1</li>
+            </ul>
 
-            <p><strong>Macro 8 — Static/Interference (Environmental Effects):</strong> Transmission problems for dramatic moments. Maps to degradation chain vinyl noise (0–20%), degradation chain redux bit reduction (0–8 bits), and transmission chain auto filter amount (0–60%).</p>
+            <h3>Macro 8 — Static / Interference</h3>
+            <p>Transmission problems for dramatic moments.</p>
+            <ul class="fx-macro-maps">
+                <li>Degradation Chain → Vinyl → Noise: 0% → 20%</li>
+                <li>Degradation Chain → Redux → Bit Reduction: 0 → 8 bits</li>
+                <li>Transmission Chain → Auto Filter → Amount: 0% → 60%</li>
+            </ul>
 
-            <h2>Preset Evolution Across Episodes</h2>
+            <h2>Episode Presets</h2>
 
             <h3>Episodes 1–3: "Lost at Sea"</h3>
-            <p>Signal Quality 20, Warmth 30, Presence 60, Atmospheric 80, Clarity 40, Intimacy 20, Tension 70, Static 40. Very degraded and distant. Cold, technical. Fighting through static. Lots of space and delay. Noticeable interference. The voice of a man who barely exists yet.</p>
+            <p>Very degraded and distant. Cold, technical. Fighting through static. The voice of a man who barely exists yet.</p>
+            <div class="fx-preset-grid">
+                <span class="fx-param">Signal Quality</span><span class="fx-val">20</span>
+                <span class="fx-param">Warmth</span><span class="fx-val">30</span>
+                <span class="fx-param">Presence</span><span class="fx-val">60</span>
+                <span class="fx-param">Atmospheric</span><span class="fx-val">80</span>
+                <span class="fx-param">Clarity</span><span class="fx-val">40</span>
+                <span class="fx-param">Intimacy</span><span class="fx-val">20</span>
+                <span class="fx-param">Tension</span><span class="fx-val">70</span>
+                <span class="fx-param">Static</span><span class="fx-val">40</span>
+            </div>
 
             <h3>Episodes 4–6: "Finding Signal"</h3>
-            <p>Signal Quality 40, Warmth 45, Presence 70, Atmospheric 60, Clarity 60, Intimacy 35, Tension 50, Static 25. Improving but still transmission-like. Slightly warmer. Cutting through better. More intelligible. Getting closer. More stable. Reducing interference.</p>
+            <p>Improving but still transmission-like. Slightly warmer. Cutting through better. Getting closer.</p>
+            <div class="fx-preset-grid">
+                <span class="fx-param">Signal Quality</span><span class="fx-val">40</span>
+                <span class="fx-param">Warmth</span><span class="fx-val">45</span>
+                <span class="fx-param">Presence</span><span class="fx-val">70</span>
+                <span class="fx-param">Atmospheric</span><span class="fx-val">60</span>
+                <span class="fx-param">Clarity</span><span class="fx-val">60</span>
+                <span class="fx-param">Intimacy</span><span class="fx-val">35</span>
+                <span class="fx-param">Tension</span><span class="fx-val">50</span>
+                <span class="fx-param">Static</span><span class="fx-val">25</span>
+            </div>
 
             <h3>Episodes 7–9: "Clear Channel"</h3>
-            <p>Signal Quality 65, Warmth 60, Presence 75, Atmospheric 40, Clarity 75, Intimacy 55, Tension 45, Static 15. Much clearer. Warmer, more human. Well integrated with music. Less reverb and delay. Clear communication. Feeling closer. More relaxed. Minimal interference.</p>
+            <p>Much clearer. Warmer, more human. Well integrated with music. Minimal interference.</p>
+            <div class="fx-preset-grid">
+                <span class="fx-param">Signal Quality</span><span class="fx-val">65</span>
+                <span class="fx-param">Warmth</span><span class="fx-val">60</span>
+                <span class="fx-param">Presence</span><span class="fx-val">75</span>
+                <span class="fx-param">Atmospheric</span><span class="fx-val">40</span>
+                <span class="fx-param">Clarity</span><span class="fx-val">75</span>
+                <span class="fx-param">Intimacy</span><span class="fx-val">55</span>
+                <span class="fx-param">Tension</span><span class="fx-val">45</span>
+                <span class="fx-param">Static</span><span class="fx-val">15</span>
+            </div>
 
             <h3><span data-spoiler="10">Episodes 10–12: "Direct Connection"</span></h3>
-            <p><span data-spoiler="10">Signal Quality 85, Warmth 75, Presence 70, Atmospheric 25, Clarity 85, Intimacy 80, Tension variable 30–90, Static 5–30 used dramatically only. Very clear but still broadcast-like. Warm, intimate. Immediate, present. Crystal clear. The voice is in the room with you. Tension and static reserved for narrative punctuation.</span></p>
+            <p><span data-spoiler="10">Very clear but still broadcast-like. Warm, intimate. The voice is in the room with you. Tension and static reserved for narrative punctuation.</span></p>
+            <div class="fx-preset-grid">
+                <span class="fx-param"><span data-spoiler="10">Signal Quality</span></span><span class="fx-val"><span data-spoiler="10">85</span></span>
+                <span class="fx-param"><span data-spoiler="10">Warmth</span></span><span class="fx-val"><span data-spoiler="10">75</span></span>
+                <span class="fx-param"><span data-spoiler="10">Presence</span></span><span class="fx-val"><span data-spoiler="10">70</span></span>
+                <span class="fx-param"><span data-spoiler="10">Atmospheric</span></span><span class="fx-val"><span data-spoiler="10">25</span></span>
+                <span class="fx-param"><span data-spoiler="10">Clarity</span></span><span class="fx-val"><span data-spoiler="10">85</span></span>
+                <span class="fx-param"><span data-spoiler="10">Intimacy</span></span><span class="fx-val"><span data-spoiler="10">80</span></span>
+                <span class="fx-param"><span data-spoiler="10">Tension</span></span><span class="fx-val"><span data-spoiler="10">30–90</span></span>
+                <span class="fx-param"><span data-spoiler="10">Static</span></span><span class="fx-val"><span data-spoiler="10">5–30</span></span>
+            </div>
 
             <h2>Integration with Musical Score</h2>
 
-            <p>The transmission effect naturally creates a mid-range focus (200 Hz – 4 kHz) that sits in the spectral gap of ambient-techno arrangements. Sub-bass and low-end below 200 Hz are reserved for music. Voice fundamental and presence occupy 200–4000 Hz. High-frequency texture above 4 kHz is shared space, negotiated dynamically.</p>
+            <p>The transmission effect naturally creates a mid-range focus (200 Hz – 4 kHz) that sits in the spectral gap of ambient-techno arrangements:</p>
 
-            <p>During musical buildups, increase Tension and Presence macros. During breakdowns, increase Warmth and Intimacy. During transitions, use the Atmospheric macro for spatial effects. <span data-spoiler="0">Consider gentle sidechain compression of 2–3 dB on the voice chain, triggered by the musical kick drum at 120 BPM, to create subtle rhythmic pumping that connects voice to pulse.</span></p>
+            <table class="fx-table">
+                <tr><td>Sub-bass / Low-end</td><td>40–200 Hz — reserved for music</td></tr>
+                <tr><td>Voice / Presence</td><td>200–4000 Hz — transmission effect zone</td></tr>
+                <tr><td>High Texture</td><td>4–20 kHz — shared space, negotiated dynamically</td></tr>
+            </table>
+
+            <p>During musical buildups, increase Tension and Presence. During breakdowns, increase Warmth and Intimacy. During transitions, use Atmospheric for spatial effects. <span data-spoiler="0">Consider gentle sidechain compression of 2–3 dB on the voice chain, triggered by the kick at 120 BPM, to connect voice to pulse.</span></p>
 
             <h2>Technical Notes</h2>
 
-            <p>For CPU optimization: freeze tracks when not actively recording, consolidate effects to audio when presets are finalized, use group processing rather than per-clip effects. Record the dry signal alongside processed as backup. Save macro presets for each episode. Use Post FX monitoring to hear the transmission effect while recording.</p>
+            <table class="fx-table">
+                <tr><td>CPU</td><td>Freeze tracks when not recording. Consolidate to audio when presets are final.</td></tr>
+                <tr><td>Backup</td><td>Record dry signal alongside processed. Save macro presets per episode.</td></tr>
+                <tr><td>Monitoring</td><td>Use "Post FX" to hear transmission effect while recording. A/B against dry.</td></tr>
+                <tr><td>Processing</td><td>Use group processing rather than per-clip effects.</td></tr>
+            </table>
 
             <div class="document-note" style="margin-top: 3rem;">
                 <p><em>This chain provides the technical foundation for Marcus's evolving transmission quality while giving creative control over the emotional character of the voice without breaking the radio broadcast illusion.</em></p>
