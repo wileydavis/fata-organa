@@ -8,9 +8,21 @@
 ## CORE CONCEPTS
 
 ### Automations
-The unconscious systems humanity built over millennia to make reality self-maintaining. Originally, humans (Minds) could shape reality with conscious thought, but this required enormous effort. They built automations to handle physics, causality, time, bodily processes, and all the complex workings of existence. Over generations, humanity forgot they'd created these systems and became trapped in determinism. The weapon destroyed these automations, restoring humanity's original power but leaving most unable to consciously maintain reality.
+The unconscious systems humanity built over millennia to make reality self-maintaining. Originally, humans (Minds) could shape reality with conscious thought, but this required enormous effort. They built automations to handle physics, causality, time, bodily processes, and all the complex workings of existence.
 
-**Related:** The Gift, The Weapon, Reality Maintenance
+**The Deeper Metaphor:**
+The automations represent humanity's tendency to build systems meant to serve community but that ultimately destroy our capacity for real community. They were created to make collective living easier—"What if we didn't have to actively cooperate to maintain reality?"—but ended up atrophying people's skills of genuine citizenship and connection.
+
+**What Was Lost:**
+Instead of learning true collective action, people became dependent on the systems. When systems eventually failed, they couldn't work together because they'd never learned how. This created either complete dependence (leading to trapped minds when systems break) or hyper-individualism (Octopus minds rejecting all cooperation).
+
+**Contemporary Parallel:**
+This mirrors our outsourcing of community to social media platforms, institutional dependence, and the atomization of society. We built tools to connect us but they're isolating us. True community—autonomous people choosing to work together—gets forgotten.
+
+**In the story:**
+The weapon destroyed these automations, restoring humanity's original power but leaving most unable to consciously maintain reality. Only those who retained some capacity for real agency (Octopus minds) or collective wisdom (rare Hybrid minds like Marcus) survived.
+
+**Related:** The Gift, The Weapon, Reality Maintenance, Systems vs. Community
 
 ---
 
