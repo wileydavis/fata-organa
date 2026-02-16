@@ -191,6 +191,17 @@ Only after Isla chooses redemption (confirmed by her breath on the frequency) do
 - Power requires wisdom (individual + collective balance)
 - Creating automations (Marcus's reset, humanity's prison) requires understanding consequences
 
+### Systems That Destroy Community (Contemporary Relevance)
+- The automations represent humanity's tendency to build systems to make community easier
+- But these systems atrophied our capacity for real community
+- Instead of learning true collective action, people became dependent
+- When systems failed, they couldn't work together because they'd never learned how
+- Result: either isolated (trapped minds—helpless) or hyper-individual (Octopus minds—rejecting all dependence)
+- True community—autonomous people choosing to work together—was forgotten
+- **Modern parallel:** Social media, institutional dependence, atomization of society
+- **Marcus as answer:** Individual capability + collective wisdom, not dependent but not isolated
+- **Isla's arc:** From pure individualism to chosen community (family)
+
 ---
 
 ## KEY MYSTERIES & REVEALS (Revised)
