@@ -1,4 +1,4 @@
-# FATA ORGANA - Episode 1 Writing Guide
+# FATA ORGANA - Episode 1 Revised Writing Guide
 
 **Purpose:** Everything you need to write Episode 1, extracted and focused  
 **Runtime Target:** 35-40 minutes (~5,000-6,000 words)
