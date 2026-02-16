@@ -144,4 +144,4 @@ Strangely, the return of time upset me the most. Like the tinglings of a cough y
 
 When it returned to me the first thing it did was to draw a line in my mind. A line that became a border. A border that became a wall. A wall that became a container. A container that held Marcus, as we know him now, from spilling out all over the sidewalk as he walked down the noisy streets of Quito.
 
-The first of these memories took place just weeks before the Adjustment. 
+The first of these memories took place just weeks before the Adjustment.
