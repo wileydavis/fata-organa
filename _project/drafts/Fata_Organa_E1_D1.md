@@ -1,4 +1,4 @@
-Fata Organa
+Fata Organa - Episode 1
 
 by Wiley Davis
 
@@ -137,11 +137,19 @@ Upon arrival it was obvious to me that even these revised plans that they'd made
 You could hear it in the receiving plaza that made punctuated echos of my footsteps as I walked across it. You could see it in the rows upon rows of perfect but empty tents. You could feel it in the way that the staff looked at one another amidst all this emptiness, deprived of any chance to assuage their guilt with good deeds. And you could see it in the way they looked at me, as a desperate glimpse of hope but also a reminder that this hope would not be enough.
 
 INT. SAILBOAT RADIO ROOM - CAFE FATA ORGANA
-MARCUS
-I'd been in Quito for six months when my memories started to return. Not all at once. Just little dribs and drabs that somehow managed to pierce the overwhelming dream of the woman at Land's End... a dream that has not left my side. A dream that seems to define me with an authority that even these returning memories can't command. I wanted to welcome them home and give them their rightful place by the hearth but I couldn't.
 
-Strangely, the return of time upset me the most. Like the tinglings of a cough you thought you'd beaten. Time. Time. Time.
+I'd been in Quito for six months when my memories started to return. Not all at once. Just little dribs and drabs that somehow managed to pierce the overwhelming dream of the woman at Land's End... a dream that has not left my side. A dream that seems to define me with an authority that even these returning memories can't command. Part of me wanted to welcome these recollections home and give them their rightful place by the hearth but I couldn't. They live here once again but they are no longer family.
 
-When it returned to me the first thing it did was to draw a line in my mind. A line that became a border. A border that became a wall. A wall that became a container. A container that held Marcus, as we know him now, from spilling out all over the sidewalk as he walked down the noisy streets of Quito.
+Strangely, the return of time upset me the most. It came on like an infrasound dread. Like the tinglings of a cough you thought you'd beaten. Time. Time. Time. Where did you come from? Who me, why I've been here all along, have I not?
 
-The first of these memories took place just weeks before the Adjustment.
+The first thing time did was to draw a line in my mind. Like it owned the place. A line that became a border. A border that became a wall. A wall that became a container. A container that held Marcus, as we know him now, from spilling out all over the sidewalk as he walked down the noisy streets of Quito.
+
+And because of time I could locate when the first of these memories took place, just weeks before the Adjustment. Still so strange to be outside of it, to be so contained. But I suppose a neccesary construct for the telling of this story. For so long I'd been useless to the various teams of specialists, counselors, military interogators, social workers, journalists, and even two novelists, who did their best to debrief me. Nothing I could say to them made much sense. Nothing for them to get a foothold in. No matter their angle of attack, the inquiries glanced off or were absorbed into a bottomless sea of drifting abstraction.
+
+But then time came back to oversee my situation. It built me a house then opened the door for memories and before I knew it the space was getting crowded and the compulsion to leave swelled into a howl of neccesity. The sound it made overwhelmed the ever present ocean wind and it blew in like a desparate cry for survival. Leave this place. Return to the dream.
+
+But my memory. We were talking about my first returned memory. My apologies for this scattered retelling but as all of those curious professionals in Quito will tell you, I've been rendered somewhat chaotic by the Adjustment, something they tolerated with the patience of heretical saints... withholding complaint due to the obvious but rarely stated fact that my condition was all their fault in the first place. I'm not above taking advantage of that guilt, which is why they never heard this memory.
+
+I was in the airport, O'Hare, an airport I remember always being uncomfortable in because of its high ceilings and narrow corridors, and it's utter lack of comfortable cozy corners. The dissonant echoes from all its hard surfaces.
+
+Sitting across from me at the gate, waiting for a plane, to to where I don't remember, sat a man wearing a blue blazer and a pair of khaki pants. Pleated. Cheap. A middle management outfit. I don't remember his shoes but I've always been bad at noticing shoes and have the sense that I used to feel a tiny amount of shame about that for some reason. Like it made me somehow just a little less human. Such an odd statement to make here, on this radio, on this little boat, atop this vast ocean. But I'm sure that whatever shoes he was wearing the kinds of people who notice such things would not have been impressed. 
