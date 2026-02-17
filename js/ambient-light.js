@@ -35,6 +35,7 @@
         '.site-nav',
         '.tx-header',
         '.tx-frequency-bar',
+        '.tx-band-selector',
         '.tx-status-strip',
         '.tx-panel-buttons',
         '.tx-tagline',
