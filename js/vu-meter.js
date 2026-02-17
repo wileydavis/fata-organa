@@ -400,6 +400,32 @@
         smoothLow: 0      // heavily smoothed low end
     };
 
+    // --- Public API for loading new audio sources ---
+    window.vuPlayer = {
+        loadSource: function(src) {
+            if (!src) return;
+            // Stop current playback
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+                isPlaying = false;
+            }
+            // Update source
+            audioSrc = src;
+            if (audio) {
+                audio.src = src;
+                audio.load();
+            }
+            hasStarted = false;
+            progressBar.style.width = '0%';
+            statusEl.textContent = 'RECEIVE TRANSMISSION';
+        },
+        play: function() { startPlayback(); },
+        pause: function() { if (audio && isPlaying) { audio.pause(); isPlaying = false; } },
+        isPlaying: function() { return isPlaying; },
+        getCurrentSrc: function() { return audioSrc; }
+    };
+
     // --- Animate ---
     function animate() {
         if (isPlaying && analyser) {

@@ -162,6 +162,88 @@
         line-height: 0;
     }
 
+    /* Band selector */
+    .tx-band-selector {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        border-left: 1px solid rgba(196, 163, 90, 0.12);
+        border-right: 1px solid rgba(196, 163, 90, 0.12);
+        background: rgba(196, 163, 90, 0.015);
+        padding: 0.35rem 1rem;
+        position: relative;
+    }
+
+    .tx-band-btn {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        background: none;
+        border: 1px solid rgba(196, 163, 90, 0.12);
+        color: rgba(196, 163, 90, 0.3);
+        padding: 0.2rem 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .tx-band-btn:first-child {
+        border-radius: 2px 0 0 2px;
+        border-right: none;
+    }
+
+    .tx-band-btn:last-child {
+        border-radius: 0 2px 2px 0;
+    }
+
+    .tx-band-btn.active {
+        color: rgba(196, 163, 90, 0.85);
+        background: rgba(196, 163, 90, 0.08);
+        border-color: rgba(196, 163, 90, 0.25);
+    }
+
+    .tx-band-btn:hover:not(.active) {
+        color: rgba(196, 163, 90, 0.5);
+        border-color: rgba(196, 163, 90, 0.2);
+    }
+
+    /* Band selector tooltip */
+    .tx-band-tooltip {
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(10, 10, 12, 0.95);
+        border: 1px solid rgba(196, 163, 90, 0.15);
+        padding: 0.5rem 0.75rem;
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        line-height: 1.6;
+        letter-spacing: 0.04em;
+        color: rgba(196, 163, 90, 0.6);
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        z-index: 10;
+    }
+
+    .tx-band-tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 4px solid transparent;
+        border-top-color: rgba(196, 163, 90, 0.15);
+    }
+
+    .tx-band-selector:hover .tx-band-tooltip {
+        opacity: 1;
+    }
+
     .tx-meter #vu-player {
         display: flex;
         flex-direction: column;
@@ -790,6 +872,13 @@
                 </div>
             </div>
 
+            <!-- Band Selector -->
+            <div class="tx-band-selector">
+                <div class="tx-band-tooltip">TRANSMISSION — Narrated episodes with score<br>SCORE — Standalone musical tracks</div>
+                <button class="tx-band-btn active" id="band-transmission" data-band="transmission">Transmission</button>
+                <button class="tx-band-btn" id="band-score" data-band="score">Score</button>
+            </div>
+
             <!-- VU Meter -->
             <div class="tx-meter">
                 <div id="vu-player" data-src="/audio/teaser.mp3"></div>
@@ -828,74 +917,136 @@
     <!-- Drawer: Transmissions (slides from left) -->
     <div class="tx-drawer tx-drawer-left" id="drawer-transmissions">
         <div class="tx-drawer-header">
-            <span class="tx-drawer-title">Transmissions</span>
+            <span class="tx-drawer-title" id="drawer-transmissions-title">Transmissions</span>
             <button class="tx-drawer-close" data-close>&#10005;</button>
         </div>
-        <div class="tx-drawer-body">
-            <div class="tx-list-item available active">
+        <div class="tx-drawer-body" id="drawer-body-transmissions">
+            <div class="tx-list-item available active" data-ep="TEASER" data-band="transmission">
                 <span class="tx-list-num">&mdash;</span>
                 <span class="tx-list-title">Audio Teaser</span>
                 <span class="tx-list-status">&#9679; Available</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 01" data-band="transmission">
                 <span class="tx-list-num">01</span>
                 <span class="tx-list-title">First Transmission</span>
                 <span class="tx-list-status">Forthcoming</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 02" data-band="transmission">
                 <span class="tx-list-num">02</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Forthcoming</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 03" data-band="transmission">
                 <span class="tx-list-num">03</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Forthcoming</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 04" data-band="transmission">
                 <span class="tx-list-num">04</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Forthcoming</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 05" data-band="transmission">
                 <span class="tx-list-num">05</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Forthcoming</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 06" data-band="transmission">
                 <span class="tx-list-num">06</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Forthcoming</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 07" data-band="transmission">
                 <span class="tx-list-num">07</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Flagged</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 08" data-band="transmission">
                 <span class="tx-list-num">08</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Flagged</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 09" data-band="transmission">
                 <span class="tx-list-num">09</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Classified</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 10" data-band="transmission">
                 <span class="tx-list-num">10</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Classified</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 11" data-band="transmission">
                 <span class="tx-list-num">11</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">Classified</span>
             </div>
-            <div class="tx-list-item">
+            <div class="tx-list-item" data-ep="EP 12" data-band="transmission">
                 <span class="tx-list-num">12</span>
                 <span class="tx-list-title">&mdash;</span>
                 <span class="tx-list-status">&mdash;</span>
+            </div>
+        </div>
+        <div class="tx-drawer-body" id="drawer-body-score" style="display:none;">
+            <div class="tx-list-item available" data-ep="EP 01" data-band="score">
+                <span class="tx-list-num">01</span>
+                <span class="tx-list-title">Attrition</span>
+                <span class="tx-list-status">&#9679; Available</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 02" data-band="score">
+                <span class="tx-list-num">02</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 03" data-band="score">
+                <span class="tx-list-num">03</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 04" data-band="score">
+                <span class="tx-list-num">04</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 05" data-band="score">
+                <span class="tx-list-num">05</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 06" data-band="score">
+                <span class="tx-list-num">06</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 07" data-band="score">
+                <span class="tx-list-num">07</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 08" data-band="score">
+                <span class="tx-list-num">08</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 09" data-band="score">
+                <span class="tx-list-num">09</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 10" data-band="score">
+                <span class="tx-list-num">10</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 11" data-band="score">
+                <span class="tx-list-num">11</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
+            </div>
+            <div class="tx-list-item" data-ep="EP 12" data-band="score">
+                <span class="tx-list-num">12</span>
+                <span class="tx-list-title">&mdash;</span>
+                <span class="tx-list-status">Forthcoming</span>
             </div>
         </div>
     </div>
@@ -1002,6 +1153,125 @@
                 closeAll();
             }
         });
+    })();
+
+    // Band selector logic
+    (function() {
+        var bandBtns = document.querySelectorAll('.tx-band-btn');
+        var freqLabel = document.querySelector('.tx-freq-label');
+        var epDisplay = document.getElementById('ep-display');
+        var drawerTitle = document.getElementById('drawer-transmissions-title');
+        var drawerBtn = document.getElementById('btn-transmissions');
+        var bodyTransmissions = document.getElementById('drawer-body-transmissions');
+        var bodyScore = document.getElementById('drawer-body-score');
+        var currentBand = 'transmission';
+
+        // Audio source maps — add URLs as episodes are produced
+        var transmissionSources = {
+            'TEASER': '/audio/teaser.mp3'
+        };
+
+        var scoreSources = {
+            'EP 01': '/audio/score/ep01-attrition.mp3'
+        };
+
+        // Expose globally
+        window.currentBand = currentBand;
+        window.audioSources = { transmission: transmissionSources, score: scoreSources };
+
+        function updateDrawerForBand(band) {
+            if (band === 'score') {
+                bodyTransmissions.style.display = 'none';
+                bodyScore.style.display = '';
+                drawerTitle.textContent = 'Score';
+                drawerBtn.textContent = 'Score';
+            } else {
+                bodyScore.style.display = 'none';
+                bodyTransmissions.style.display = '';
+                drawerTitle.textContent = 'Transmissions';
+                drawerBtn.textContent = 'Transmissions';
+            }
+        }
+
+        function setActiveListItem(ep, band) {
+            // Clear all active states in the relevant body
+            var body = band === 'score' ? bodyScore : bodyTransmissions;
+            body.querySelectorAll('.tx-list-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            // Set active on matching item
+            var match = body.querySelector('[data-ep="' + ep + '"]');
+            if (match) match.classList.add('active');
+        }
+
+        function loadTrack(ep, band) {
+            var sources = band === 'score' ? scoreSources : transmissionSources;
+            var src = sources[ep];
+            if (!src || !window.vuPlayer) return;
+
+            window.vuPlayer.loadSource(src);
+            if (epDisplay) epDisplay.textContent = ep;
+            setActiveListItem(ep, band);
+        }
+
+        function switchBand(band) {
+            if (band === currentBand) return;
+
+            bandBtns.forEach(function(b) { b.classList.remove('active'); });
+            document.querySelector('[data-band="' + band + '"]').classList.add('active');
+            currentBand = band;
+            window.currentBand = band;
+
+            // Update frequency label
+            if (band === 'score') {
+                freqLabel.textContent = 'FREQUENCY 7.83 MHz \u2014 SCORE';
+            } else {
+                freqLabel.textContent = 'FREQUENCY 7.83 MHz';
+            }
+
+            // Swap drawer content
+            updateDrawerForBand(band);
+
+            // Load first available track in the new band
+            var sources = band === 'score' ? scoreSources : transmissionSources;
+            var keys = Object.keys(sources);
+            if (keys.length > 0 && window.vuPlayer) {
+                var ep = keys[0];
+                window.vuPlayer.loadSource(sources[ep]);
+                if (epDisplay) epDisplay.textContent = ep;
+                setActiveListItem(ep, band);
+            }
+        }
+
+        // Band toggle clicks
+        bandBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                switchBand(btn.getAttribute('data-band'));
+            });
+        });
+
+        // List item clicks — play available tracks
+        document.querySelectorAll('.tx-list-item.available').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var ep = item.getAttribute('data-ep');
+                var band = item.getAttribute('data-band');
+                if (!ep || !band) return;
+
+                // Switch band if needed
+                if (band !== currentBand) switchBand(band);
+
+                loadTrack(ep, band);
+
+                // Auto-play
+                setTimeout(function() {
+                    if (window.vuPlayer && !window.vuPlayer.isPlaying()) {
+                        window.vuPlayer.play();
+                    }
+                }, 100);
+            });
+        });
+
+        window.switchBand = switchBand;
     })();
     </script>
     <script src="/js/doc-viewer.js"></script>

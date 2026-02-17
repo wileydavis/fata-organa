@@ -280,6 +280,103 @@
         display.textContent = String(level);
     }
 
+    // --- Inline clearance popover on redacted click ---
+    var popover = null;
+    var popoverTimeout = null;
+
+    function buildPopover() {
+        if (popover) return popover;
+        popover = document.createElement('div');
+        popover.className = 'clearance-popover';
+        popover.innerHTML = ''
+            + '<div class="clearance-popover-label">Spoiler Clearance</div>'
+            + '<div class="clearance-popover-control">'
+            +   '<button class="clearance-popover-btn" id="popover-down">\u2212</button>'
+            +   '<span class="clearance-popover-display" id="popover-display">0</span>'
+            +   '<button class="clearance-popover-btn" id="popover-up">+</button>'
+            + '</div>'
+            + '<div class="clearance-popover-hint">Set to number of episodes listened</div>';
+        document.body.appendChild(popover);
+
+        popover.querySelector('#popover-down').addEventListener('click', function(e) {
+            e.stopPropagation();
+            var lvl = getLevel();
+            if (lvl > 0) setLevel(lvl - 1);
+            updatePopoverDisplay(getLevel());
+        });
+
+        popover.querySelector('#popover-up').addEventListener('click', function(e) {
+            e.stopPropagation();
+            var lvl = getLevel();
+            if (lvl < MAX_LEVEL) setLevel(lvl + 1);
+            updatePopoverDisplay(getLevel());
+        });
+
+        // Prevent clicks inside from closing
+        popover.addEventListener('click', function(e) { e.stopPropagation(); });
+
+        return popover;
+    }
+
+    function updatePopoverDisplay(level) {
+        var display = document.getElementById('popover-display');
+        if (!display) return;
+        display.textContent = String(level);
+    }
+
+    function showPopover(e) {
+        var po = buildPopover();
+        updatePopoverDisplay(getLevel());
+
+        // Clear any pending hide
+        if (popoverTimeout) { clearTimeout(popoverTimeout); popoverTimeout = null; }
+
+        // Position near click — place above the click point, centered horizontally
+        po.style.display = 'block';
+        po.classList.add('visible');
+
+        // Measure popover size after making visible
+        var poRect = po.getBoundingClientRect();
+        var poW = poRect.width || 180;
+        var poH = poRect.height || 80;
+
+        var x = e.clientX - poW / 2;
+        var y = e.clientY - poH - 12;
+
+        // Keep within viewport
+        if (x < 8) x = 8;
+        if (x + poW > window.innerWidth - 8) x = window.innerWidth - 8 - poW;
+        if (y < 8) { y = e.clientY + 16; } // flip below if no room above
+
+        po.style.left = x + 'px';
+        po.style.top = y + 'px';
+    }
+
+    function hidePopover() {
+        if (!popover) return;
+        popover.classList.remove('visible');
+        popoverTimeout = setTimeout(function() {
+            if (popover) popover.style.display = 'none';
+        }, 250);
+    }
+
+    // Close popover on any outside click; open on redacted click
+    document.addEventListener('click', function(e) {
+        // Check if click is inside the popover
+        if (popover && popover.contains(e.target)) return;
+
+        // Check if click is on a redacted element
+        var target = e.target.closest ? e.target.closest('[data-spoiler].redacted') : null;
+        if (target) {
+            e.preventDefault();
+            showPopover(e);
+            return;
+        }
+
+        // Otherwise close
+        hidePopover();
+    });
+
     // --- Document viewer hook ---
     // Called by doc-viewer.js after content is injected
     window.spoilerSystem = {
