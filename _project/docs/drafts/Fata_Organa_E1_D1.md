@@ -136,8 +136,9 @@ Upon arrival it was obvious to me that even these revised plans that they'd made
 
 You could hear it in the receiving plaza that made punctuated echos of my footsteps as I walked across it. You could see it in the rows upon rows of perfect but empty tents. You could feel it in the way that the staff looked at one another amidst all this emptiness, deprived of any chance to assuage their guilt with good deeds. And you could see it in the way they looked at me, as a desperate glimpse of hope but also a reminder that this hope would not be enough.
 
-INT. SAILBOAT RADIO ROOM - CAFE FATA ORGANA
+INT. SAILBOAT RADIO ROOM - AIRPORT FATA ORGANA
 MARCUS
+
 I'd been in Quito for six months when my memories started to return. Not all at once. Just little dribs and drabs that somehow managed to pierce the overwhelming dream of the woman at Land's End... a dream that has not left my side. A dream that seems to define me with an authority that even these returning memories can't command. I wanted to welcome them home and give them their rightful place by the hearth but I couldn't.
 
 Strangely, the return of time upset me the most. Like the tinglings of a cough you thought you'd beaten. Time. Time. Time.
