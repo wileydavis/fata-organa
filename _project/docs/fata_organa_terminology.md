@@ -590,3 +590,40 @@ If publishing as website resource:
 **Total Entries:** 68 terms across 11 categories  
 **Last Updated:** January 2026  
 **Status:** Complete for current story development; may expand during writing
+
+
+---
+
+### Time as Container
+The oppressive return of temporal structure to Marcus's consciousness during his recovery in Quito. Rather than simply "returning," time acts as a colonizing force that "draws a line" that becomes a border, then a wall, then a container that prevents Marcus from "spilling out all over the sidewalk." Time "builds a house" in his mind and opens the door for other memories, forcing him back into linear, bounded identity after experiencing fluid consciousness in the CZ.
+
+This represents the broader theme of how structured systems (temporal, institutional, social) contain and limit human potential while appearing to organize it beneficially.
+
+**Related:** Boundaries and Frontiers, Abstraction, The Automations
+
+---
+
+### Pacific Refugee Authority (PRA)
+The institutional body established by the KPR to handle the expected hundreds of thousands of refugees from the Containment Zone. Built massive facilities along North American coastlines, later revised to smaller camps like Quito when it became clear no one was coming out alive. 
+
+Represents the tragedy of well-intentioned humanitarian systems that become monuments to unintended consequences. The empty camps designed for masses serve as testimony to the scale of miscalculation and the isolation of the single survivor (Marcus).
+
+**Related:** Scale, Unintended Consequences, The KPR
+
+---
+
+### Strategic Withholding (Marcus's Technique)
+Marcus's deliberate decision to keep certain memories and insights secret from his Quito handlers while appearing helplessly confused. He admits to "taking advantage of that guilt" from staff who know his condition is "all their fault." This reveals Marcus as more psychologically sophisticated than he initially appears—using apparent vulnerability as a strategic tool.
+
+In the context of the hidden structure, this foreshadows his strategic crafting of transmissions. He's always been more aware and capable than he lets others believe.
+
+**Related:** Hidden Structure, Strategic Narrator, Trust
+
+---
+
+### Heretical Saints
+Marcus's description of the Quito staff ("specialists, counselors, military interrogators, social workers, journalists, and even two novelists") who treated him with the "patience of heretical saints." Their saintly patience stems from unspoken knowledge that his condition is "all their fault," making their care a form of penance.
+
+Captures the psychology of institutional guilt—the way responsible parties care for victims with a combination of genuine compassion and self-interested need for absolution.
+
+**Related:** Strategic Withholding, Scale, Authority
