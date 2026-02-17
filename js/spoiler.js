@@ -360,17 +360,22 @@
         }, 250);
     }
 
-    // Close popover on any outside click
-    document.addEventListener('click', function() { hidePopover(); });
-
-    // Delegate click on redacted elements
+    // Close popover on any outside click; open on redacted click
     document.addEventListener('click', function(e) {
-        var target = e.target.closest('[data-spoiler].redacted');
-        if (!target) return;
-        e.preventDefault();
-        e.stopPropagation();
-        showPopover(e);
-    }, true);
+        // Check if click is inside the popover
+        if (popover && popover.contains(e.target)) return;
+
+        // Check if click is on a redacted element
+        var target = e.target.closest ? e.target.closest('[data-spoiler].redacted') : null;
+        if (target) {
+            e.preventDefault();
+            showPopover(e);
+            return;
+        }
+
+        // Otherwise close
+        hidePopover();
+    });
 
     // --- Document viewer hook ---
     // Called by doc-viewer.js after content is injected
