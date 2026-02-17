@@ -1097,35 +1097,70 @@
     (function() {
         var bandBtns = document.querySelectorAll('.tx-band-btn');
         var freqLabel = document.querySelector('.tx-freq-label');
+        var epDisplay = document.getElementById('ep-display');
         var currentBand = 'transmission';
 
-        // Expose current band globally for audio system
+        // Audio source maps — add URLs as episodes are produced
+        var transmissionSources = {
+            'TEASER': '/audio/teaser.mp3'
+            // 'EP 01': '/audio/transmissions/ep01.mp3',
+        };
+
+        var scoreSources = {
+            'EP 01': '/audio/score/ep01-attrition.mp3'
+            // 'EP 02': '/audio/score/ep02.mp3',
+        };
+
+        // Expose current band globally
         window.currentBand = currentBand;
+        window.audioSources = { transmission: transmissionSources, score: scoreSources };
+
+        function switchBand(band) {
+            if (band === currentBand) return;
+
+            bandBtns.forEach(function(b) { b.classList.remove('active'); });
+            document.querySelector('[data-band="' + band + '"]').classList.add('active');
+            currentBand = band;
+            window.currentBand = band;
+
+            // Update frequency label
+            if (band === 'score') {
+                freqLabel.textContent = 'FREQUENCY 7.83 MHz \u2014 SCORE';
+            } else {
+                freqLabel.textContent = 'FREQUENCY 7.83 MHz';
+            }
+
+            // Load the appropriate audio for the current episode display
+            var ep = epDisplay ? epDisplay.textContent.trim() : 'TEASER';
+            var sources = band === 'score' ? scoreSources : transmissionSources;
+            var src = sources[ep];
+
+            // If no source for current episode in this band, try first available
+            if (!src) {
+                var keys = Object.keys(sources);
+                if (keys.length > 0) {
+                    ep = keys[0];
+                    src = sources[ep];
+                    if (epDisplay) epDisplay.textContent = ep;
+                }
+            }
+
+            if (src && window.vuPlayer) {
+                window.vuPlayer.loadSource(src);
+            } else if (window.vuPlayer) {
+                // No source available for this band/episode combo
+                window.vuPlayer.loadSource('');
+                if (epDisplay) epDisplay.textContent = '\u2014';
+            }
+        }
 
         bandBtns.forEach(function(btn) {
             btn.addEventListener('click', function() {
-                var band = btn.getAttribute('data-band');
-                if (band === currentBand) return;
-
-                // Toggle active state
-                bandBtns.forEach(function(b) { b.classList.remove('active'); });
-                btn.classList.add('active');
-                currentBand = band;
-                window.currentBand = band;
-
-                // Update frequency label
-                if (band === 'score') {
-                    freqLabel.textContent = 'FREQUENCY 7.83 MHz — SCORE';
-                } else {
-                    freqLabel.textContent = 'FREQUENCY 7.83 MHz';
-                }
-
-                // Future: swap audio source based on band + current episode
-                // var ep = getCurrentEpisode();
-                // var src = band === 'score' ? scoreUrls[ep] : transmissionUrls[ep];
-                // vuMeter.loadSource(src);
+                switchBand(btn.getAttribute('data-band'));
             });
         });
+
+        window.switchBand = switchBand;
     })();
     </script>
     <script src="/js/doc-viewer.js"></script>
