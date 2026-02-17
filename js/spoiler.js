@@ -332,7 +332,7 @@
         if (popoverTimeout) { clearTimeout(popoverTimeout); popoverTimeout = null; }
 
         // Position near click — place above the click point, centered horizontally
-        po.style.display = '';
+        po.style.display = 'block';
         po.classList.add('visible');
 
         // Measure popover size after making visible
