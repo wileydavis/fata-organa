@@ -7,7 +7,7 @@
     position: relative;
     overflow: hidden;
     user-select: none;
-    cursor: default;
+    cursor: pointer;
 }
 
 /* Block-level redaction (terms, paragraphs, sections) */
@@ -73,7 +73,7 @@ span[data-spoiler].redacted {
     position: relative;
     overflow: hidden;
     user-select: none;
-    cursor: default;
+    cursor: pointer;
     background: repeating-linear-gradient(
         90deg,
         rgba(25, 25, 28, 0.97) 0px,
@@ -83,6 +83,18 @@ span[data-spoiler].redacted {
     );
     border-radius: 1px;
     margin: 0 0.1em;
+    transition: box-shadow 0.15s ease;
+}
+
+span[data-spoiler].redacted:hover {
+    box-shadow: 0 0 0 1px rgba(196, 163, 90, 0.15);
+}
+
+/* Block redacted hover */
+p.redacted:hover,
+div.redacted:hover,
+h3.redacted:hover {
+    outline: 1px solid rgba(196, 163, 90, 0.08);
 }
 
 span[data-spoiler].redacted * {
@@ -422,4 +434,89 @@ span[data-spoiler].redacted::before {
         padding-left: 1.25rem;
         padding-right: 1.25rem;
     }
+}
+
+/* ============================================
+   Inline Clearance Popover
+   (appears on click of any redacted element)
+   ============================================ */
+
+.clearance-popover {
+    position: fixed;
+    z-index: 10000;
+    display: none;
+    background: rgba(12, 12, 14, 0.97);
+    border: 1px solid rgba(196, 163, 90, 0.2);
+    padding: 0.65rem 0.9rem 0.55rem;
+    min-width: 170px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.clearance-popover.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.clearance-popover-label {
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(196, 163, 90, 0.45);
+    margin-bottom: 0.4rem;
+}
+
+.clearance-popover-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.clearance-popover-btn {
+    background: none;
+    border: 1px solid rgba(196, 163, 90, 0.2);
+    color: rgba(196, 163, 90, 0.65);
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 0.9rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    padding: 0;
+    line-height: 1;
+}
+
+.clearance-popover-btn:hover {
+    color: rgba(196, 163, 90, 1);
+    border-color: rgba(196, 163, 90, 0.4);
+    background: rgba(196, 163, 90, 0.06);
+}
+
+.clearance-popover-display {
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: rgba(196, 163, 90, 0.9);
+    min-width: 2rem;
+    text-align: center;
+    letter-spacing: 0.05em;
+}
+
+.clearance-popover-hint {
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(196, 163, 90, 0.25);
+    margin-top: 0.35rem;
 }
