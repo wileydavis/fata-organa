@@ -874,7 +874,7 @@
 
             <!-- Band Selector -->
             <div class="tx-band-selector">
-                <div class="tx-band-tooltip">TRANSMISSION — Narrated episodes with score<br>SCORE — Standalone musical tracks</div>
+                <div class="tx-band-tooltip">TRANSMISSION — Narrated episodes with score<br>SCORE — Standalone musical tracks<br><span style="opacity:0.5;">Tap active band to browse</span></div>
                 <button class="tx-band-btn active" id="band-transmission" data-band="transmission">Transmission</button>
                 <button class="tx-band-btn" id="band-score" data-band="score">Score</button>
             </div>
@@ -903,7 +903,6 @@
 
         <!-- Panel buttons -->
         <div class="tx-panel-buttons">
-            <button class="tx-drawer-btn" id="btn-transmissions">Transmissions</button>
             <button class="tx-drawer-btn" id="btn-archive">Field Manuals</button>
             <button class="tx-drawer-btn" id="btn-log">Project Log</button>
         </div>
@@ -1102,7 +1101,6 @@
             archive: document.getElementById('drawer-archive')
         };
         var buttons = {
-            transmissions: document.getElementById('btn-transmissions'),
             archive: document.getElementById('btn-archive')
         };
         var currentOpen = null;
@@ -1110,25 +1108,32 @@
         function openDrawer(name) {
             if (currentOpen === name) { closeAll(); return; }
             closeAll();
-            drawers[name].classList.add('open');
-            buttons[name].classList.add('active');
+            if (drawers[name]) drawers[name].classList.add('open');
+            if (buttons[name]) buttons[name].classList.add('active');
             overlay.classList.add('visible');
             currentOpen = name;
         }
 
         function closeAll() {
             Object.keys(drawers).forEach(function(k) {
-                drawers[k].classList.remove('open');
-                buttons[k].classList.remove('active');
+                if (drawers[k]) drawers[k].classList.remove('open');
+            });
+            Object.keys(buttons).forEach(function(k) {
+                if (buttons[k]) buttons[k].classList.remove('active');
             });
             overlay.classList.remove('visible');
             currentOpen = null;
         }
 
-        // Expose globally so doc-viewer can close drawers
-        window.closeAllDrawers = closeAll;
+        function isDrawerOpen(name) {
+            return currentOpen === name;
+        }
 
-        buttons.transmissions.addEventListener('click', function() { openDrawer('transmissions'); });
+        // Expose globally
+        window.closeAllDrawers = closeAll;
+        window.openDrawer = openDrawer;
+        window.isDrawerOpen = isDrawerOpen;
+
         buttons.archive.addEventListener('click', function() { openDrawer('archive'); });
         overlay.addEventListener('click', closeAll);
 
@@ -1161,7 +1166,6 @@
         var freqLabel = document.querySelector('.tx-freq-label');
         var epDisplay = document.getElementById('ep-display');
         var drawerTitle = document.getElementById('drawer-transmissions-title');
-        var drawerBtn = document.getElementById('btn-transmissions');
         var bodyTransmissions = document.getElementById('drawer-body-transmissions');
         var bodyScore = document.getElementById('drawer-body-score');
         var currentBand = 'transmission';
@@ -1184,12 +1188,10 @@
                 bodyTransmissions.style.display = 'none';
                 bodyScore.style.display = '';
                 drawerTitle.textContent = 'Score';
-                drawerBtn.textContent = 'Score';
             } else {
                 bodyScore.style.display = 'none';
                 bodyTransmissions.style.display = '';
                 drawerTitle.textContent = 'Transmissions';
-                drawerBtn.textContent = 'Transmissions';
             }
         }
 
@@ -1215,7 +1217,7 @@
         }
 
         function switchBand(band) {
-            if (band === currentBand) return;
+            if (band === currentBand) return false;
 
             bandBtns.forEach(function(b) { b.classList.remove('active'); });
             document.querySelector('[data-band="' + band + '"]').classList.add('active');
@@ -1241,12 +1243,25 @@
                 if (epDisplay) epDisplay.textContent = ep;
                 setActiveListItem(ep, band);
             }
+
+            return true;
         }
 
-        // Band toggle clicks
+        // Band toggle clicks — first tap switches band, second tap opens drawer
         bandBtns.forEach(function(btn) {
             btn.addEventListener('click', function() {
-                switchBand(btn.getAttribute('data-band'));
+                var band = btn.getAttribute('data-band');
+                var switched = switchBand(band);
+
+                if (!switched) {
+                    // Already on this band — toggle the transmissions drawer
+                    if (window.isDrawerOpen && window.isDrawerOpen('transmissions')) {
+                        window.closeAllDrawers();
+                    } else if (window.openDrawer) {
+                        updateDrawerForBand(band);
+                        window.openDrawer('transmissions');
+                    }
+                }
             });
         });
 
