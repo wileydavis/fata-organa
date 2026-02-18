@@ -6,7 +6,10 @@
 
 ## The Project
 
-Fata Organa is a 12-episode audio drama told as a podcast. Created by Wiley Davis. It began development in late December 2025 at Mars College near the Salton Sea.
+Fata Organa is a 12-episode ambient narrative meditation told as a podcast. Created by Wiley Davis. It began development in late December 2025 at Mars College near the Salton Sea.
+
+**Ambient Narrative Approach:**
+The project functions as both story and meditation. The goal is that listening becomes a contemplative, consciousness-altering experience rather than just narrative entertainment. The transmission format creates intimate, ritual space—like sitting with someone by a radio late at night. Philosophical tangents aren't digressions but invitations for listeners to reflect on their own experience alongside Marcus's journey. The 35-40 minute episode length matches meditation duration, with pacing designed for reflection rather than plot urgency.
 
 **The tagline:** "They thought it was a weapon. But it's a gift."
 
@@ -37,9 +40,12 @@ Where the Ableton Live production methodology was developed. Key outputs:
 
 **Core production framework:**
 - Key: D# minor, Tempo: 120 BPM, DAW: Ableton Live
-- Reference artists: Kangding Ray (Solens Arc), Gas (Pop), Ben Frost (A U R O R A)
+- Reference artists: Kangding Ray (Solens Arc), Gas (Pop), Ben Frost (A U R O R A) - chosen for their ability to create immersive, meditative soundscapes that support contemplative listening
 - Signal flow: Source → Shape → Space → Destroy → Space Again
-- Three narrative states: Analytical (voice forward), Receptive (trance), Transitional (seamless blend)
+- Three narrative states supporting meditative listening:
+- Analytical (voice forward) - clear transmission for contemplation
+- Receptive (trance) - ambient immersion for reflection  
+- Transitional (seamless blend) - consciousness flow between states
 - Voice processing rack: 3 parallel chains (Clarity/Texture/Rhythm) with chain selector macro
 - Rhythmic entrainment as both production technique and in-world plot mechanism
 
