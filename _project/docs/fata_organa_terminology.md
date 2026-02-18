@@ -627,3 +627,19 @@ Marcus's description of the Quito staff ("specialists, counselors, military inte
 Captures the psychology of institutional guilt—the way responsible parties care for victims with a combination of genuine compassion and self-interested need for absolution.
 
 **Related:** Strategic Withholding, Scale, Authority
+
+---
+
+### Ambient Narrative
+The storytelling approach of Fata Organa, designed to function as both story and meditation. Rather than narrative entertainment that demands attention, ambient narrative creates contemplative space where listeners can reflect on their own experience alongside the protagonist's journey.
+
+Key elements:
+- **Meditative pacing** - prioritizes reflection over plot urgency  
+- **Philosophical integration** - concepts emerge from experience, not academic explanation
+- **Consciousness-altering structure** - the listening experience parallels Marcus's journey toward fluid awareness
+- **Ritual space** - the transmission format creates intimate, sacred listening environment
+- **35-40 minute episodes** - meditation-length duration with natural breathing space
+
+The goal is for the entire listening experience to induce a "fata organa" state in the audience—seeing past mental performance to authentic being.
+
+**Related:** Fata Organa, Presence, Meditation, Transmission Format
