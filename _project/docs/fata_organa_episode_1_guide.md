@@ -226,7 +226,13 @@ Marcus identifies himself, establishes the transmission format:
 - Marcus's awareness and strategic use of this dynamic
 - Different kinds of professional approaches (military, social, journalistic, literary)
 
-### **4. Memory as Secret/Strategic Resource (New)**
+### **4. The False Pattern Structure (New Discovery)**
+- **Memory selection appears to favor fata organa moments** - creates audience expectation
+- **Pattern breaks when father memories revealed as dementia** (later episodes)  
+- **Meta-demonstration of anomaly** - listeners experience interpretive system failure
+- **Story structure embodies its themes** rather than just discussing them
+
+### **5. Memory as Secret/Strategic Resource (Updated)**
 - Not just recovering memories but choosing which to reveal
 - Transmission as confession of secrets withheld
 - Creates intimacy with listener (we get what Quito didn't)
