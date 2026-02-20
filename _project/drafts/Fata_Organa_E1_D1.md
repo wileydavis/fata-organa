@@ -164,6 +164,6 @@ The details of these people are precise, like little machines so perfectly made 
 
 But floating within these perfect machines are various abstractions about my life. A background radiation of color, a borealis of context incomplete. The machines are the picture of definition, with mass and texture and gleaming lines, whereas the abstractions from my life float through these scenes like grey figures, untethered from any context I can make out.
 
-As with all abstractions, I'm hesitant to trust them. Displacers of the particular. I was a son. I was an American. I believed in the righteousness of the individual over the group. Within the particulars of my memories these ideas swim like sharks. Untethered and indifferent to the 
+As with all abstractions, I'm hesitant to trust them. Displacers of the particular. I was a son. I was an American. I believed in the uncompromising righteousness of the individual over the group. Amidst the particulars of my memories these ideas swim like sharks. Untethered and indifferent to the humans they occasionally see as food. 
 
-My father was fascinated by abstractions, his comfort handling such dangerous things perhaps born from his solid grounding in the details and rigor of the particular. He was a machinist by trade and in many ways you could say he was a machinist by soul as well.
+My father was fascinated by abstractions, his comfort handling such dangerous things perhaps born from his solid grounding in the details and rigor of the particular. He was a machinist by trade and in many ways you could say he was a machinist by soul as well. The second memory to return was of him. This one long before the adjustment. When I was twelve and the abstractions of the world were just beginning to circle.
