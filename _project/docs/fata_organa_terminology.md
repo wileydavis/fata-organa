@@ -643,3 +643,32 @@ Key elements:
 The goal is for the entire listening experience to induce a "fata organa" state in the audience—seeing past mental performance to authentic being.
 
 **Related:** Fata Organa, Presence, Meditation, Transmission Format
+
+---
+
+### False Pattern Structure (Narrative Device)
+A sophisticated storytelling technique where Marcus establishes that his returning memories "select for fata organa moments" - times when he glimpsed authentic being through social performance. This creates audience expectation that all recovered memories follow this "transcendent moment" pattern.
+
+**The Pattern Break:**
+Later episodes reveal that father memories were actually dementia onset, not mystical transcendence. This breaks the established pattern and demonstrates anomaly through story structure rather than just discussing it conceptually.
+
+**Meta-Function:**
+Listeners experience exactly what Marcus describes about encountering anomalies - their interpretive system (understanding memory selection) proves more complex than expected. They must "account for their own presence in the system" of interpreting the story.
+
+**Thematic Resonance:**
+Embodies the core theme that "the system is more complex than imagined." The narrative itself becomes an anomaly that challenges listener expectations, creating the same disorientation characters experience.
+
+**Related:** Anomaly, Strategic Narrator, Hidden Structure, Pattern Recognition
+
+---
+
+### Memory Selection Pattern  
+Marcus's observation that his returning memories seem to favor moments when "the world's mask slipped a little" - fata organa experiences where he witnessed authentic being. Presented in Episode 1 as the filtering mechanism of his damaged consciousness.
+
+**Strategic Function:**
+- Establishes interpretive framework listeners can trust
+- Creates expectation that all memories follow "transcendent moment" criteria  
+- Sets up later revelation that some memories (father's) returned for different reasons (trauma/unresolved guilt)
+- Demonstrates how we impose meaningful patterns on ambiguous data
+
+**Related:** False Pattern Structure, Fata Organa, Strategic Withholding
