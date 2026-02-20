@@ -167,7 +167,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0;
+        gap: 0.4rem;
         border-left: 1px solid rgba(196, 163, 90, 0.12);
         border-right: 1px solid rgba(196, 163, 90, 0.12);
         background: rgba(196, 163, 90, 0.015);
@@ -181,32 +181,31 @@
         text-transform: uppercase;
         letter-spacing: 0.12em;
         background: none;
-        border: 1px solid rgba(196, 163, 90, 0.12);
-        color: rgba(196, 163, 90, 0.3);
+        border: 1px solid rgba(196, 163, 90, 0.08);
+        color: rgba(196, 163, 90, 0.25);
         padding: 0.2rem 0.75rem;
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
-    }
-
-    .tx-band-btn:first-child {
-        border-radius: 2px 0 0 2px;
-        border-right: none;
-    }
-
-    .tx-band-btn:last-child {
-        border-radius: 0 2px 2px 0;
+        border-radius: 2px;
     }
 
     .tx-band-btn.active {
         color: rgba(196, 163, 90, 0.85);
-        background: rgba(196, 163, 90, 0.08);
-        border-color: rgba(196, 163, 90, 0.25);
+        border-color: rgba(196, 163, 90, 0.2);
     }
 
     .tx-band-btn:hover:not(.active) {
-        color: rgba(196, 163, 90, 0.5);
-        border-color: rgba(196, 163, 90, 0.2);
+        color: rgba(196, 163, 90, 0.45);
+        border-color: rgba(196, 163, 90, 0.15);
+    }
+
+    .tx-band-toggle {
+        cursor: pointer;
+        display: block;
+        width: 36px;
+        height: 24px;
+        flex-shrink: 0;
     }
 
     /* Band selector tooltip */
@@ -874,8 +873,9 @@
 
             <!-- Band Selector -->
             <div class="tx-band-selector">
-                <div class="tx-band-tooltip">TRANSMISSION — Narrated episodes with score<br>SCORE — Standalone musical tracks</div>
+                <div class="tx-band-tooltip">TRANSMISSION — Narrated episodes with score<br>SCORE — Standalone musical tracks<br><span style="opacity:0.5;">Tap active band to browse</span></div>
                 <button class="tx-band-btn active" id="band-transmission" data-band="transmission">Transmission</button>
+                <canvas class="tx-band-toggle" id="band-toggle" width="36" height="24"></canvas>
                 <button class="tx-band-btn" id="band-score" data-band="score">Score</button>
             </div>
 
@@ -903,7 +903,6 @@
 
         <!-- Panel buttons -->
         <div class="tx-panel-buttons">
-            <button class="tx-drawer-btn" id="btn-transmissions">Transmissions</button>
             <button class="tx-drawer-btn" id="btn-archive">Field Manuals</button>
             <button class="tx-drawer-btn" id="btn-log">Project Log</button>
         </div>
@@ -1102,7 +1101,6 @@
             archive: document.getElementById('drawer-archive')
         };
         var buttons = {
-            transmissions: document.getElementById('btn-transmissions'),
             archive: document.getElementById('btn-archive')
         };
         var currentOpen = null;
@@ -1110,25 +1108,32 @@
         function openDrawer(name) {
             if (currentOpen === name) { closeAll(); return; }
             closeAll();
-            drawers[name].classList.add('open');
-            buttons[name].classList.add('active');
+            if (drawers[name]) drawers[name].classList.add('open');
+            if (buttons[name]) buttons[name].classList.add('active');
             overlay.classList.add('visible');
             currentOpen = name;
         }
 
         function closeAll() {
             Object.keys(drawers).forEach(function(k) {
-                drawers[k].classList.remove('open');
-                buttons[k].classList.remove('active');
+                if (drawers[k]) drawers[k].classList.remove('open');
+            });
+            Object.keys(buttons).forEach(function(k) {
+                if (buttons[k]) buttons[k].classList.remove('active');
             });
             overlay.classList.remove('visible');
             currentOpen = null;
         }
 
-        // Expose globally so doc-viewer can close drawers
-        window.closeAllDrawers = closeAll;
+        function isDrawerOpen(name) {
+            return currentOpen === name;
+        }
 
-        buttons.transmissions.addEventListener('click', function() { openDrawer('transmissions'); });
+        // Expose globally
+        window.closeAllDrawers = closeAll;
+        window.openDrawer = openDrawer;
+        window.isDrawerOpen = isDrawerOpen;
+
         buttons.archive.addEventListener('click', function() { openDrawer('archive'); });
         overlay.addEventListener('click', closeAll);
 
@@ -1161,7 +1166,6 @@
         var freqLabel = document.querySelector('.tx-freq-label');
         var epDisplay = document.getElementById('ep-display');
         var drawerTitle = document.getElementById('drawer-transmissions-title');
-        var drawerBtn = document.getElementById('btn-transmissions');
         var bodyTransmissions = document.getElementById('drawer-body-transmissions');
         var bodyScore = document.getElementById('drawer-body-score');
         var currentBand = 'transmission';
@@ -1184,12 +1188,10 @@
                 bodyTransmissions.style.display = 'none';
                 bodyScore.style.display = '';
                 drawerTitle.textContent = 'Score';
-                drawerBtn.textContent = 'Score';
             } else {
                 bodyScore.style.display = 'none';
                 bodyTransmissions.style.display = '';
                 drawerTitle.textContent = 'Transmissions';
-                drawerBtn.textContent = 'Transmissions';
             }
         }
 
@@ -1215,7 +1217,7 @@
         }
 
         function switchBand(band) {
-            if (band === currentBand) return;
+            if (band === currentBand) return false;
 
             bandBtns.forEach(function(b) { b.classList.remove('active'); });
             document.querySelector('[data-band="' + band + '"]').classList.add('active');
@@ -1241,12 +1243,25 @@
                 if (epDisplay) epDisplay.textContent = ep;
                 setActiveListItem(ep, band);
             }
+
+            return true;
         }
 
-        // Band toggle clicks
+        // Band toggle clicks — first tap switches band, second tap opens drawer
         bandBtns.forEach(function(btn) {
             btn.addEventListener('click', function() {
-                switchBand(btn.getAttribute('data-band'));
+                var band = btn.getAttribute('data-band');
+                var switched = switchBand(band);
+
+                if (!switched) {
+                    // Already on this band — toggle the transmissions drawer
+                    if (window.isDrawerOpen && window.isDrawerOpen('transmissions')) {
+                        window.closeAllDrawers();
+                    } else if (window.openDrawer) {
+                        updateDrawerForBand(band);
+                        window.openDrawer('transmissions');
+                    }
+                }
             });
         });
 
@@ -1272,6 +1287,200 @@
         });
 
         window.switchBand = switchBand;
+    })();
+
+    // Band toggle canvas switch
+    (function() {
+        var canvas = document.getElementById('band-toggle');
+        if (!canvas) return;
+        var dpr = window.devicePixelRatio || 1;
+        var W = 36;
+        var H = 24;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        // Polyfill roundRect for older browsers
+        if (!ctx.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (typeof r === 'number') r = [r];
+                var rad = r[0] || 0;
+                this.moveTo(x + rad, y);
+                this.lineTo(x + w - rad, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + rad);
+                this.lineTo(x + w, y + h - rad);
+                this.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+                this.lineTo(x + rad, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - rad);
+                this.lineTo(x, y + rad);
+                this.quadraticCurveTo(x, y, x + rad, y);
+                this.closePath();
+            };
+        }
+
+        // State: 0 = transmission (left), 1 = score (right)
+        var position = 0;       // current animated position 0-1
+        var target = 0;         // target position
+        var glowPulse = 0;      // subtle pulse cycle
+
+        // Colors from the transmitter palette
+        var amber = { r: 196, g: 163, b: 90 };
+
+        function rgba(r, g, b, a) {
+            return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            var cx = W / 2;
+            var cy = H / 2;
+            var trackW = 22;
+            var trackH = 8;
+            var trackL = cx - trackW / 2;
+            var trackR = cx + trackW / 2;
+            var trackT = cy - trackH / 2;
+            var knobR = 4.5;
+
+            // Subtle glow pulse
+            glowPulse += 0.015;
+            var pulse = 0.5 + Math.sin(glowPulse) * 0.08;
+
+            // Track groove
+            ctx.beginPath();
+            ctx.roundRect(trackL, trackT, trackW, trackH, 4);
+            ctx.fillStyle = rgba(20, 20, 22, 0.9);
+            ctx.fill();
+            ctx.strokeStyle = rgba(amber.r, amber.g, amber.b, 0.12);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+
+            // Track fill — illuminated side indicates active
+            var fillGrad = ctx.createLinearGradient(trackL, 0, trackR, 0);
+            if (position < 0.5) {
+                // Transmission active — left side lit
+                fillGrad.addColorStop(0, rgba(amber.r, amber.g, amber.b, 0.08 * pulse * 2));
+                fillGrad.addColorStop(position + 0.1, rgba(amber.r, amber.g, amber.b, 0.03));
+                fillGrad.addColorStop(1, rgba(20, 20, 22, 0));
+            } else {
+                // Score active — right side lit
+                fillGrad.addColorStop(0, rgba(20, 20, 22, 0));
+                fillGrad.addColorStop(position - 0.1, rgba(amber.r, amber.g, amber.b, 0.03));
+                fillGrad.addColorStop(1, rgba(amber.r, amber.g, amber.b, 0.08 * pulse * 2));
+            }
+            ctx.beginPath();
+            ctx.roundRect(trackL + 0.5, trackT + 0.5, trackW - 1, trackH - 1, 3.5);
+            ctx.fillStyle = fillGrad;
+            ctx.fill();
+
+            // Center line / detent mark
+            ctx.beginPath();
+            ctx.moveTo(cx, trackT + 2);
+            ctx.lineTo(cx, trackT + trackH - 2);
+            ctx.strokeStyle = rgba(amber.r, amber.g, amber.b, 0.06);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+
+            // Knob position
+            var knobTravel = trackW - knobR * 2 - 2;
+            var knobX = trackL + knobR + 1 + position * knobTravel;
+            var knobY = cy;
+
+            // Knob glow (underneath)
+            var glowGrad = ctx.createRadialGradient(knobX, knobY, 0, knobX, knobY, knobR * 2.5);
+            glowGrad.addColorStop(0, rgba(amber.r, amber.g, amber.b, 0.12 * pulse * 2));
+            glowGrad.addColorStop(1, rgba(amber.r, amber.g, amber.b, 0));
+            ctx.beginPath();
+            ctx.arc(knobX, knobY, knobR * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = glowGrad;
+            ctx.fill();
+
+            // Knob body
+            var knobGrad = ctx.createRadialGradient(knobX - 1, knobY - 1, 0, knobX, knobY, knobR);
+            knobGrad.addColorStop(0, rgba(60, 58, 50, 1));
+            knobGrad.addColorStop(0.6, rgba(40, 38, 34, 1));
+            knobGrad.addColorStop(1, rgba(28, 27, 24, 1));
+            ctx.beginPath();
+            ctx.arc(knobX, knobY, knobR, 0, Math.PI * 2);
+            ctx.fillStyle = knobGrad;
+            ctx.fill();
+
+            // Knob edge
+            ctx.strokeStyle = rgba(amber.r, amber.g, amber.b, 0.18 + pulse * 0.08);
+            ctx.lineWidth = 0.75;
+            ctx.stroke();
+
+            // Knob indicator line (vertical groove)
+            ctx.beginPath();
+            ctx.moveTo(knobX, knobY - 2);
+            ctx.lineTo(knobX, knobY + 2);
+            ctx.strokeStyle = rgba(amber.r, amber.g, amber.b, 0.35 + pulse * 0.15);
+            ctx.lineWidth = 0.75;
+            ctx.stroke();
+
+            // Tick marks at ends
+            var tickY1 = trackT - 1.5;
+            var tickY2 = trackT - 4;
+            // Left tick
+            ctx.beginPath();
+            ctx.moveTo(trackL + knobR + 1, tickY1);
+            ctx.lineTo(trackL + knobR + 1, tickY2);
+            ctx.strokeStyle = rgba(amber.r, amber.g, amber.b, position < 0.5 ? 0.3 : 0.08);
+            ctx.lineWidth = 0.75;
+            ctx.stroke();
+            // Right tick
+            ctx.beginPath();
+            ctx.moveTo(trackR - knobR - 1, tickY1);
+            ctx.lineTo(trackR - knobR - 1, tickY2);
+            ctx.strokeStyle = rgba(amber.r, amber.g, amber.b, position >= 0.5 ? 0.3 : 0.08);
+            ctx.lineWidth = 0.75;
+            ctx.stroke();
+        }
+
+        function animate() {
+            // Ease toward target
+            var diff = target - position;
+            if (Math.abs(diff) > 0.002) {
+                position += diff * 0.12;
+            } else {
+                position = target;
+            }
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Click to toggle
+        canvas.addEventListener('click', function() {
+            if (target < 0.5) {
+                // Switch to score
+                if (window.switchBand) window.switchBand('score');
+                target = 1;
+            } else {
+                // Switch to transmission
+                if (window.switchBand) window.switchBand('transmission');
+                target = 0;
+            }
+        });
+
+        // Listen for external band changes (from the buttons)
+        var origSwitchBand = window.switchBand;
+        window.switchBand = function(band) {
+            target = (band === 'score') ? 1 : 0;
+            if (origSwitchBand) return origSwitchBand(band);
+        };
+
+        // Also sync on button clicks for second-tap drawer behavior
+        document.querySelectorAll('.tx-band-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var band = btn.getAttribute('data-band');
+                target = (band === 'score') ? 1 : 0;
+            });
+        });
+
+        animate();
     })();
     </script>
     <script src="/js/doc-viewer.js"></script>
