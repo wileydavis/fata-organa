@@ -1,9 +1,8 @@
-Fata Organa - Episode 1
+# Fata Organa - Episode 1
 
 by Wiley Davis
 
-INT. SAILBOAT RADIO ROOM - COLD OPEN
-MARCUS
+## INT. SAILBOAT RADIO ROOM - COLD OPEN
 
 I have this recurring dream about a woman sitting on the beach at Land's End and staring at the sea.
 
@@ -21,8 +20,7 @@ She continues staring at the sea and just before I wake she whispers loud enough
 
 They thought it was a weapon. But it's a gift.
 
-INT. SAILBOAT RADIO ROOM - COLD OPEN
-MARCUS
+## INT. SAILBOAT RADIO ROOM - COLD OPEN
 
 I am told that a French naval vessel found me 200 nautical miles outside the North American containment zone, adrift in an open fishing boat, sunburnt and conscious, but unresponsive.
 
@@ -34,8 +32,7 @@ It's not amnesia. I have memories, but they're less than coherent, like they've 
 
 I never told them about my dream, but I know where it took place. I can't shake the feeling that I made a mistake there and that I have to go back.
 
-INT. SAILBOAT RADIO ROOM - FRAME
-MARCUS
+## INT. SAILBOAT RADIO ROOM - FRAME
 
 You can call me Marcus. That's what I'm told I was called before the Adjustment, as they refer to it, and various tangible facts about myself apparently confirm that. My fingerprints. My face. My gait. Something about the patterns of my electrical conductivity.
 
@@ -93,8 +90,7 @@ An immense density but moveable with just a touch.
 
 I too am drowning in what has been done. But not in fear.
 
-INT. SAILBOAT RADIO ROOM - THE DESTROYER
-MARCUS
+## INT. SAILBOAT RADIO ROOM - THE DESTROYER
 
 [conduit ask asking]
 I often find myself thinking of Captain Beaumont. His was the first face I saw when I reemerged as something identifiably Marcus. But I can't recall his face at all... only his grey-blue eyes locked on mine in what would normally be an overwhelming amount of eye contact, but here, as those strange memories that aren't memories settled into their Marcus-shaped positions, I found Beaumont's stare to be a conduit. Like a tractor beam reeling me up from the depths.
@@ -123,8 +119,7 @@ For three months they'd been looking and looking to no avail.
 
 Until they found me in that fishing boat, they were starting to wonder if there would be any survivors at all.
 
-INT. SAILBOAT RADIO ROOM - QUITO
-MARCUS
+## INT. SAILBOAT RADIO ROOM - QUITO
 
 I discovered this fact aboard the ship but when we docked in Quito and Beaumont placed me into the hands of the official Pacific Refugee Authority, the gravity of the situation became distinctly obvious.
 
@@ -136,7 +131,7 @@ Upon arrival it was obvious to me that even these revised plans that they'd made
 
 You could hear it in the receiving plaza that made punctuated echos of my footsteps as I walked across it. You could see it in the rows upon rows of perfect but empty tents. You could feel it in the way that the staff looked at one another amidst all this emptiness, deprived of any chance to assuage their guilt with good deeds. And you could see it in the way they looked at me, as a desperate glimpse of hope but also a reminder that this hope would not be enough.
 
-INT. SAILBOAT RADIO ROOM - CAFE FATA ORGANA
+## INT. SAILBOAT RADIO ROOM - AIRPORT FATA ORGANA
 
 I'd been in Quito for six months when my memories started to return. Not all at once. Just little dribs and drabs that somehow managed to pierce the overwhelming dream of the woman at Land's End... a dream that has not left my side. A dream that seems to define me with an authority that even these returning memories can't command. Part of me wanted to welcome these recollections home and give them their rightful place by the hearth but I couldn't. They live here once again but they are no longer family.
 
@@ -161,3 +156,5 @@ This went on for some time. Adjust, smooth, glance, shift, repeat. And then, sud
 I say somehow because even in recollection I can't pin down exactly what changed. Like I was watching a pure expression of subtlety, of nuance. Incredible what the smallest variations of muscle can communicate. Enough information to transform an entire airport lobby, contained in the simple cant of a person's limbs and the plastic modulation of a face. The self-aware middle manager had departed and in his place was another person entirely. An emergent phenomenon that should have been his entire being all along. The kind of person who has a name that can't be represented as sound or symbol. Something so much more than middle manager in cheap suit. A name he deserves.
 
 And as delicately as it arrived, this grace sank back into the mist. The lean once again a stiff collection of awkward angles. Eyes much too aware of the imagined stares from others.
+
+## INT. SAILBOAT RADIO ROOM - MEASUREMENT LESSON
