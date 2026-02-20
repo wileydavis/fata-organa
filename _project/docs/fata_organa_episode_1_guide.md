@@ -175,7 +175,7 @@ Marcus identifies himself, establishes the transmission format:
 
 ---
 
-### AIRPORT FATA ORGANA: O'Hare Memory (In Progress)
+### AIRPORT FATA ORGANA: O'Hare Memory (Completed)
 **Duration:** 5-7 minutes  
 **Audio:** Airport ambiance—announcements, departures, fluorescent buzz, hard surfaces
 
