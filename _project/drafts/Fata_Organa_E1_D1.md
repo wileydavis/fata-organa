@@ -158,12 +158,15 @@ I say somehow because even in recollection I can't pin down exactly what changed
 And as delicately as it arrived, this grace sank back into the mist. The lean once again a stiff collection of awkward angles. Eyes much too aware of the imagined stares from others.
 
 ## INT. SAILBOAT RADIO ROOM - MEASUREMENT LESSON
+
 All of my returned memories are like this. Small slices where the mask of a person dissolves.
 
 The details of these people are precise, like little machines so perfectly made they could run forever, and I find myself wondering what significance this holds. Is there meaning in this pattern?  
 
 But floating within these perfect machines are various abstractions about my life. A background radiation of color, a borealis of context incomplete. The machines are the picture of definition, with mass and texture and gleaming lines, whereas the abstractions from my life float through these scenes like grey figures, untethered from any context I can make out.
 
-As with all abstractions, I'm hesitant to trust them. Displacers of the particular. I was a son. I was an American. I believed in the uncompromising righteousness of the individual over the group. Amidst the particulars of my memories these ideas swim like sharks. Untethered and indifferent to the humans they occasionally see as food. 
+As with all abstractions, I'm hesitant to trust them. Displacers of the particular. I was a son. I was an American. I believed in the uncompromising righteousness of the individual over the group. Amidst the particulars of my memories these ideas swim like sharks. Untethered and indifferent to the humans they occasionally see as food.
 
 My father was fascinated by abstractions, his comfort handling such dangerous things perhaps born from his solid grounding in the details and rigor of the particular. He was a machinist by trade and in many ways you could say he was a machinist by soul as well. The second memory to return was of him. This one long before the adjustment. When I was twelve and the abstractions of the world were just beginning to circle.
+
+Some books might say that we are made of clay but those books didn't know my father. My father was made of metals and the smell of machine coolant which smells like no other thing that I can describe except to say that anyone who has spent time in machine shops will recognize the smell immediately. Perhaps even with a tinge of pleasant nostalgia as I do. 
