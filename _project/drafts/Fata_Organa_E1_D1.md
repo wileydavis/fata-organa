@@ -177,7 +177,7 @@ But for some reason I overcame my hesitation on this night. I put on my big coat
 
 At the door I pressed my ear against its cold metal skin and listened. The machines made no noise which means they must not be running, so I listened for that strange silent property of another person's mood. Reaching out for the sound of their thoughts. Was he deep in the grips of a problem? He often said that the most difficult aspect of machining was figuring out how to hold things. Such holding occupied his dreams. Or was he just taking a quiet moment for himself before rejioning his family, rejoining his responsible life? I used to think I could hear such frequencies in people. Like if I could just listen closely enough, the right time to join in would present itself. A perfect welcoming gap. I remember thinking this might have meant I was crazy in some minor way but my conviction in this was unshakeable. The things we touch without even knowing.
 
-Ear on the door I heard a gap in my father's intention. A lull in his focus. A nice pocket in which to sit. When I heard it I simply opened the door, walked in, and said, "Teach me something?"
+Ear on the door, I heard a gap in my father's intention. A lull in his focus. A nice pocket in which to sit. When I heard it I simply opened the door, walked in, and said, "Teach me something?"
 
 A simple exchange that would become a pattern in our lives, but as far as I can remember this was the first occurence in that pattern. A pattern that would draw a line in my mind dividing my father into two beings, the one I knew before the pattern and the one after.
 
