@@ -169,4 +169,17 @@ As with all abstractions, I'm hesitant to trust them. Displacers of the particul
 
 My father was fascinated by abstractions, his comfort handling such dangerous things perhaps born from his solid grounding in the details and rigor of the particular. He was a machinist by trade and in many ways you could say he was a machinist by soul as well. The second memory to return was of him. This one long before the adjustment. When I was twelve and the abstractions of the world were just beginning to circle.
 
-Some books might say that we are made of clay but those books didn't know my father. My father was made of metals and the smell of machine coolant which smells like no other thing that I can describe except to say that anyone who has spent time in machine shops will recognize the smell immediately. Perhaps even with a tinge of pleasant nostalgia as I do. 
+Some books might say that we are made of clay but those books didn't know my father. My father was made of metals and the smell of machine coolant which smells like no other thing that I can describe except to say that anyone who has spent time in machine shops will recognize the smell immediately. Perhaps even with a tinge of pleasant nostalgia as I do. It's a smell both chemical and earthen. Astrigent. Fecund. Dangerously overpowering. Like home.
+
+My father's shop was a corrugated metal building in our back yard. It had a large roll up door that faced the alley and a man door that faced our house. I'd often watch that door, open in the summer evenings and closed on this particular winter one, light leaking out from underneath. Watching for him to be done with his work. Hesitant to interrupt that work but almost desperate for his calm attention. Worried that I'd fall asleep before the door finally swung open and the light clicked off for the night. A familliar pattern of my youth.
+
+But for some reason I overcame my hesitation on this night. I put on my big coat, and my mud boots and quietly trooped across the snow-covered yard. The snow was fresh, still falling in fact, and it muffled the soft crunch of my footsteps as they sank into the moonlit blanket covering the ground.
+
+At the door I pressed my ear against its cold metal skin and listened. The machines made no noise which means they must not be running, so I listened for that strange silent property of another person's mood. Reaching out for the sound of their thoughts. Was he deep in the grips of a problem? He often said that the most difficult aspect of machining was figuring out how to hold things. Such holding occupied his dreams. Or was he just taking a quiet moment for himself before rejioning his family, rejoining his responsible life? I used to think I could hear such frequencies in people. Like if I could just listen closely enough, the right time to join in would present itself. A perfect welcoming gap. I remember thinking this might have meant I was crazy in some minor way but my conviction in this was unshakeable. The things we touch without even knowing.
+
+Ear on the door I heard a gap in my father's intention. A lull in his focus. A nice pocket in which to sit. When I heard it I simply opened the door, walked in, and said, "Teach me something?"
+
+A simple exchange that would become a pattern in our lives, but as far as I can remember this was the first occurence in that pattern. A pattern that would draw a line in my mind dividing my father into two beings, the one I knew before the pattern and the one after.
+
+He looked at me for a moment and I could hear a pin click into place in his mind. "Come here," he said. "I'll teach you how impossible it is to take the measure of something."
+
