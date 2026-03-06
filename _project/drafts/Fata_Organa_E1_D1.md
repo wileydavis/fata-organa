@@ -185,21 +185,19 @@ Ear on the door, I heard a gap in my father's intention. A lull in his focus. A 
 
 A simple exchange that would become a pattern in our lives, but as far as I can remember this was the first occurence in that pattern. A pattern that would draw a line in my mind dividing my father into two beings, the one I knew before the pattern and the one after.
 
-He looked at me for a moment and I could hear a pin click into place in his mind. "Come here," he said. "I'll teach you how impossible it is to take the measure of something."
+He looked at me for a moment and I could hear a pin click into place in his mind. "Come here," he said. "I know just the place to start."
 
-From his workbench he picked up a set of calipers and a silver aluminum bar that had been turned on the lathe so that it was both  shiny and ringed with miniscule ribs you could feel with the pad of your finger but not really see with the naked eye. That had been a lesson from my father as well... a lesson from some other memory not yet returned, that the eye was often the most unreliable sense in a machine shop. Sound and touch being more sensitive to the pleas of machines and metal than the eyes could ever be.
+From his workbench he picked up a set of calipers and a silver aluminum bar that had been turned on the lathe so that it was both  shiny and ringed with miniscule ribs you could feel with the pad of your finger but not really see with the naked eye. That had been a lesson from my father as well... a lesson from some other memory not yet returned but present in this one, that the eye was the most unreliable sense in a machine shop. Sound and touch being more sensitive to the pleas of machines and metal than the eyes could ever be.
 
 But in this memory, he taught me something perhaps even more fundamental. At first it seemed as if he were simply showing me how to hold and measure the aluminum bar with his calipers. As I was taking my first measurment, he reached across the bench and pulled a notepad toward himself while simultaneously clicking open a pen he'd pulled from his shirt pocket. "Tell me the number," he said. I told him the number and he wrote it down on the pad. "Again," he said. I measured again and told him the number and he wrote it down on the pad under the first. And so on and so on for twelve measurements.
 
-I was so focused on handling the calipers in a way he'd be impressed with. Careful with them. Consistent with how I held them and where I measured the rod. Consistent with the pressure. A dutiful student. Perhaps even a natural in his eyes.
+I was so focused on handling the calipers in a way he'd be impressed with. Careful with them. Consistent with how I held them and where I measured the bar. Consistent with the pressure. A dutiful student. Perhaps, I hoped, a natural in his eyes.
 
-He looked at the pad in silence for a monet and without a word pushed the pad across for me to read. I stared at the list of numbers for longer than I needed to.
+He looked at the pad in silence for a moment and without a word pushed the pad across for me to read. I stared at the list of numbers for longer than I needed to.
 
 "What do you see?" he said.
 
 "The numbers get bigger," I said. He nodded.
 
-I was about to apologize for my technique when he held up his hand, like he too could hear my thoughts, my shame, and said, "It's your fault but not in the way you think. Your technique was flawless but while you were taking such careful measurements, the heat from your hand was warming the bar. Not much but enough to cause an expansion. The calipers were measureing the rod but also measuring you. And now you know how to use calipers. But more importantly, you now know that you can never absolve yourself from the things you measure."
-
-
+I was about to apologize for my technique, my failure, when he held up his hand, like he too could hear my thoughts, my shame, and said, "It's your fault but not in the way you think. Your technique was flawless but while you were taking such careful measurements, the heat from your hand was warming the bar. Not much but enough to cause an expansion. The calipers were measureing the bar but also measuring you." He paused to let tht sink into my twelve year old brain. "And now you know how to use calipers. But more importantly, you now know that you can never absolve yourself from the things you measure."
 
