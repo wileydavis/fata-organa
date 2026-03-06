@@ -155,7 +155,7 @@ This went on for some time. Adjust, smooth, glance, shift, repeat. And then, sud
 
 I say somehow because even in recollection I can't pin down exactly what changed. Like I was watching a pure expression of subtlety, of nuance. Incredible what the smallest variations of muscle can communicate. Enough information to transform an entire airport lobby, contained in the simple cant of a person's limbs and the plastic modulation of a face. The self-aware middle manager had departed and in his place was another person entirely. An emergent phenomenon that should have been his entire being all along. The kind of person who has a name that can't be represented as sound or symbol. Something so much more than middle manager in cheap suit. A name he deserves.
 
-And as delicately as it arrived, this grace sank back into the mist. The lean once again a stiff collection of awkward angles. Eyes much too aware of the imagined stares from others.
+And as delicately as it arrived, this grace sank back into the mist.dr The lean once again a stiff collection of awkward angles. Eyes much too aware of the imagined stares from others.
 
 ## INT. SAILBOAT RADIO ROOM - MEASUREMENT LESSON
 
@@ -169,17 +169,37 @@ As with all abstractions, I'm hesitant to trust them. Displacers of the particul
 
 My father was fascinated by abstractions, his comfort handling such dangerous things perhaps born from his solid grounding in the details and rigor of the particular. He was a machinist by trade and in many ways you could say he was a machinist by soul as well. The second memory to return was of him. This one long before the adjustment. When I was twelve and the abstractions of the world were just beginning to circle.
 
-Some books might say that we are made of clay but those books didn't know my father. My father was made of metals and the smell of machine coolant which smells like no other thing that I can describe except to say that anyone who has spent time in machine shops will recognize the smell immediately. Perhaps even with a tinge of pleasant nostalgia as I do. It's a smell both chemical and earthen. Astrigent. Fecund. Dangerously overpowering. Like home.
+Some books might say that we are made of clay but those books didn't know my father. My father was made of metals and the smell of machine coolant which smells like no other thing that I can describe except to say that anyone who has spent time in machine shops will recognize it immediately. Perhaps even with a tinge of pleasant nostalgia as I do. It's a smell both chemical and earthen. Astrigent. Fecund. Dangerously overpowering. Like home.
 
-My father's shop was a corrugated metal building in our back yard. It had a large roll up door that faced the alley and a man door that faced our house. I'd often watch that door, open in the summer evenings and closed on this particular winter one, light leaking out from underneath. Watching for him to be done with his work. Hesitant to interrupt that work but almost desperate for his calm attention. Worried that I'd fall asleep before the door finally swung open and the light clicked off for the night. A familliar pattern of my youth.
+My father's shop was a corrugated metal building in our back yard. It had a large roll up door that faced the alley and a man door that faced our house. I'd often watch that door, open in the summer evenings and closed on this particular winter one, light leaking out from underneath, watching for him to be done with his work. Hesitant to interrupt that work but almost desperate for his calm attention. Worried that I'd fall asleep before the door finally swung open and the light clicked off for the night. A familliar pattern of my youth.
 
 But for some reason I overcame my hesitation on this night. I put on my big coat, and my mud boots and quietly trooped across the snow-covered yard. The snow was fresh, still falling in fact, and it muffled the soft crunch of my footsteps as they sank into the moonlit blanket covering the ground.
 
-At the door I pressed my ear against its cold metal skin and listened. The machines made no noise which means they must not be running, so I listened for that strange silent property of another person's mood. Reaching out for the sound of their thoughts. Was he deep in the grips of a problem? He often said that the most difficult aspect of machining was figuring out how to hold things. Such holding occupied his dreams. Or was he just taking a quiet moment for himself before rejioning his family, rejoining his responsible life? I used to think I could hear such frequencies in people. Like if I could just listen closely enough, the right time to join in would present itself. A perfect welcoming gap. I remember thinking this might have meant I was crazy in some minor way but my conviction in this was unshakeable. The things we touch without even knowing.
+At the door I pressed my ear against its cold metal skin and listened. The machines made no noise which means they must not be running, so I listened for that strange silent property of another person's mood. Reaching out for the sound of their thoughts. Was he deep in the grips of a problem? He often said that the most difficult aspect of machining was figuring out how to hold things. 
+
+Such holding occupied his dreams.
+
+Or was he just taking a quiet moment for himself before rejoining his family, rejoining his responsible life? I used to think I could hear such frequencies in people. Like if I could just listen closely enough, the right time to join in would present itself. A perfect welcoming gap. I remember thinking this might have meant I was crazy in some minor way but my conviction in this was unshakeable. The things we touch without even knowing.
 
 Ear on the door, I heard a gap in my father's intention. A lull in his focus. A nice pocket in which to sit. When I heard it I simply opened the door, walked in, and said, "Teach me something?"
 
 A simple exchange that would become a pattern in our lives, but as far as I can remember this was the first occurence in that pattern. A pattern that would draw a line in my mind dividing my father into two beings, the one I knew before the pattern and the one after.
 
 He looked at me for a moment and I could hear a pin click into place in his mind. "Come here," he said. "I'll teach you how impossible it is to take the measure of something."
+
+From his workbench he picked up a set of calipers and a silver aluminum bar that had been turned on the lathe so that it was both  shiny and ringed with miniscule ribs you could feel with the pad of your finger but not really see with the naked eye. That had been a lesson from my father as well... a lesson from some other memory not yet returned, that the eye was often the most unreliable sense in a machine shop. Sound and touch being more sensitive to the pleas of machines and metal than the eyes could ever be.
+
+But in this memory, he taught me something perhaps even more fundamental. At first it seemed as if he were simply showing me how to hold and measure the aluminum bar with his calipers. As I was taking my first measurment, he reached across the bench and pulled a notepad toward himself while simultaneously clicking open a pen he'd pulled from his shirt pocket. "Tell me the number," he said. I told him the number and he wrote it down on the pad. "Again," he said. I measured again and told him the number and he wrote it down on the pad under the first. And so on and so on for twelve measurements.
+
+I was so focused on handling the calipers in a way he'd be impressed with. Careful with them. Consistent with how I held them and where I measured the rod. Consistent with the pressure. A dutiful student. Perhaps even a natural in his eyes.
+
+He looked at the pad in silence for a monet and without a word pushed the pad across for me to read. I stared at the list of numbers for longer than I needed to.
+
+"What do you see?" he said.
+
+"The numbers get bigger," I said. He nodded.
+
+I was about to apologize for my technique when he held up his hand, like he too could hear my thoughts, my shame, and said, "It's your fault but not in the way you think. Your technique was flawless but while you were taking such careful measurements, the heat from your hand was warming the bar. Not much but enough to cause an expansion. The calipers were measureing the rod but also measuring you. And now you know how to use calipers. But more importantly, you now know that you can never absolve yourself from the things you measure."
+
+
 
