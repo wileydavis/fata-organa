@@ -50,7 +50,7 @@ It's certainly a risk. I'm sure someone out there is listening.
 
 I'm sure some of them can even triangulate my position from these broadcasts, but I'm so close now I don't think it will matter.
 
-I will already be inside the Containment Zone and no one will follow me there. 
+I will already be inside the Containment Zone and no one will follow me there.
 
 Part of me wonders if they let me get away, so that they could observe what happens.
 
@@ -80,7 +80,7 @@ And from there a cable snaking through the boat and up the mast to the antenna. 
 
 I don't know but it's a connection I have become overwhelmed with wanting.
 
-Someone may be hearing this. Someone may be listening. And someone may be receiving. 
+Someone may be hearing this. Someone may be listening. And someone may be receiving.
 
 I'm going in the same way I came out. By the sea. Aiming for Land's End where my dream took place. And with each mile I beat against this headwind, the feeling as time disintegrates grows heavy.
 
@@ -155,7 +155,7 @@ This went on for some time. Adjust, smooth, glance, shift, repeat. And then, sud
 
 I say somehow because even in recollection I can't pin down exactly what changed. Like I was watching a pure expression of subtlety, of nuance. Incredible what the smallest variations of muscle can communicate. Enough information to transform an entire airport lobby, contained in the simple cant of a person's limbs and the plastic modulation of a face. The self-aware middle manager had departed and in his place was another person entirely. An emergent phenomenon that should have been his entire being all along. The kind of person who has a name that can't be represented as sound or symbol. Something so much more than middle manager in cheap suit. A name he deserves.
 
-And as delicately as it arrived, this grace sank back into the mist.dr The lean once again a stiff collection of awkward angles. Eyes much too aware of the imagined stares from others.
+And as delicately as it arrived, this grace sank back into the mist.The lean once again a stiff collection of awkward angles. Eyes much too aware of the imagined stares from others.
 
 ## INT. SAILBOAT RADIO ROOM - MEASUREMENT LESSON
 
@@ -167,15 +167,17 @@ But floating within these perfect machines are various abstractions about my lif
 
 As with all abstractions, I'm hesitant to trust them. Displacers of the particular. I was a son. I was an American. I believed in the uncompromising righteousness of the individual over the group. Amidst the particulars of my memories these ideas swim like sharks. Untethered and indifferent to the humans they occasionally see as food.
 
-My father was fascinated by abstractions, his comfort handling such dangerous things perhaps born from his solid grounding in the details and rigor of the particular. He was a machinist by trade and in many ways you could say he was a machinist by soul as well. The second memory to return was of him. This one long before the adjustment. When I was twelve and the abstractions of the world were just beginning to circle.
+My father was fascinated by abstractions, his comfort handling such dangerous things perhaps born from his solid grounding in the details and rigor of the particular. He was a machinist by trade and in many ways you could say he was a machinist by soul as well.
+
+The second memory to return was of him. This one long before the adjustment. When I was twelve and the abstractions of the world were just beginning to circle.
 
 Some books might say that we are made of clay but those books didn't know my father. My father was made of metals and the smell of machine coolant which smells like no other thing that I can describe except to say that anyone who has spent time in machine shops will recognize it immediately. Perhaps even with a tinge of pleasant nostalgia as I do. It's a smell both chemical and earthen. Astrigent. Fecund. Dangerously overpowering. Like home.
 
-My father's shop was a corrugated metal building in our back yard. It had a large roll up door that faced the alley and a man door that faced our house. I'd often watch that door, open in the summer evenings and closed on this particular winter one, light leaking out from underneath, watching for him to be done with his work. Hesitant to interrupt that work but almost desperate for his calm attention. Worried that I'd fall asleep before the door finally swung open and the light clicked off for the night. A familliar pattern of my youth.
+My father's shop was a corrugated metal building in our back yard. It had a large roll up door facing the alley and a man door facing our house. I'd often watch that door, open in the summer evenings and closed on this particular winter one, light leaking out from underneath, watching for him to be done with his work. Hesitant to interrupt that work but almost desperate for his calm attention. Worried that I'd fall asleep before the door finally swung open and the light clicked off for the night. A familliar pattern of my youth.
 
 But for some reason I overcame my hesitation on this night. I put on my big coat, and my mud boots and quietly trooped across the snow-covered yard. The snow was fresh, still falling in fact, and it muffled the soft crunch of my footsteps as they sank into the moonlit blanket covering the ground.
 
-At the door I pressed my ear against its cold metal skin and listened. The machines made no noise which means they must not be running, so I listened for that strange silent property of another person's mood. Reaching out for the sound of their thoughts. Was he deep in the grips of a problem? He often said that the most difficult aspect of machining was figuring out how to hold things. 
+At the door I pressed my ear against its cold metal skin and listened. The machines made no noise which means they must not be running, so I listened for that strange silent property of another person's mood. Reaching out for the sound of their thoughts. Was he deep in the grips of a problem? He often said that the most difficult aspect of machining was figuring out how to hold things.
 
 Such holding occupied his dreams.
 
@@ -200,4 +202,3 @@ He looked at the pad in silence for a moment and without a word pushed the pad a
 "The numbers get bigger," I said. He nodded.
 
 I was about to apologize for my technique, my failure, when he held up his hand, like he too could hear my thoughts, my shame, and said, "It's your fault but not in the way you think. Your technique was flawless but while you were taking such careful measurements, the heat from your hand was warming the bar. Not much but enough to cause an expansion. The calipers were measureing the bar but also measuring you." He paused to let tht sink into my twelve year old brain. "And now you know how to use calipers. But more importantly, you now know that you can never absolve yourself from the things you measure."
-
