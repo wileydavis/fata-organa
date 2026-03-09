@@ -10,7 +10,7 @@ There's no one else around, and I think that's been true for a very long time, b
 
 In this dream, I'm overwhelmed by a great feeling of relief.
 
-She exists. 
+She exists.
 
 Something else besides me that seems to admit to a notion of cause and effect.
 
@@ -20,7 +20,7 @@ She continues staring at the sea and just before I wake she whispers loud enough
 
 They thought it was a weapon. But it's a gift.
 
-## INT. SAILBOAT RADIO ROOM - COLD OPEN
+## INT. SAILBOAT RADIO ROOM - OPEN
 
 I am told that a French naval vessel found me 200 nautical miles outside the North American containment zone, adrift in an open fishing boat, sunburnt and conscious, but unresponsive.
 
@@ -39,8 +39,6 @@ You can call me Marcus. That's what I'm told I was called before the Adjustment,
 All of these seem to solidify an identity that my rescuers were satisfied with. Satisfied enough to change my status from refugee to resident with a capital R. They played this up as a generous turn of events but given the fact that I was the only person to make it out of the Containment Zone I have trouble believing it was much of an inconvenience on their part.
 
 But hey, If they're satisfied, I'm satisfied.
-
-[the users of the weapon were prepared to receive mass refugees from the result of using the weapon and were prepared to take excellent care of them and integrate them. But Marcus was the only refugee that made it out.]
 
 We work with the circumstances we're given. I believe that names can have power but in this world they're just names. So Marcus is fine by me.
 
@@ -92,7 +90,6 @@ I too am drowning in what has been done. But not in fear.
 
 ## INT. SAILBOAT RADIO ROOM - THE DESTROYER
 
-[conduit ask asking]
 I often find myself thinking of Captain Beaumont. His was the first face I saw when I reemerged as something identifiably Marcus. But I can't recall his face at all... only his grey-blue eyes locked on mine in what would normally be an overwhelming amount of eye contact, but here, as those strange memories that aren't memories settled into their Marcus-shaped positions, I found Beaumont's stare to be a conduit. Like a tractor beam reeling me up from the depths.
 
 Is Beaumont out here somewhere, sailing these waters in search of other survivors? Or is he secretly tailing me with his giant ship, somewhere in my wake just beyond the horizon, waiting and watching with those grey-blue eyes to see what happens as I disappear into the anomaly?
