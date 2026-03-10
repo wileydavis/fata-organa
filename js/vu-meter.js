@@ -365,7 +365,8 @@
             }
         });
 
-        audio.addEventListener('error', function() {
+        audio.addEventListener('error', function(e) {
+            console.error('Audio error:', audio.error ? audio.error.code + ' ' + audio.error.message : e);
             isLoading = false;
             isPlaying = false;
             statusEl.classList.remove('loading');
@@ -387,13 +388,19 @@
             analyser.connect(audioCtx.destination);
             analyserConnected = true;
         } catch(e) {
+            console.error('Analyser init error:', e);
             analyserConnected = false;
         }
     }
 
     function doPlay() {
-        if (!audioCtx) initAnalyser();
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        // Only init analyser after first user gesture and audio is ready
+        if (!audioCtx && audio) {
+            initAnalyser();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(function() {});
+        }
         audio.play().then(function() {
             isPlaying = true;
             hasStarted = true;
@@ -401,9 +408,9 @@
             statusEl.classList.remove('loading');
             statusEl.textContent = 'RECEIVING TRANSMISSION';
         }).catch(function(err) {
+            console.error('Playback error:', err);
             isLoading = false;
             statusEl.classList.remove('loading');
-            // Autoplay blocked — user needs to click
             if (err.name === 'NotAllowedError') {
                 statusEl.textContent = 'SIGNAL READY \u2014 CLICK TO RECEIVE';
             } else {
