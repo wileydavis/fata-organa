@@ -38,7 +38,7 @@ You can call me Marcus. That's what I'm told I was called before the Adjustment,
 
 All of these seem to solidify an identity that my rescuers were satisfied with. Satisfied enough to change my status from refugee to resident with a capital R. They played this up as a generous turn of events but given the fact that I was the only person to make it out of the Containment Zone I have trouble believing it was much of an inconvenience on their part.
 
-But hey, If they're satisfied, I'm satisfied.
+But hey, If they're satisfied, I'm satisfied.     
 
 We work with the circumstances we're given. I believe that names can have power but in this world they're just names. So Marcus is fine by me.
 
@@ -198,4 +198,8 @@ He looked at the pad in silence for a moment and without a word pushed the pad a
 
 "The numbers get bigger," I said. He nodded.
 
-I was about to apologize for my technique, my failure, when he held up his hand, like he too could hear my thoughts, my shame, and said, "It's your fault but not in the way you think. Your technique was flawless but while you were taking such careful measurements, the heat from your hand was warming the bar. Not much but enough to cause an expansion. The calipers were measureing the bar but also measuring you." He paused to let tht sink into my twelve year old brain. "And now you know how to use calipers. But more importantly, you now know that you can never absolve yourself from the things you measure."
+I was about to apologize for my technique, my failure, when he held up his hand, like he too could hear my thoughts, my shame, and said, "It's your fault but not in the way you think. Your technique was flawless but while you were taking such careful measurements, the heat from your hand was warming the bar. Not much but enough to cause an expansion. The calipers were measureing the bar but also measuring you." He paused to let that sink into my twelve year old brain. "And now you know how to use calipers. But more importantly, you now know that you can never absolve yourself from the things you measure."
+
+These memories must mean something. That they've arrived when they have. But the meaning isn't completely clear to me. I keep coming back to a vague notion that this measurement lesson has parallells to what I'll find in the CZ. Something important I should know about it. A connection between the abstract and the particular. A power in the particular but also a danger, as if an elaboration of details is more than just a description of what is, but rather is an act of exclusion of what could be. A choice. An acknowledgement that when you describe the particular, you cannot absolve yourself of the fact that you have prevented some other thing from existing.
+
+I don't know what is waiting for me in the Containment Zone. In Quito, I learned that they'd thought of the weapon as non-destructive. That it would temporarily break causality but  leave people intact. They'd deployed it based on that promise. A promise made by an artificial intelligence system they'd built to run their model society. A system they'd had good reason to trust up to that point. That system had called it an adjustment. Such a benign sounding term. But that decision ended up creating two anomalies. The mysterious one that lies within the CZ and the loss of faith in a sytem that underpins their entire identity. 
