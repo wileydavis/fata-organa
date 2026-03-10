@@ -381,6 +381,13 @@
 
     function initAnalyser() {
         if (audioCtx) return;
+        // Skip AudioContext for cross-origin audio without CORS
+        // createMediaElementSource takes ownership of audio output,
+        // and without CORS the routing can fail silently
+        if (!isSameOrigin(audioSrc)) {
+            analyserConnected = false;
+            return;
+        }
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             source = audioCtx.createMediaElementSource(audio);
@@ -391,21 +398,13 @@
             analyser.connect(audioCtx.destination);
             analyserConnected = true;
         } catch(e) {
-            // Cross-origin audio without CORS — analyser won't work
-            // but audio still plays through default output
             analyserConnected = false;
-            if (audioCtx) {
-                // Still need to route audio to speakers
-                try {
-                    if (source) source.connect(audioCtx.destination);
-                } catch(e2) {}
-            }
         }
     }
 
     function doPlay() {
-        if (!audioCtx) initAnalyser();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!audioCtx && isSameOrigin(audioSrc)) initAnalyser();
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         audio.play().then(function() {
             isPlaying = true;
             hasStarted = true;
