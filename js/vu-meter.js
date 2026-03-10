@@ -310,15 +310,17 @@
     }
 
     // --- Audio ---
+    var isLoading = false;
+
     function initAudio() {
         if (audio) return;
         audio = new Audio();
         audio.crossOrigin = 'anonymous';
-        audio.src = audioSrc;
         audio.preload = 'auto';
 
         audio.addEventListener('ended', function() {
             isPlaying = false;
+            isLoading = false;
             statusEl.textContent = 'TRANSMISSION COMPLETE \u2014 CLICK TO REPLAY';
         });
 
@@ -327,6 +329,41 @@
                 progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
             }
         });
+
+        // Loading states
+        audio.addEventListener('loadstart', function() {
+            if (isLoading) {
+                statusEl.textContent = 'TUNING SIGNAL\u2026';
+                statusEl.classList.add('loading');
+            }
+        });
+
+        audio.addEventListener('waiting', function() {
+            if (isPlaying || isLoading) {
+                statusEl.textContent = 'BUFFERING SIGNAL\u2026';
+                statusEl.classList.add('loading');
+            }
+        });
+
+        audio.addEventListener('canplay', function() {
+            statusEl.classList.remove('loading');
+            if (isLoading && !isPlaying) {
+                // Auto-start when enough data is buffered
+                isLoading = false;
+                doPlay();
+            } else if (isPlaying) {
+                statusEl.textContent = 'RECEIVING TRANSMISSION';
+            }
+        });
+
+        audio.addEventListener('error', function() {
+            isLoading = false;
+            isPlaying = false;
+            statusEl.classList.remove('loading');
+            statusEl.textContent = 'SIGNAL LOST \u2014 TRY AGAIN';
+        });
+
+        audio.src = audioSrc;
     }
 
     function initAnalyser() {
@@ -340,17 +377,39 @@
         analyser.connect(audioCtx.destination);
     }
 
-    function startPlayback() {
-        if (!audio) initAudio();
+    function doPlay() {
         if (!audioCtx) initAnalyser();
         if (audioCtx.state === 'suspended') audioCtx.resume();
         audio.play().then(function() {
             isPlaying = true;
             hasStarted = true;
+            isLoading = false;
+            statusEl.classList.remove('loading');
             statusEl.textContent = 'RECEIVING TRANSMISSION';
-        }).catch(function() {
-            statusEl.textContent = 'SIGNAL ERROR \u2014 TRY AGAIN';
+        }).catch(function(err) {
+            isLoading = false;
+            statusEl.classList.remove('loading');
+            // Autoplay blocked — user needs to click
+            if (err.name === 'NotAllowedError') {
+                statusEl.textContent = 'SIGNAL READY \u2014 CLICK TO RECEIVE';
+            } else {
+                statusEl.textContent = 'SIGNAL ERROR \u2014 TRY AGAIN';
+            }
         });
+    }
+
+    function startPlayback() {
+        if (!audio) initAudio();
+
+        // If audio has enough data, play immediately
+        if (audio.readyState >= 3) {
+            doPlay();
+        } else {
+            // Start loading, will auto-play on canplay
+            isLoading = true;
+            statusEl.textContent = 'TUNING SIGNAL\u2026';
+            audio.load();
+        }
     }
 
     function togglePlay() {
@@ -360,10 +419,7 @@
             isPlaying = false;
             statusEl.textContent = 'PAUSED \u2014 CLICK TO RESUME';
         } else {
-            audio.play().then(function() {
-                isPlaying = true;
-                statusEl.textContent = 'RECEIVING TRANSMISSION';
-            });
+            doPlay();
         }
     }
 
@@ -402,7 +458,7 @@
 
     // --- Public API for loading new audio sources ---
     window.vuPlayer = {
-        loadSource: function(src) {
+        loadSource: function(src, autoplay) {
             if (!src) return;
             // Stop current playback
             if (audio) {
@@ -412,13 +468,31 @@
             }
             // Update source
             audioSrc = src;
+            hasStarted = false;
+            isLoading = false;
+            progressBar.style.width = '0%';
+
             if (audio) {
                 audio.src = src;
-                audio.load();
+                if (autoplay) {
+                    isLoading = true;
+                    statusEl.textContent = 'TUNING SIGNAL\u2026';
+                    statusEl.classList.add('loading');
+                    audio.load();
+                    // canplay handler will auto-start
+                } else {
+                    statusEl.classList.remove('loading');
+                    statusEl.textContent = 'RECEIVE TRANSMISSION';
+                }
+            } else {
+                if (autoplay) {
+                    statusEl.textContent = 'TUNING SIGNAL\u2026';
+                    statusEl.classList.add('loading');
+                    startPlayback();
+                } else {
+                    statusEl.textContent = 'RECEIVE TRANSMISSION';
+                }
             }
-            hasStarted = false;
-            progressBar.style.width = '0%';
-            statusEl.textContent = 'RECEIVE TRANSMISSION';
         },
         play: function() { startPlayback(); },
         pause: function() { if (audio && isPlaying) { audio.pause(); isPlaying = false; } },
