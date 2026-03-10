@@ -324,12 +324,8 @@
     function initAudio() {
         if (audio) return;
         audio = new Audio();
+        audio.crossOrigin = 'anonymous';
         audio.preload = 'auto';
-        // Only set crossOrigin for same-origin sources
-        // Cross-origin without CORS headers will fail silently with crossOrigin set
-        if (isSameOrigin(audioSrc)) {
-            audio.crossOrigin = 'anonymous';
-        }
 
         audio.addEventListener('ended', function() {
             isPlaying = false;
@@ -381,13 +377,6 @@
 
     function initAnalyser() {
         if (audioCtx) return;
-        // Skip AudioContext for cross-origin audio without CORS
-        // createMediaElementSource takes ownership of audio output,
-        // and without CORS the routing can fail silently
-        if (!isSameOrigin(audioSrc)) {
-            analyserConnected = false;
-            return;
-        }
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             source = audioCtx.createMediaElementSource(audio);
@@ -403,7 +392,7 @@
     }
 
     function doPlay() {
-        if (!audioCtx && isSameOrigin(audioSrc)) initAnalyser();
+        if (!audioCtx) initAnalyser();
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         audio.play().then(function() {
             isPlaying = true;
@@ -485,8 +474,6 @@
     window.vuPlayer = {
         loadSource: function(src, autoplay) {
             if (!src) return;
-            var wasSameOrigin = audio ? !!audio.crossOrigin : true;
-            var nowSameOrigin = isSameOrigin(src);
 
             // Stop current playback
             if (audio) {
@@ -500,20 +487,6 @@
             isLoading = false;
             progressBar.style.width = '0%';
 
-            // If crossing origin boundary, recreate audio element
-            if (audio && (wasSameOrigin !== nowSameOrigin)) {
-                audio.pause();
-                audio.removeAttribute('src');
-                audio.load();
-                audio = null;
-                // AudioContext + source can't be reused with new element
-                // but we can keep audioCtx and create new source
-                source = null;
-                analyser = null;
-                audioCtx = null;
-                analyserConnected = false;
-            }
-
             if (audio) {
                 audio.src = src;
                 if (autoplay) {
@@ -526,7 +499,6 @@
                     statusEl.textContent = 'RECEIVE TRANSMISSION';
                 }
             } else {
-                // Audio element needs recreation
                 if (autoplay) {
                     isLoading = true;
                     statusEl.textContent = 'TUNING SIGNAL\u2026';
