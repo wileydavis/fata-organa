@@ -311,12 +311,25 @@
 
     // --- Audio ---
     var isLoading = false;
+    var analyserConnected = false;
+
+    function isSameOrigin(src) {
+        if (!src || src.charAt(0) === '/') return true;
+        try {
+            var url = new URL(src, window.location.href);
+            return url.origin === window.location.origin;
+        } catch(e) { return false; }
+    }
 
     function initAudio() {
         if (audio) return;
         audio = new Audio();
-        audio.crossOrigin = 'anonymous';
         audio.preload = 'auto';
+        // Only set crossOrigin for same-origin sources
+        // Cross-origin without CORS headers will fail silently with crossOrigin set
+        if (isSameOrigin(audioSrc)) {
+            audio.crossOrigin = 'anonymous';
+        }
 
         audio.addEventListener('ended', function() {
             isPlaying = false;
@@ -368,13 +381,26 @@
 
     function initAnalyser() {
         if (audioCtx) return;
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        source = audioCtx.createMediaElementSource(audio);
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.8;
-        source.connect(analyser);
-        analyser.connect(audioCtx.destination);
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            source = audioCtx.createMediaElementSource(audio);
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.8;
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            analyserConnected = true;
+        } catch(e) {
+            // Cross-origin audio without CORS — analyser won't work
+            // but audio still plays through default output
+            analyserConnected = false;
+            if (audioCtx) {
+                // Still need to route audio to speakers
+                try {
+                    if (source) source.connect(audioCtx.destination);
+                } catch(e2) {}
+            }
+        }
     }
 
     function doPlay() {
@@ -460,17 +486,34 @@
     window.vuPlayer = {
         loadSource: function(src, autoplay) {
             if (!src) return;
+            var wasSameOrigin = audio ? !!audio.crossOrigin : true;
+            var nowSameOrigin = isSameOrigin(src);
+
             // Stop current playback
             if (audio) {
                 audio.pause();
-                audio.currentTime = 0;
                 isPlaying = false;
             }
+
             // Update source
             audioSrc = src;
             hasStarted = false;
             isLoading = false;
             progressBar.style.width = '0%';
+
+            // If crossing origin boundary, recreate audio element
+            if (audio && (wasSameOrigin !== nowSameOrigin)) {
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.load();
+                audio = null;
+                // AudioContext + source can't be reused with new element
+                // but we can keep audioCtx and create new source
+                source = null;
+                analyser = null;
+                audioCtx = null;
+                analyserConnected = false;
+            }
 
             if (audio) {
                 audio.src = src;
@@ -479,17 +522,19 @@
                     statusEl.textContent = 'TUNING SIGNAL\u2026';
                     statusEl.classList.add('loading');
                     audio.load();
-                    // canplay handler will auto-start
                 } else {
                     statusEl.classList.remove('loading');
                     statusEl.textContent = 'RECEIVE TRANSMISSION';
                 }
             } else {
+                // Audio element needs recreation
                 if (autoplay) {
+                    isLoading = true;
                     statusEl.textContent = 'TUNING SIGNAL\u2026';
                     statusEl.classList.add('loading');
                     startPlayback();
                 } else {
+                    statusEl.classList.remove('loading');
                     statusEl.textContent = 'RECEIVE TRANSMISSION';
                 }
             }
@@ -502,7 +547,7 @@
 
     // --- Animate ---
     function animate() {
-        if (isPlaying && analyser) {
+        if (isPlaying && analyser && analyserConnected) {
             var dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(dataArray);
             var sum = 0;
@@ -533,6 +578,20 @@
             // Slow smoothing for ambient effects (tau ~500ms at 60fps)
             window.vuSignal.smoothRms += (avg - window.vuSignal.smoothRms) * 0.03;
             window.vuSignal.smoothLow += (lowAvg - window.vuSignal.smoothLow) * 0.02;
+        } else if (isPlaying && !analyserConnected) {
+            // Cross-origin audio without CORS — simulate gentle needle activity
+            time += 0.016;
+            var fakeLevel = 0.35 + Math.sin(time * 1.7) * 0.08 + Math.sin(time * 3.1) * 0.05 + Math.random() * 0.03;
+            targetAngle = dbToAngle(-20 + fakeLevel * 26);
+            glowIntensity += (1 - glowIntensity) * 0.05;
+
+            window.vuSignal.rms = fakeLevel;
+            window.vuSignal.low = fakeLevel * 0.6;
+            window.vuSignal.high = fakeLevel * 0.3;
+            window.vuSignal.peak = Math.max(fakeLevel, window.vuSignal.peak * 0.98);
+            window.vuSignal.isPlaying = true;
+            window.vuSignal.smoothRms += (fakeLevel - window.vuSignal.smoothRms) * 0.03;
+            window.vuSignal.smoothLow += (fakeLevel * 0.6 - window.vuSignal.smoothLow) * 0.02;
         } else {
             targetAngle = minAngle;
             glowIntensity *= 0.95;
