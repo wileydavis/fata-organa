@@ -281,6 +281,16 @@
         padding: 0 1rem 0.5rem;
         min-height: 1.2em;
         line-height: normal;
+        transition: opacity 0.3s ease;
+    }
+
+    .tx-meter .vu-status.loading {
+        animation: signalPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes signalPulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
     }
 
     /* Status strip below meter */
@@ -1207,12 +1217,12 @@
             if (match) match.classList.add('active');
         }
 
-        function loadTrack(ep, band) {
+        function loadTrack(ep, band, autoplay) {
             var sources = band === 'score' ? scoreSources : transmissionSources;
             var src = sources[ep];
             if (!src || !window.vuPlayer) return;
 
-            window.vuPlayer.loadSource(src);
+            window.vuPlayer.loadSource(src, autoplay);
             if (epDisplay) epDisplay.textContent = ep;
             setActiveListItem(ep, band);
         }
@@ -1276,14 +1286,11 @@
                 // Switch band if needed
                 if (band !== currentBand) switchBand(band);
 
-                loadTrack(ep, band);
+                // Load and autoplay
+                loadTrack(ep, band, true);
 
-                // Auto-play
-                setTimeout(function() {
-                    if (window.vuPlayer && !window.vuPlayer.isPlaying()) {
-                        window.vuPlayer.play();
-                    }
-                }, 100);
+                // Close the drawer
+                if (window.closeAllDrawers) window.closeAllDrawers();
             });
         });
 
