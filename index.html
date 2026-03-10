@@ -892,7 +892,7 @@
                 </div>
                 <div class="tx-status-cell">
                     <span class="tx-status-key">Recovered</span>
-                    <span class="tx-status-val">0 / 12</span>
+                    <span class="tx-status-val">1 / 12</span>
                 </div>
                 <div class="tx-status-cell">
                     <span class="tx-status-key">Last Signal</span>
@@ -925,10 +925,10 @@
                 <span class="tx-list-title">Audio Teaser</span>
                 <span class="tx-list-status">&#9679; Available</span>
             </div>
-            <div class="tx-list-item" data-ep="EP 01" data-band="transmission">
+            <div class="tx-list-item available" data-ep="EP 01" data-band="transmission">
                 <span class="tx-list-num">01</span>
                 <span class="tx-list-title">First Transmission</span>
-                <span class="tx-list-status">Forthcoming</span>
+                <span class="tx-list-status">&#9679; Available</span>
             </div>
             <div class="tx-list-item" data-ep="EP 02" data-band="transmission">
                 <span class="tx-list-num">02</span>
@@ -1172,7 +1172,8 @@
 
         // Audio source maps — add URLs as episodes are produced
         var transmissionSources = {
-            'TEASER': '/audio/teaser.mp3'
+            'TEASER': '/audio/teaser.mp3',
+            'EP 01': 'https://media.fataorgana.fm/episodes/E1%20D1.mp3'
         };
 
         var scoreSources = {
