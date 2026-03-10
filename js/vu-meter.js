@@ -517,38 +517,104 @@
     };
 
     // --- Animate ---
+    // Smoothed values for needle drive
+    var smoothedLevel = 0;
+    var smoothedLow = 0;
+    var smoothedMid = 0;
+    var smoothedHigh = 0;
+    var prevLevel = 0;
+    var transientBoost = 0;
+
     function animate() {
         if (isPlaying && analyser && analyserConnected) {
             var dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(dataArray);
-            var sum = 0;
-            var lowSum = 0;
-            var highSum = 0;
-            var count = Math.min(dataArray.length, 64);
-            var lowBins = Math.floor(count * 0.2);   // bottom 20% = sub/bass
-            var highStart = Math.floor(count * 0.6);  // top 40% = brightness
-            for (var i = 0; i < count; i++) {
-                var weighted = dataArray[i] * (1 - (i / count) * 0.5);
-                sum += weighted;
-                if (i < lowBins) lowSum += dataArray[i];
-                if (i >= highStart) highSum += dataArray[i];
-            }
-            var avg = sum / count / 255;
-            var lowAvg = lowSum / lowBins / 255;
-            var highAvg = highSum / (count - highStart) / 255;
 
-            targetAngle = dbToAngle(-20 + avg * 26);
+            // Frequency bin layout (fftSize=256, 128 bins, ~172Hz per bin at 44100Hz):
+            //   bins 0-1:   0-344Hz    (sub-bass, kick drum)
+            //   bins 1-3:   172-688Hz  (bass, low voice)
+            //   bins 3-12:  516-2064Hz (voice fundamental, midrange)
+            //   bins 12-23: 2064-3956Hz (voice presence, clarity)
+            //   bins 23+:   4000Hz+    (sibilance, air)
+
+            var binCount = analyser.frequencyBinCount;
+
+            // Sub-bass / kick: bins 0-2 (0-516Hz)
+            var subSum = 0;
+            for (var i = 0; i < 3 && i < binCount; i++) subSum += dataArray[i];
+            var subLevel = subSum / (3 * 255);
+
+            // Voice band: bins 2-23 (344-3956Hz)
+            var voiceSum = 0;
+            var voiceBins = Math.min(23, binCount) - 2;
+            for (var i = 2; i < 23 && i < binCount; i++) voiceSum += dataArray[i];
+            var voiceLevel = voiceBins > 0 ? voiceSum / (voiceBins * 255) : 0;
+
+            // High presence: bins 23-40
+            var highSum = 0;
+            var highBins = Math.min(40, binCount) - 23;
+            for (var i = 23; i < 40 && i < binCount; i++) highSum += dataArray[i];
+            var highLevel = highBins > 0 ? highSum / (highBins * 255) : 0;
+
+            // Overall RMS for signal data
+            var totalSum = 0;
+            var totalCount = Math.min(binCount, 64);
+            for (var i = 0; i < totalCount; i++) totalSum += dataArray[i];
+            var rmsLevel = totalSum / (totalCount * 255);
+
+            // --- Band-aware needle drive ---
+            var needleLevel;
+            var isScore = window.currentBand === 'score';
+
+            if (isScore) {
+                // Score mode: follow kick/bass pulse
+                // Weight heavily toward sub-bass with some mid for melodic movement
+                needleLevel = subLevel * 0.7 + voiceLevel * 0.2 + highLevel * 0.1;
+            } else {
+                // Transmission mode: follow voice energy
+                // Weight toward voice band with sub for room/breath
+                needleLevel = voiceLevel * 0.65 + subLevel * 0.15 + highLevel * 0.2;
+            }
+
+            // Transient detection — boost the needle on sudden increases
+            var delta = needleLevel - prevLevel;
+            if (delta > 0.02) {
+                transientBoost = Math.min(delta * 3, 0.25);
+            }
+            transientBoost *= 0.85; // decay
+            prevLevel = needleLevel;
+
+            // Apply transient boost
+            needleLevel += transientBoost;
+
+            // Heavy smoothing — different rates for attack vs release
+            // Fast attack (voice onset / kick hit), slow release (natural decay)
+            if (needleLevel > smoothedLevel) {
+                smoothedLevel += (needleLevel - smoothedLevel) * 0.25; // attack
+            } else {
+                smoothedLevel += (needleLevel - smoothedLevel) * 0.06; // release
+            }
+
+            // Smooth the sub-bands for vuSignal exposure
+            smoothedLow += (subLevel - smoothedLow) * 0.08;
+            smoothedMid += (voiceLevel - smoothedMid) * 0.1;
+            smoothedHigh += (highLevel - smoothedHigh) * 0.1;
+
+            // Drive the needle from smoothed level
+            // Scale to use more of the needle range
+            var scaledLevel = Math.pow(smoothedLevel, 0.7) * 1.4; // compress + expand range
+            scaledLevel = Math.min(scaledLevel, 1.0);
+            targetAngle = dbToAngle(-20 + scaledLevel * 26);
             glowIntensity += (1 - glowIntensity) * 0.05;
 
             // Update exposed signal data
-            window.vuSignal.rms = avg;
-            window.vuSignal.low = lowAvg;
-            window.vuSignal.high = highAvg;
-            window.vuSignal.peak = Math.max(avg, window.vuSignal.peak * 0.98);
+            window.vuSignal.rms = rmsLevel;
+            window.vuSignal.low = smoothedLow;
+            window.vuSignal.high = smoothedHigh;
+            window.vuSignal.peak = Math.max(scaledLevel, window.vuSignal.peak * 0.98);
             window.vuSignal.isPlaying = true;
-            // Slow smoothing for ambient effects (tau ~500ms at 60fps)
-            window.vuSignal.smoothRms += (avg - window.vuSignal.smoothRms) * 0.03;
-            window.vuSignal.smoothLow += (lowAvg - window.vuSignal.smoothLow) * 0.02;
+            window.vuSignal.smoothRms += (rmsLevel - window.vuSignal.smoothRms) * 0.03;
+            window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
         } else if (isPlaying && !analyserConnected) {
             // Cross-origin audio without CORS — simulate gentle needle activity
             time += 0.016;
