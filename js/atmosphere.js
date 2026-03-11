@@ -1,6 +1,7 @@
 /* ============================================
    FATA ORGANA — Atmosphere
-   Canvas-based particle/signal animation
+   Audio-reactive particle system with
+   geometric pattern formation
    ============================================ */
 
 (function() {
@@ -20,8 +21,6 @@
     var ctx = canvas.getContext('2d');
     var width = 0;
     var height = 0;
-    var particles = [];
-    var signalLines = [];
     var time = 0;
     var glitchTimer = 200;
     var glitchActive = false;
@@ -37,10 +36,34 @@
     window.addEventListener('resize', resize);
     resize();
 
-    function createParticle() {
+    // --- Audio signal access ---
+    function getSignal() {
+        return window.vuSignal || {
+            rms: 0, low: 0, high: 0, peak: 0,
+            isPlaying: false, hasStarted: false,
+            smoothRms: 0, smoothLow: 0
+        };
+    }
+
+    // --- Particle system ---
+    var particles = [];
+    var baseCount = Math.min(Math.floor(width * height / 8000), 100);
+    var maxCount = Math.min(Math.floor(width * height / 2500), 400);
+
+    // Smoothed reactive values
+    var reactivity = 0;
+    var density = 0;
+    var swirlForce = 0;
+    var patternStrength = 0;
+    var connectionAlpha = 0;
+    var playDuration = 0; // seconds of audio played this session
+
+    function createParticle(forceCenter) {
+        var angle = Math.random() * Math.PI * 2;
+        var dist = forceCenter ? Math.random() * 200 + 100 : 0;
         return {
-            x: Math.random() * width,
-            y: Math.random() * height,
+            x: forceCenter ? width / 2 + Math.cos(angle) * dist : Math.random() * width,
+            y: forceCenter ? height / 2 + Math.sin(angle) * dist : Math.random() * height,
             size: Math.random() * 2 + 0.5,
             baseAlpha: Math.random() * 0.5 + 0.15,
             alpha: 0,
@@ -52,13 +75,18 @@
             freq: Math.random() * 0.02 + 0.005,
             hue: 38 + Math.random() * 15,
             sat: 30 + Math.random() * 30,
-            lit: 55 + Math.random() * 25
+            lit: 55 + Math.random() * 25,
+            attractIdx: Math.floor(Math.random() * 12),
+            orbitDist: Math.random() * 80 + 20,
+            orbitSpeed: (Math.random() - 0.5) * 0.008
         };
     }
 
-    function resetParticle(p) {
-        p.x = Math.random() * width;
-        p.y = Math.random() * height;
+    function resetParticle(p, forceCenter) {
+        var angle = Math.random() * Math.PI * 2;
+        var dist = forceCenter ? Math.random() * 200 + 100 : 0;
+        p.x = forceCenter ? width / 2 + Math.cos(angle) * dist : Math.random() * width;
+        p.y = forceCenter ? height / 2 + Math.sin(angle) * dist : Math.random() * height;
         p.size = Math.random() * 2 + 0.5;
         p.baseAlpha = Math.random() * 0.5 + 0.15;
         p.vx = (Math.random() - 0.5) * 0.2;
@@ -66,8 +94,19 @@
         p.life = Math.random() * 500 + 200;
         p.maxLife = p.life;
         p.phase = Math.random() * Math.PI * 2;
+        p.attractIdx = Math.floor(Math.random() * 12);
+        p.orbitDist = Math.random() * 80 + 20;
+        p.orbitSpeed = (Math.random() - 0.5) * 0.008;
     }
 
+    for (var i = 0; i < baseCount; i++) {
+        var p = createParticle(false);
+        p.maxLife = p.life;
+        particles.push(p);
+    }
+
+    // --- Signal lines ---
+    var signalLines = [];
     function createSignal() {
         return {
             y: Math.random() * height,
@@ -82,7 +121,6 @@
             phase: Math.random() * Math.PI * 2
         };
     }
-
     function resetSignal(s) {
         s.y = Math.random() * height;
         s.targetAlpha = Math.random() * 0.06 + 0.02;
@@ -94,22 +132,73 @@
         s.maxLife = s.life;
         s.phase = Math.random() * Math.PI * 2;
     }
-
-    var count = Math.min(Math.floor(width * height / 6000), 150);
-    for (var i = 0; i < count; i++) {
-        var p = createParticle();
-        p.maxLife = p.life;
-        particles.push(p);
-    }
     for (var j = 0; j < 10; j++) {
         var s = createSignal();
         s.maxLife = s.life;
         signalLines.push(s);
     }
 
+    // --- Geometry vertices ---
+    function getVertices(t, sides, cx, cy, radius) {
+        var verts = [];
+        var baseAngle = t * 0.0003;
+        for (var i = 0; i < sides; i++) {
+            var a = baseAngle + (Math.PI * 2 / sides) * i;
+            var r = radius + Math.sin(t * 0.001 + i * 1.5) * radius * 0.2;
+            verts.push({
+                x: cx + Math.cos(a) * r,
+                y: cy + Math.sin(a) * r
+            });
+        }
+        return verts;
+    }
+
+    // --- Render ---
     function render() {
         time++;
+        var sig = getSignal();
 
+        // --- Smooth reactive values ---
+        var targetReactivity = sig.isPlaying ? 1 : 0;
+        reactivity += (targetReactivity - reactivity) * 0.008;
+
+        // Density grows with cumulative play time (full at ~20 min)
+        if (sig.isPlaying) {
+            playDuration += 1 / 60; // ~60fps
+        }
+        var targetDensity = Math.min(playDuration / 1200, 1); // 1200s = 20 min
+        if (!sig.isPlaying) targetDensity = density * 0.9995; // very slow decay when paused
+        density += (targetDensity - density) * 0.003;
+
+        // Swirl driven by low-end
+        var targetSwirl = sig.smoothLow * 3.0 * reactivity;
+        swirlForce += (targetSwirl - swirlForce) * 0.04;
+
+        // Pattern strength grows with reactivity and density
+        var targetPattern = reactivity * (0.15 + density * 0.85);
+        patternStrength += (targetPattern - patternStrength) * 0.008;
+
+        // Connection lines appear as density grows
+        var targetConnAlpha = reactivity * density * 0.1;
+        connectionAlpha += (targetConnAlpha - connectionAlpha) * 0.006;
+
+        // --- Dynamic particle count ---
+        var targetCount = Math.floor(baseCount + (maxCount - baseCount) * density * reactivity);
+        if (!sig.isPlaying) targetCount = Math.max(baseCount, Math.floor(particles.length * 0.999));
+        targetCount = Math.max(baseCount, Math.min(maxCount, targetCount));
+
+        while (particles.length < targetCount) {
+            var np = createParticle(reactivity > 0.3);
+            np.maxLife = np.life;
+            particles.push(np);
+        }
+
+        // --- Geometry ---
+        var sides = Math.floor(3 + density * 9);
+        var geoRadius = Math.min(width, height) * (0.15 + density * 0.2);
+        var verts = getVertices(time, sides, width / 2, height / 2, geoRadius);
+
+        // --- Glitch ---
         glitchTimer--;
         if (!glitchActive && glitchTimer <= 0) {
             if (Math.random() > 0.5) {
@@ -127,7 +216,13 @@
                 glitchTimer = Math.floor(Math.random() * 300) + 200;
             }
         }
+        if (sig.peak > 0.7 && sig.isPlaying && Math.random() > 0.85) {
+            glitchActive = true;
+            glitchIntensity = sig.peak;
+            glitchTimer = Math.floor(Math.random() * 8) + 2;
+        }
 
+        // --- Clear ---
         ctx.clearRect(0, 0, width, height);
 
         var grad = ctx.createRadialGradient(
@@ -139,6 +234,7 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, width, height);
 
+        // --- Signal lines ---
         for (var si = 0; si < signalLines.length; si++) {
             var sl = signalLines[si];
             sl.life--;
@@ -147,6 +243,10 @@
             sl.alpha = sl.targetAlpha * slFade;
             sl.y += sl.speed;
             sl.x += Math.sin(time * 0.001 + sl.phase) * 0.3;
+
+            if (sig.isPlaying) {
+                sl.alpha *= (1 + sig.smoothRms * 2);
+            }
 
             if (glitchActive && Math.random() > 0.8) {
                 sl.alpha = Math.min(sl.targetAlpha * 5, 0.2);
@@ -165,7 +265,22 @@
             if (sl.life <= 0) resetSignal(sl);
         }
 
-        for (var pi = 0; pi < particles.length; pi++) {
+        // --- Geometry wireframe ---
+        if (patternStrength > 0.01 && verts.length > 0) {
+            ctx.beginPath();
+            ctx.moveTo(verts[0].x, verts[0].y);
+            for (var vi = 1; vi < verts.length; vi++) {
+                ctx.lineTo(verts[vi].x, verts[vi].y);
+            }
+            ctx.closePath();
+            var geoAlpha = patternStrength * 0.04 * (1 + sig.smoothRms);
+            ctx.strokeStyle = 'hsla(40, 30%, 60%, ' + geoAlpha + ')';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // --- Particles ---
+        for (var pi = particles.length - 1; pi >= 0; pi--) {
             var pt = particles[pi];
             pt.life--;
 
@@ -177,23 +292,109 @@
             pt.x += pt.vx + Math.sin(time * 0.003 + pt.phase) * 0.12;
             pt.y += pt.vy + Math.cos(time * 0.002 + pt.phase) * 0.06;
 
+            // --- Geometric attraction ---
+            if (patternStrength > 0.01 && verts.length > 0) {
+                var targetVert = verts[pt.attractIdx % verts.length];
+                pt.phase += pt.orbitSpeed * (1 + swirlForce);
+                var orbitX = targetVert.x + Math.cos(pt.phase) * pt.orbitDist;
+                var orbitY = targetVert.y + Math.sin(pt.phase) * pt.orbitDist;
+
+                var ax = (orbitX - pt.x) * patternStrength * 0.006;
+                var ay = (orbitY - pt.y) * patternStrength * 0.006;
+                pt.vx += ax;
+                pt.vy += ay;
+
+                // Transient push outward
+                if (sig.peak > 0.5) {
+                    var pushAngle = Math.atan2(pt.y - height / 2, pt.x - width / 2);
+                    var pushForce = (sig.peak - 0.5) * 0.12 * reactivity;
+                    pt.vx += Math.cos(pushAngle) * pushForce;
+                    pt.vy += Math.sin(pushAngle) * pushForce;
+                }
+            }
+
+            // --- Swirl ---
+            if (swirlForce > 0.01) {
+                var sdx = pt.x - width / 2;
+                var sdy = pt.y - height / 2;
+                var sDist = Math.sqrt(sdx * sdx + sdy * sdy) || 1;
+                var swirlMag = swirlForce * 0.25 / (1 + sDist * 0.003);
+                pt.vx += -sdy / sDist * swirlMag;
+                pt.vy += sdx / sDist * swirlMag;
+            }
+
+            // Damping
+            pt.vx *= 0.985;
+            pt.vy *= 0.985;
+
+            // Audio brightness
+            if (sig.isPlaying) {
+                pt.alpha *= (1 + sig.smoothRms * 1.5);
+                if (sig.high > 0.3 && Math.random() > 0.95) {
+                    pt.alpha = Math.min(pt.alpha * 2, 0.9);
+                }
+            }
+
+            // Glitch
             if (glitchActive && Math.random() > 0.9) {
                 pt.x += (Math.random() - 0.5) * glitchIntensity * 25;
                 pt.alpha = Math.min(pt.alpha * 2.5, 0.8);
             }
 
+            // Draw
             if (pt.alpha > 0.01) {
+                var drawSize = pt.size * (1 + sig.smoothRms * 0.5);
                 ctx.beginPath();
-                ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                ctx.arc(pt.x, pt.y, drawSize, 0, Math.PI * 2);
                 ctx.fillStyle = 'hsla(' + pt.hue + ', ' + pt.sat + '%, ' + pt.lit + '%, ' + pt.alpha + ')';
                 ctx.fill();
             }
 
-            if (pt.life <= 0 || pt.x < -30 || pt.x > width + 30 || pt.y < -30 || pt.y > height + 30) {
-                resetParticle(pt);
+            // Reset or cull
+            if (pt.life <= 0 || pt.x < -60 || pt.x > width + 60 || pt.y < -60 || pt.y > height + 60) {
+                if (particles.length > targetCount && pi >= baseCount) {
+                    particles.splice(pi, 1);
+                } else {
+                    resetParticle(pt, reactivity > 0.3);
+                }
             }
         }
 
+        // --- Connection lines ---
+        if (connectionAlpha > 0.003) {
+            var connDist = 60 + density * 80;
+            var connDistSq = connDist * connDist;
+            var maxConns = Math.min(particles.length, 180);
+
+            ctx.lineWidth = 0.5;
+            for (var ci = 0; ci < maxConns; ci++) {
+                var pa = particles[ci];
+                if (pa.alpha < 0.02) continue;
+
+                for (var cj = ci + 1; cj < maxConns; cj++) {
+                    var pb = particles[cj];
+                    if (pb.alpha < 0.02) continue;
+
+                    var cdx = pa.x - pb.x;
+                    var cdy = pa.y - pb.y;
+                    var cdSq = cdx * cdx + cdy * cdy;
+
+                    if (cdSq < connDistSq) {
+                        var proximity = 1 - cdSq / connDistSq;
+                        var lineAlpha = connectionAlpha * proximity * Math.min(pa.alpha, pb.alpha) * 2;
+                        if (lineAlpha > 0.003) {
+                            ctx.beginPath();
+                            ctx.moveTo(pa.x, pa.y);
+                            ctx.lineTo(pb.x, pb.y);
+                            ctx.strokeStyle = 'hsla(40, 25%, 65%, ' + lineAlpha + ')';
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- Glitch tear ---
         if (glitchActive && Math.random() > 0.6) {
             var tearY = Math.random() * height;
             var tearH = Math.random() * 3 + 1;
@@ -201,6 +402,7 @@
             ctx.fillRect(0, tearY, width, tearH);
         }
 
+        // --- Rare ambient pulse ---
         if (Math.random() > 0.998) {
             var pg = ctx.createRadialGradient(
                 width / 2, height * 0.4, 0,
