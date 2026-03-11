@@ -289,6 +289,32 @@
             ctx.textAlign = 'left';
             ctx.fillStyle = 'rgba(70, 185, 80, ' + (recAlpha * 0.95) + ')';
             ctx.fillText('RECEIVE TRANSMISSION', recX + 16, recY + recH / 2 + 2.5);
+
+            // --- Play triangle — centered on meter face ---
+            var triSize = 28;
+            var triX = cx + 3; // slight offset right to optically center the triangle
+            var triY = cy - arcRadius * 0.45;
+            var triPulse = 0.12 + Math.sin(time * 0.06) * 0.06;
+
+            // Glow behind
+            ctx.beginPath();
+            ctx.moveTo(triX - triSize * 0.42, triY - triSize * 0.5);
+            ctx.lineTo(triX + triSize * 0.55, triY);
+            ctx.lineTo(triX - triSize * 0.42, triY + triSize * 0.5);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(196, 163, 90, ' + (triPulse * 0.3) + ')';
+            ctx.fill();
+
+            // Triangle outline
+            ctx.beginPath();
+            ctx.moveTo(triX - triSize * 0.42, triY - triSize * 0.5);
+            ctx.lineTo(triX + triSize * 0.55, triY);
+            ctx.lineTo(triX - triSize * 0.42, triY + triSize * 0.5);
+            ctx.closePath();
+            ctx.strokeStyle = 'rgba(196, 163, 90, ' + (triPulse + 0.08) + ')';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
         } else if (isPlaying) {
             ctx.fillStyle = 'rgba(50, 140, 60, 0.2)';
             ctx.fillRect(recX, recY, recW, recH);
@@ -454,8 +480,22 @@
 
         if (!hasStarted && mx >= recX && mx <= recX + recW && my >= recY && my <= recY + recH) {
             startPlayback();
+            // Enter focus mode on first play
+            if (window.focusMode && !window.focusMode.isActive()) {
+                window.focusMode.enter();
+            }
             return;
         }
+
+        if (!hasStarted) {
+            // Click anywhere on canvas starts playback + focus
+            startPlayback();
+            if (window.focusMode && !window.focusMode.isActive()) {
+                window.focusMode.enter();
+            }
+            return;
+        }
+
         togglePlay();
     });
 
