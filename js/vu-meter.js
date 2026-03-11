@@ -608,10 +608,11 @@
             smoothedHigh += (highLevel - smoothedHigh) * 0.1;
 
             // Drive the needle from smoothed level
-            // Scale to use more of the needle range
-            var scaledLevel = Math.pow(smoothedLevel, 0.7) * 1.4; // compress + expand range
+            // Scale to sit comfortably in the middle of the arc
+            // pow(x, 0.5) compresses dynamic range; * 0.75 keeps it from pegging right
+            var scaledLevel = Math.pow(smoothedLevel, 0.5) * 0.75;
             scaledLevel = Math.min(scaledLevel, 1.0);
-            targetAngle = dbToAngle(-20 + scaledLevel * 26);
+            targetAngle = dbToAngle(-20 + scaledLevel * 20);
             glowIntensity += (1 - glowIntensity) * 0.05;
 
             // Update exposed signal data
