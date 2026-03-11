@@ -1383,6 +1383,24 @@
             setActiveListItem(ep, band);
         }
 
+        // Find and play the next available track in the current band
+        function playNext() {
+            var sources = currentBand === 'score' ? scoreSources : transmissionSources;
+            var keys = Object.keys(sources);
+            var currentEp = epDisplay ? epDisplay.textContent.trim() : '';
+            var currentIdx = keys.indexOf(currentEp);
+
+            // Find next track
+            if (currentIdx >= 0 && currentIdx < keys.length - 1) {
+                var nextEp = keys[currentIdx + 1];
+                loadTrack(nextEp, currentBand, true);
+                return true;
+            }
+            return false; // no more tracks
+        }
+
+        window.playNext = playNext;
+
         function switchBand(band) {
             if (band === currentBand) return false;
 
