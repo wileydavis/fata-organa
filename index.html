@@ -1011,7 +1011,7 @@
         <p class="tx-tagline">They thought it was a weapon. But it's a gift.</p>
     </div>
 
-    <div class="focus-exit-hint" id="focus-exit-hint">Click anywhere or press Escape to exit</div>
+    <div class="focus-exit-hint" id="focus-exit-hint">Pause or press Escape to exit</div>
 
     <!-- Overlay -->
     <div class="tx-drawer-overlay" id="drawer-overlay"></div>
@@ -1307,19 +1307,6 @@
                 }
             });
         }
-
-        // Click on the VU meter area during focus does NOT exit (so you can play/pause)
-        var meter = document.querySelector('.tx-meter');
-
-        // Click anywhere else during focus exits
-        document.addEventListener('click', function(e) {
-            if (!inFocus) return;
-            // Don't exit if clicking the meter (play/pause controls)
-            if (meter && meter.contains(e.target)) return;
-            // Don't exit if clicking progress bar
-            if (e.target.closest && e.target.closest('.vu-progress-wrap')) return;
-            exitFocus();
-        });
 
         // Sync with browser fullscreen exit (user presses Escape in fullscreen)
         document.addEventListener('fullscreenchange', function() {
