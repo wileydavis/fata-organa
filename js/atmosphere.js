@@ -288,6 +288,18 @@
             pt.x += pt.vx + Math.sin(time * 0.003 + pt.phase) * 0.12;
             pt.y += pt.vy + Math.cos(time * 0.002 + pt.phase) * 0.06;
 
+            // --- Center repulsion (keep particles away from VU meter) ---
+            var cdx = pt.x - width / 2;
+            var cdy = pt.y - height / 2;
+            var centerDist = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
+            var deadZone = Math.min(width, height) * 0.22; // radius of the meter area
+            if (centerDist < deadZone) {
+                // Push outward — stronger the closer to center
+                var repelStrength = (1 - centerDist / deadZone) * 0.15;
+                pt.vx += (cdx / centerDist) * repelStrength;
+                pt.vy += (cdy / centerDist) * repelStrength;
+            }
+
             // --- Geometric attraction ---
             if (patternStrength > 0.01 && verts.length > 0) {
                 var targetVert = verts[pt.attractIdx % verts.length];
@@ -300,21 +312,24 @@
                 pt.vx += ax;
                 pt.vy += ay;
 
-                // Transient push outward
+                // Transient push outward from center
                 if (sig.peak > 0.5) {
                     var pushAngle = Math.atan2(pt.y - height / 2, pt.x - width / 2);
-                    var pushForce = (sig.peak - 0.5) * 0.12 * reactivity;
+                    var pushForce = (sig.peak - 0.5) * 0.15 * reactivity;
                     pt.vx += Math.cos(pushAngle) * pushForce;
                     pt.vy += Math.sin(pushAngle) * pushForce;
                 }
             }
 
-            // --- Swirl ---
+            // --- Swirl (ring-shaped, strongest at mid-distance from center) ---
             if (swirlForce > 0.01) {
                 var sdx = pt.x - width / 2;
                 var sdy = pt.y - height / 2;
                 var sDist = Math.sqrt(sdx * sdx + sdy * sdy) || 1;
-                var swirlMag = swirlForce * 0.25 / (1 + sDist * 0.003);
+                // Bell curve: strongest swirl at ~40% of screen diagonal, fades at center and edges
+                var optimalDist = Math.max(width, height) * 0.4;
+                var swirlFalloff = Math.exp(-Math.pow((sDist - optimalDist) / (optimalDist * 0.6), 2));
+                var swirlMag = swirlForce * 0.3 * swirlFalloff;
                 pt.vx += -sdy / sDist * swirlMag;
                 pt.vy += sdx / sDist * swirlMag;
             }
