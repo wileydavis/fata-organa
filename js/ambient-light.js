@@ -61,7 +61,7 @@
     darknessOverlay.className = 'ambient-darkness';
     darknessOverlay.style.cssText = ''
         + 'position:fixed;top:0;left:0;right:0;bottom:0;'
-        + 'pointer-events:none;z-index:1;'
+        + 'pointer-events:none;z-index:0;'
         + 'background:black;opacity:0;';
     document.body.appendChild(darknessOverlay);
 
@@ -90,7 +90,7 @@
             darkness = Math.max(0, darkness - FADE_OUT_SPEED);
         }
 
-        darknessOverlay.style.opacity = darkness;
+        darknessOverlay.style.opacity = document.body.classList.contains('focus-mode') ? 0 : darkness;
 
         // --- Dim UI elements ---
         var uiOpacity = 1 - darkness * 0.95;
