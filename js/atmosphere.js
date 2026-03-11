@@ -58,12 +58,10 @@
     var connectionAlpha = 0;
     var playDuration = 0; // seconds of audio played this session
 
-    function createParticle(forceCenter) {
-        var angle = Math.random() * Math.PI * 2;
-        var dist = forceCenter ? Math.random() * 200 + 100 : 0;
+    function createParticle(spread) {
         return {
-            x: forceCenter ? width / 2 + Math.cos(angle) * dist : Math.random() * width,
-            y: forceCenter ? height / 2 + Math.sin(angle) * dist : Math.random() * height,
+            x: Math.random() * width,
+            y: Math.random() * height,
             size: Math.random() * 2 + 0.5,
             baseAlpha: Math.random() * 0.5 + 0.15,
             alpha: 0,
@@ -77,16 +75,14 @@
             sat: 30 + Math.random() * 30,
             lit: 55 + Math.random() * 25,
             attractIdx: Math.floor(Math.random() * 12),
-            orbitDist: Math.random() * 80 + 20,
-            orbitSpeed: (Math.random() - 0.5) * 0.008
+            orbitDist: Math.random() * 180 + 40,
+            orbitSpeed: (Math.random() - 0.5) * 0.006
         };
     }
 
-    function resetParticle(p, forceCenter) {
-        var angle = Math.random() * Math.PI * 2;
-        var dist = forceCenter ? Math.random() * 200 + 100 : 0;
-        p.x = forceCenter ? width / 2 + Math.cos(angle) * dist : Math.random() * width;
-        p.y = forceCenter ? height / 2 + Math.sin(angle) * dist : Math.random() * height;
+    function resetParticle(p, spread) {
+        p.x = Math.random() * width;
+        p.y = Math.random() * height;
         p.size = Math.random() * 2 + 0.5;
         p.baseAlpha = Math.random() * 0.5 + 0.15;
         p.vx = (Math.random() - 0.5) * 0.2;
@@ -95,8 +91,8 @@
         p.maxLife = p.life;
         p.phase = Math.random() * Math.PI * 2;
         p.attractIdx = Math.floor(Math.random() * 12);
-        p.orbitDist = Math.random() * 80 + 20;
-        p.orbitSpeed = (Math.random() - 0.5) * 0.008;
+        p.orbitDist = Math.random() * 180 + 40;
+        p.orbitSpeed = (Math.random() - 0.5) * 0.006;
     }
 
     for (var i = 0; i < baseCount; i++) {
@@ -195,7 +191,7 @@
 
         // --- Geometry ---
         var sides = Math.floor(3 + density * 9);
-        var geoRadius = Math.min(width, height) * (0.15 + density * 0.2);
+        var geoRadius = Math.max(width, height) * (0.35 + density * 0.25);
         var verts = getVertices(time, sides, width / 2, height / 2, geoRadius);
 
         // --- Glitch ---
@@ -299,8 +295,8 @@
                 var orbitX = targetVert.x + Math.cos(pt.phase) * pt.orbitDist;
                 var orbitY = targetVert.y + Math.sin(pt.phase) * pt.orbitDist;
 
-                var ax = (orbitX - pt.x) * patternStrength * 0.006;
-                var ay = (orbitY - pt.y) * patternStrength * 0.006;
+                var ax = (orbitX - pt.x) * patternStrength * 0.003;
+                var ay = (orbitY - pt.y) * patternStrength * 0.003;
                 pt.vx += ax;
                 pt.vy += ay;
 
