@@ -356,7 +356,16 @@
         audio.addEventListener('ended', function() {
             isPlaying = false;
             isLoading = false;
-            statusEl.textContent = 'TRANSMISSION COMPLETE \u2014 CLICK TO REPLAY';
+            // Try to play next track in the current band
+            if (window.playNext && window.playNext()) {
+                // Next track is loading/playing
+                return;
+            }
+            // No more tracks — exit focus and show complete
+            statusEl.textContent = 'TRANSMISSION COMPLETE';
+            if (window.focusMode && window.focusMode.isActive()) {
+                window.focusMode.exit();
+            }
         });
 
         audio.addEventListener('timeupdate', function() {
