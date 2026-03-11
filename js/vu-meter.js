@@ -433,6 +433,10 @@
             isLoading = false;
             statusEl.classList.remove('loading');
             statusEl.textContent = 'RECEIVING TRANSMISSION';
+            // Enter focus when playback starts
+            if (window.focusMode && !window.focusMode.isActive()) {
+                window.focusMode.enter();
+            }
         }).catch(function(err) {
             console.error('Playback error:', err);
             isLoading = false;
@@ -460,11 +464,18 @@
     }
 
     function togglePlay() {
-        if (!hasStarted) { startPlayback(); return; }
+        if (!hasStarted) {
+            startPlayback();
+            return;
+        }
         if (isPlaying) {
             audio.pause();
             isPlaying = false;
             statusEl.textContent = 'PAUSED \u2014 CLICK TO RESUME';
+            // Exit focus on pause
+            if (window.focusMode && window.focusMode.isActive()) {
+                window.focusMode.exit();
+            }
         } else {
             doPlay();
         }
@@ -472,34 +483,13 @@
 
     // --- Click ---
     canvas.addEventListener('click', function(e) {
-        var rect = canvas.getBoundingClientRect();
-        var scaleX = W / rect.width;
-        var scaleY = H / rect.height;
-        var mx = (e.clientX - rect.left) * scaleX;
-        var my = (e.clientY - rect.top) * scaleY;
-
-        if (!hasStarted && mx >= recX && mx <= recX + recW && my >= recY && my <= recY + recH) {
-            startPlayback();
-            // Enter focus mode on first play
-            if (window.focusMode && !window.focusMode.isActive()) {
-                window.focusMode.enter();
-            }
-            return;
-        }
-
-        if (!hasStarted) {
-            // Click anywhere on canvas starts playback + focus
-            startPlayback();
-            if (window.focusMode && !window.focusMode.isActive()) {
-                window.focusMode.enter();
-            }
-            return;
-        }
-
+        // Stop the click from propagating to the focus mode exit handler
+        e.stopPropagation();
         togglePlay();
     });
 
     progressWrap.addEventListener('click', function(e) {
+        e.stopPropagation();
         if (!audio || !audio.duration) return;
         var rect = progressWrap.getBoundingClientRect();
         audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
