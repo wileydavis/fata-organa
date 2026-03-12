@@ -144,23 +144,31 @@
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Warm backlight — large, soft, signal-driven
-        var blRadius = W * (0.8 + energy * 0.2);
-        var blGrad = ctx.createRadialGradient(cx, H * 0.38, 0, cx, H * 0.38, blRadius);
-        blGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.5) + ')');
-        blGrad.addColorStop(0.25, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.25) + ')');
-        blGrad.addColorStop(0.6, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.08) + ')');
-        blGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = blGrad;
+        // Internal sconce light — emanates from needle pivot, illuminates upward
+        // As if a small bulb sits behind a lip at the bottom of the meter
+        var sconceX = cx;
+        var sconceY = cy + 8; // just below the pivot
+        var sconceRadius = H * (0.9 + energy * 0.15);
+        var sconceGrad = ctx.createRadialGradient(sconceX, sconceY, 0, sconceX, sconceY, sconceRadius);
+        var sconceIntensity = blIntensity * 0.7;
+        sconceGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.9) + ')');
+        sconceGrad.addColorStop(0.08, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.6) + ')');
+        sconceGrad.addColorStop(0.25, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.25) + ')');
+        sconceGrad.addColorStop(0.5, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.08) + ')');
+        sconceGrad.addColorStop(0.8, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.02) + ')');
+        sconceGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = sconceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Subtle warm wash — wide, barely visible
-        var washAlpha = playing ? (0.01 + energy * 0.025) * breathMod : 0.015;
-        var washGrad = ctx.createRadialGradient(cx, cy * 0.65, 0, cx, cy * 0.65, W * 0.7);
-        washGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washAlpha + ')');
-        washGrad.addColorStop(0.4, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.3) + ')');
-        washGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = washGrad;
+        // Secondary upward wash — vertical gradient, bright at bottom, dark at top
+        // Simulates light bouncing off the dial face
+        var washIntensity = playing ? (0.03 + energy * 0.04) * breathMod : 0.02;
+        var upGrad = ctx.createLinearGradient(0, H, 0, 0);
+        upGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washIntensity + ')');
+        upGrad.addColorStop(0.3, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.3) + ')');
+        upGrad.addColorStop(0.7, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.05) + ')');
+        upGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = upGrad;
         ctx.fillRect(0, 0, W, H);
 
         // VU label
