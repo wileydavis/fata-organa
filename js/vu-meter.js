@@ -144,19 +144,21 @@
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Warm backlight — signal-driven color and intensity
-        var blGrad = ctx.createRadialGradient(cx, H * 0.35, 0, cx, H * 0.35, W * (0.45 + energy * 0.15));
-        blGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + blIntensity + ')');
-        blGrad.addColorStop(0.4, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.4) + ')');
+        // Warm backlight — large, soft, signal-driven
+        var blRadius = W * (0.8 + energy * 0.2);
+        var blGrad = ctx.createRadialGradient(cx, H * 0.38, 0, cx, H * 0.38, blRadius);
+        blGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.5) + ')');
+        blGrad.addColorStop(0.25, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.25) + ')');
+        blGrad.addColorStop(0.6, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.08) + ')');
         blGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = blGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Subtle warm wash — circular, signal-driven
-        var washAlpha = playing ? (0.02 + energy * 0.05) * breathMod : 0.03;
-        var washGrad = ctx.createRadialGradient(cx, cy * 0.7, 0, cx, cy * 0.7, W * 0.45);
+        // Subtle warm wash — wide, barely visible
+        var washAlpha = playing ? (0.01 + energy * 0.025) * breathMod : 0.015;
+        var washGrad = ctx.createRadialGradient(cx, cy * 0.65, 0, cx, cy * 0.65, W * 0.7);
         washGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washAlpha + ')');
-        washGrad.addColorStop(0.6, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.4) + ')');
+        washGrad.addColorStop(0.4, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.3) + ')');
         washGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = washGrad;
         ctx.fillRect(0, 0, W, H);
