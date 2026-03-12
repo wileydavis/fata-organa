@@ -144,29 +144,27 @@
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Internal sconce light — emanates from needle pivot, illuminates upward
-        // As if a small bulb sits behind a lip at the bottom of the meter
+        // Internal sconce light — emanates from below the sconce lip
         var sconceX = cx;
-        var sconceY = cy + 8; // just below the pivot
-        var sconceRadius = H * (0.9 + energy * 0.15);
+        var sconceY = cy + 12; // light source hidden below the sconce
+        var sconceRadius = H * (0.85 + energy * 0.1);
         var sconceGrad = ctx.createRadialGradient(sconceX, sconceY, 0, sconceX, sconceY, sconceRadius);
-        var sconceIntensity = blIntensity * 0.7;
-        sconceGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.9) + ')');
-        sconceGrad.addColorStop(0.08, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.6) + ')');
-        sconceGrad.addColorStop(0.25, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.25) + ')');
-        sconceGrad.addColorStop(0.5, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.08) + ')');
-        sconceGrad.addColorStop(0.8, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.02) + ')');
+        var sconceIntensity = blIntensity * 0.45;
+        sconceGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.7) + ')');
+        sconceGrad.addColorStop(0.06, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.45) + ')');
+        sconceGrad.addColorStop(0.15, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.2) + ')');
+        sconceGrad.addColorStop(0.35, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.06) + ')');
+        sconceGrad.addColorStop(0.6, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.015) + ')');
         sconceGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = sconceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Secondary upward wash — vertical gradient, bright at bottom, dark at top
-        // Simulates light bouncing off the dial face
-        var washIntensity = playing ? (0.03 + energy * 0.04) * breathMod : 0.02;
+        // Upward wash — very dim, fades to nothing well before the top
+        var washIntensity = playing ? (0.015 + energy * 0.02) * breathMod : 0.01;
         var upGrad = ctx.createLinearGradient(0, H, 0, 0);
         upGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washIntensity + ')');
-        upGrad.addColorStop(0.3, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.3) + ')');
-        upGrad.addColorStop(0.7, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.05) + ')');
+        upGrad.addColorStop(0.2, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.2) + ')');
+        upGrad.addColorStop(0.5, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.03) + ')');
         upGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = upGrad;
         ctx.fillRect(0, 0, W, H);
@@ -274,13 +272,40 @@
             ctx.stroke();
         }
 
-        // Pivot cap
+        // Pivot cap (behind sconce)
         ctx.beginPath();
         ctx.arc(cx, cy, 5, 0, Math.PI * 2);
         ctx.fillStyle = '#2a2520';
         ctx.fill();
         ctx.strokeStyle = 'rgba(196, 163, 90, 0.18)';
         ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        // --- Physical sconce — dark arc covering the pivot and light source ---
+        // A curved lip that bumps up above the pivot, hiding the light from direct view
+        var sconceW = 50;
+        var sconceH = 14;
+        var sconceTop = cy - 4;
+
+        // Sconce body — dark with slight gradient
+        ctx.beginPath();
+        ctx.ellipse(cx, sconceTop + sconceH, sconceW, sconceH, 0, Math.PI, 0);
+        ctx.lineTo(cx + sconceW, H);
+        ctx.lineTo(cx - sconceW, H);
+        ctx.closePath();
+        var sconceBodyGrad = ctx.createLinearGradient(0, sconceTop, 0, sconceTop + sconceH + 10);
+        sconceBodyGrad.addColorStop(0, '#1e1c18');
+        sconceBodyGrad.addColorStop(0.4, '#151410');
+        sconceBodyGrad.addColorStop(1, '#0e0d0b');
+        ctx.fillStyle = sconceBodyGrad;
+        ctx.fill();
+
+        // Sconce top edge — faint highlight as light catches the lip
+        ctx.beginPath();
+        ctx.ellipse(cx, sconceTop + sconceH, sconceW, sconceH, 0, Math.PI, Math.PI * 2);
+        var edgeAlpha = playing ? 0.12 + energy * 0.08 : 0.06;
+        ctx.strokeStyle = 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + edgeAlpha + ')';
+        ctx.lineWidth = 0.75;
         ctx.stroke();
 
         // --- RECEIVE indicator ---
