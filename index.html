@@ -851,9 +851,6 @@
     /* === FOCUS MODE === */
     .focus-mode .site-nav,
     .focus-mode .tx-header,
-    .focus-mode .tx-frequency-bar,
-    .focus-mode .tx-band-selector,
-    .focus-mode .tx-status-strip,
     .focus-mode .tx-panel-buttons,
     .focus-mode .tx-tagline,
     .focus-mode .tx-footer,
@@ -862,6 +859,12 @@
         opacity: 0 !important;
         pointer-events: none;
         transition: opacity 0.8s ease;
+    }
+
+    .focus-mode .tx-frequency-bar,
+    .focus-mode .tx-band-selector,
+    .focus-mode .tx-status-strip {
+        display: none !important;
     }
 
     .focus-mode {
@@ -885,11 +888,21 @@
         border: none;
     }
 
+    .focus-mode .tx-panel {
+        background: transparent !important;
+        max-width: none;
+    }
+
     .focus-mode .tx-meter {
-        border-color: transparent;
+        border: 1px solid rgba(196, 163, 90, 0.08);
         transform: scale(1.3);
         transition: transform 0.8s ease;
         background: transparent !important;
+        box-shadow: 0 0 40px rgba(196, 163, 90, 0.03);
+    }
+
+    .focus-mode .tx-meter .vu-progress-wrap {
+        background: rgba(30, 28, 24, 0.9);
     }
 
     /* Focus mode exit hint */
