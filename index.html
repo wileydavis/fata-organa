@@ -890,7 +890,8 @@
 
     .focus-mode .tx-panel {
         background: transparent !important;
-        max-width: 480px;
+        width: auto !important;
+        max-width: none !important;
     }
 
     .focus-mode .tx-meter {
@@ -898,6 +899,12 @@
         transform: none;
         background: transparent !important;
         box-shadow: 0 0 40px rgba(196, 163, 90, 0.03);
+    }
+
+    .focus-mode .tx-meter #vu-player canvas {
+        width: 480px !important;
+        max-width: 90vw !important;
+        height: auto !important;
     }
 
     .focus-mode .tx-meter .vu-progress-wrap {
