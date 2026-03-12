@@ -125,9 +125,12 @@
         var blBase = playing ? (0.14 + energy * 0.35) : 0.16;
         var blIntensity = blBase * breathMod;
 
-        // Face background — darken when playing for more contrast
+        // Face background — circular with transparent edges
         var faceBright = playing ? Math.max(0.4, 1 - energy * 0.8) : 1;
-        var faceGrad = ctx.createRadialGradient(cx, cy - H * 0.3, 10, cx, cy, H * 1.3);
+        var faceRadius = Math.max(W, H) * 0.52;
+        var faceCx = cx;
+        var faceCy = cy - H * 0.1;
+        var faceGrad = ctx.createRadialGradient(faceCx, faceCy, 0, faceCx, faceCy, faceRadius);
         var fr = Math.round(37 * faceBright);
         var fg = Math.round(32 * faceBright);
         var fb = Math.round(24 * faceBright);
@@ -136,25 +139,26 @@
         fg = Math.round(23 * faceBright);
         fb = Math.round(16 * faceBright);
         faceGrad.addColorStop(0.5, 'rgb(' + fr + ',' + fg + ',' + fb + ')');
-        faceGrad.addColorStop(1, 'rgb(' + Math.round(17 * faceBright) + ',' + Math.round(16 * faceBright) + ',' + Math.round(16 * faceBright) + ')');
+        faceGrad.addColorStop(0.78, 'rgb(' + Math.round(17 * faceBright) + ',' + Math.round(16 * faceBright) + ',' + Math.round(16 * faceBright) + ')');
+        faceGrad.addColorStop(1, 'rgba(10, 10, 12, 0)');
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
         // Warm backlight — signal-driven color and intensity
-        var blGrad = ctx.createRadialGradient(cx, H * 0.35, 0, cx, H * 0.35, W * (0.5 + energy * 0.15));
+        var blGrad = ctx.createRadialGradient(cx, H * 0.35, 0, cx, H * 0.35, W * (0.45 + energy * 0.15));
         blGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + blIntensity + ')');
-        blGrad.addColorStop(0.35, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.45) + ')');
+        blGrad.addColorStop(0.4, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (blIntensity * 0.4) + ')');
         blGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = blGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Subtle warm wash — also signal-driven
+        // Subtle warm wash — circular, signal-driven
         var washAlpha = playing ? (0.02 + energy * 0.05) * breathMod : 0.03;
-        var warmLR = ctx.createLinearGradient(0, 0, W, 0);
-        warmLR.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.8) + ')');
-        warmLR.addColorStop(0.5, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washAlpha + ')');
-        warmLR.addColorStop(1, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.6) + ')');
-        ctx.fillStyle = warmLR;
+        var washGrad = ctx.createRadialGradient(cx, cy * 0.7, 0, cx, cy * 0.7, W * 0.45);
+        washGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washAlpha + ')');
+        washGrad.addColorStop(0.6, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washAlpha * 0.4) + ')');
+        washGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = washGrad;
         ctx.fillRect(0, 0, W, H);
 
         // VU label
