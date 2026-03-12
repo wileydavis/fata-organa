@@ -136,19 +136,19 @@
             var coreAlpha = Math.min(0.22, glowAlpha * 0.25);
             var cs = c.r + ',' + c.g + ',' + c.b;
 
-            // Circle glow with gradual falloff — many stops for smooth fade
-            var radius = 35 + glowEnergy * 25; // % of viewport
+            // Circle glow — large, subtle, fills much of the screen
+            var radius = 55 + glowEnergy * 30; // % of viewport
             ambientGlow.style.opacity = 1;
             ambientGlow.style.background = ''
                 + 'radial-gradient('
                 + 'circle at 50% 45%, '
-                + 'rgba(' + cs + ',' + coreAlpha + ') 0%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.75) + ') ' + (radius * 0.2) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.5) + ') ' + (radius * 0.4) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.3) + ') ' + (radius * 0.6) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.15) + ') ' + (radius * 0.8) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.05) + ') ' + radius + '%, '
-                + 'transparent ' + (radius * 1.3) + '%)';
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.6) + ') 0%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.4) + ') ' + (radius * 0.15) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.25) + ') ' + (radius * 0.3) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.12) + ') ' + (radius * 0.5) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.05) + ') ' + (radius * 0.75) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.02) + ') ' + radius + '%, '
+                + 'transparent ' + (radius * 1.2) + '%)';
         } else {
             ambientGlow.style.opacity = 0;
         }
