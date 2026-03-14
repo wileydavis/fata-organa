@@ -990,7 +990,7 @@
                 <span class="tx-freq-label">FREQUENCY 7.83 MHz</span>
                 <div class="tx-episode-nav">
                     <button class="tx-ep-btn" id="ep-prev" disabled>&#9666;</button>
-                    <span class="tx-ep-current" id="ep-display">TEASER</span>
+                    <span class="tx-ep-current" id="ep-display">INTRO</span>
                     <button class="tx-ep-btn" id="ep-next" disabled>&#9656;</button>
                 </div>
             </div>
@@ -1005,7 +1005,7 @@
 
             <!-- VU Meter -->
             <div class="tx-meter">
-                <div id="vu-player" data-src="/audio/teaser.mp3"></div>
+                <div id="vu-player" data-src="https://media.fataorgana.fm/episodes/Teaser-Intro.mp3"></div>
             </div>
 
             <!-- Status strip -->
@@ -1047,9 +1047,9 @@
             <button class="tx-drawer-close" data-close>&#10005;</button>
         </div>
         <div class="tx-drawer-body" id="drawer-body-transmissions">
-            <div class="tx-list-item available active" data-ep="TEASER" data-band="transmission">
+            <div class="tx-list-item available active" data-ep="INTRO" data-band="transmission">
                 <span class="tx-list-num">&mdash;</span>
-                <span class="tx-list-title">Audio Teaser</span>
+                <span class="tx-list-title">Lab Orientation Statement</span>
                 <span class="tx-list-status">&#9679; Available</span>
             </div>
             <div class="tx-list-item available" data-ep="EP 01" data-band="transmission">
@@ -1362,7 +1362,7 @@
 
         // Audio source maps — add URLs as episodes are produced
         var transmissionSources = {
-            'TEASER': '/audio/teaser.mp3',
+            'INTRO': 'https://media.fataorgana.fm/episodes/Teaser-Intro.mp3',
             'EP 01': 'https://media.fataorgana.fm/episodes/E1%20V3.mp3'
         };
 
