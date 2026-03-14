@@ -911,6 +911,36 @@
         background: rgba(30, 28, 24, 0.9);
     }
 
+    /* Now playing title */
+    .tx-now-playing {
+        display: none;
+        text-align: center;
+        padding: 0.75rem 1rem 0;
+    }
+
+    .tx-now-playing-label {
+        display: block;
+        font-family: var(--mono);
+        font-size: 0.45rem;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        color: rgba(196, 163, 90, 0.25);
+        margin-bottom: 0.3rem;
+    }
+
+    .tx-now-playing-title {
+        display: block;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: rgba(196, 163, 90, 0.5);
+    }
+
+    .focus-mode .tx-now-playing {
+        display: block;
+    }
+
     /* Focus mode exit hint */
     .focus-exit-hint {
         position: fixed;
@@ -1008,6 +1038,12 @@
                 <div id="vu-player" data-src="https://media.fataorgana.fm/episodes/Teaser-Intro.mp3"></div>
             </div>
 
+            <!-- Now playing title (visible in focus mode) -->
+            <div class="tx-now-playing" id="now-playing">
+                <span class="tx-now-playing-label">Now Receiving</span>
+                <span class="tx-now-playing-title" id="now-playing-title">Lab Orientation Statement</span>
+            </div>
+
             <!-- Status strip -->
             <div class="tx-status-strip">
                 <div class="tx-status-cell">
@@ -1054,7 +1090,7 @@
             </div>
             <div class="tx-list-item available" data-ep="EP 01" data-band="transmission">
                 <span class="tx-list-num">01</span>
-                <span class="tx-list-title">First Transmission</span>
+                <span class="tx-list-title">Calibration</span>
                 <span class="tx-list-status">&#9679; Available</span>
             </div>
             <div class="tx-list-item" data-ep="EP 02" data-band="transmission">
@@ -1374,6 +1410,24 @@
         window.currentBand = currentBand;
         window.audioSources = { transmission: transmissionSources, score: scoreSources };
 
+        // Track title maps (displayed in focus mode)
+        var transmissionTitles = {
+            'INTRO': 'Lab Orientation Statement',
+            'EP 01': 'Calibration'
+        };
+
+        var scoreTitles = {
+            'EP 01': 'Attrition'
+        };
+
+        var nowPlayingTitle = document.getElementById('now-playing-title');
+
+        function updateNowPlaying(ep, band) {
+            if (!nowPlayingTitle) return;
+            var titles = band === 'score' ? scoreTitles : transmissionTitles;
+            nowPlayingTitle.textContent = titles[ep] || ep;
+        }
+
         function updateDrawerForBand(band) {
             if (band === 'score') {
                 bodyTransmissions.style.display = 'none';
@@ -1405,6 +1459,7 @@
             window.vuPlayer.loadSource(src, autoplay);
             if (epDisplay) epDisplay.textContent = ep;
             setActiveListItem(ep, band);
+            updateNowPlaying(ep, band);
         }
 
         // Find and play the next available track in the current band
