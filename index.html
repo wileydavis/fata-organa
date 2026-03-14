@@ -916,20 +916,12 @@
         display: none;
         text-align: center;
         padding: 0.75rem 1rem 0;
-    }
-
-    .tx-now-playing-label {
-        display: block;
-        font-family: var(--mono);
-        font-size: 0.45rem;
-        text-transform: uppercase;
-        letter-spacing: 0.25em;
-        color: rgba(196, 163, 90, 0.25);
-        margin-bottom: 0.3rem;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
     }
 
     .tx-now-playing-title {
-        display: block;
         font-family: var(--mono);
         font-size: 0.7rem;
         text-transform: uppercase;
@@ -937,8 +929,29 @@
         color: rgba(196, 163, 90, 0.5);
     }
 
+    .tx-now-playing-nav {
+        background: none;
+        border: none;
+        color: rgba(196, 163, 90, 0.2);
+        font-size: 0.7rem;
+        padding: 0.4rem 0.5rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-family: var(--mono);
+        line-height: 1;
+    }
+
+    .tx-now-playing-nav:hover {
+        color: rgba(196, 163, 90, 0.6);
+    }
+
+    .tx-now-playing-nav:disabled {
+        opacity: 0.15;
+        cursor: default;
+    }
+
     .focus-mode .tx-now-playing {
-        display: block;
+        display: flex;
     }
 
     /* Focus mode exit hint */
@@ -1038,10 +1051,11 @@
                 <div id="vu-player" data-src="https://media.fataorgana.fm/episodes/Teaser-Intro.mp3"></div>
             </div>
 
-            <!-- Now playing title (visible in focus mode) -->
+            <!-- Now playing title with nav (visible in focus mode) -->
             <div class="tx-now-playing" id="now-playing">
-                <span class="tx-now-playing-label">Now Receiving</span>
+                <button class="tx-now-playing-nav" id="focus-prev">&#9666;</button>
                 <span class="tx-now-playing-title" id="now-playing-title">Lab Orientation Statement</span>
+                <button class="tx-now-playing-nav" id="focus-next">&#9656;</button>
             </div>
 
             <!-- Status strip -->
@@ -1479,6 +1493,59 @@
         }
 
         window.playNext = playNext;
+
+        // Play previous track in current band
+        function playPrev() {
+            var sources = currentBand === 'score' ? scoreSources : transmissionSources;
+            var keys = Object.keys(sources);
+            var currentEp = epDisplay ? epDisplay.textContent.trim() : '';
+            var currentIdx = keys.indexOf(currentEp);
+
+            if (currentIdx > 0) {
+                var prevEp = keys[currentIdx - 1];
+                loadTrack(prevEp, currentBand, true);
+                return true;
+            }
+            return false;
+        }
+
+        window.playPrev = playPrev;
+
+        // Focus mode nav buttons
+        var focusPrev = document.getElementById('focus-prev');
+        var focusNextBtn = document.getElementById('focus-next');
+
+        function updateNavButtons() {
+            var sources = currentBand === 'score' ? scoreSources : transmissionSources;
+            var keys = Object.keys(sources);
+            var currentEp = epDisplay ? epDisplay.textContent.trim() : '';
+            var currentIdx = keys.indexOf(currentEp);
+            if (focusPrev) focusPrev.disabled = currentIdx <= 0;
+            if (focusNextBtn) focusNextBtn.disabled = currentIdx < 0 || currentIdx >= keys.length - 1;
+        }
+
+        // Override loadTrack to also update nav state
+        var _origLoadTrack = loadTrack;
+        loadTrack = function(ep, band, autoplay) {
+            _origLoadTrack(ep, band, autoplay);
+            updateNavButtons();
+        };
+
+        if (focusPrev) {
+            focusPrev.addEventListener('click', function(e) {
+                e.stopPropagation();
+                playPrev();
+            });
+        }
+
+        if (focusNextBtn) {
+            focusNextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                playNext();
+            });
+        }
+
+        updateNavButtons();
 
         function switchBand(band) {
             if (band === currentBand) return false;
