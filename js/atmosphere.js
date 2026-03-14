@@ -288,8 +288,8 @@
         var cy = height / 2;
         var deadR = Math.min(width, height) * 0.18;
 
-        // Slow global rotation for the pattern
-        var patternRotation = time * 0.00005;
+        // Slow global rotation — speeds up over track
+        var patternRotation = time * (0.00005 + smoothProgress * 0.0002);
         var cosR = Math.cos(patternRotation);
         var sinR = Math.sin(patternRotation);
 
@@ -338,9 +338,10 @@
             targetX += Math.sin(dispAngle) * audioDisp * 15;
             targetY += Math.cos(dispAngle * 0.7) * audioDisp * 10;
 
-            // --- Move toward target (very slowly) ---
-            // Strength of attraction increases with progress
-            var attractStrength = 0.002 + smoothProgress * 0.012;
+            // --- Move toward target ---
+            // Speed ramps from 1x to 5x over track duration
+            var speedMult = 1 + smoothProgress * 4;
+            var attractStrength = (0.002 + smoothProgress * 0.012) * speedMult;
 
             // When idle, just wander
             if (reactivity < 0.1) {
@@ -354,8 +355,8 @@
 
                 // Very subtle wander on top
                 pt.wanderAngle += (Math.random() - 0.5) * 0.01;
-                pt.vx += Math.cos(pt.wanderAngle) * 0.001;
-                pt.vy += Math.sin(pt.wanderAngle) * 0.001;
+                pt.vx += Math.cos(pt.wanderAngle) * 0.001 * speedMult;
+                pt.vy += Math.sin(pt.wanderAngle) * 0.001 * speedMult;
             }
 
             // --- Center repulsion ---
@@ -368,9 +369,10 @@
                 pt.vy += (cdy / cDist) * repel;
             }
 
-            // Heavy damping — slow, meditative movement
-            pt.vx *= 0.93;
-            pt.vy *= 0.93;
+            // Damping eases over track duration (0.93 → 0.97 = less friction)
+            var damping = 0.93 + smoothProgress * 0.04;
+            pt.vx *= damping;
+            pt.vy *= damping;
 
             pt.x += pt.vx;
             pt.y += pt.vy;
