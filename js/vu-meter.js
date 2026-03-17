@@ -45,6 +45,12 @@
     statusEl.className = 'vu-status';
     statusEl.textContent = '\u00A0';
 
+    // Get current track title from the now-playing element
+    function getTrackTitle() {
+        var el = document.getElementById('now-playing-title');
+        return (el && el.textContent) ? el.textContent : '';
+    }
+
     // Progress bar
     var progressWrap = document.createElement('div');
     progressWrap.className = 'vu-progress-wrap';
@@ -371,7 +377,7 @@
             ctx.font = '500 7px "JetBrains Mono", monospace';
             ctx.textAlign = 'center';
             ctx.fillStyle = 'rgba(70, 185, 80, ' + (recAlpha * 0.9) + ')';
-            ctx.fillText('RECEIVE TRANSMISSION', cx, recY);
+            ctx.fillText(getTrackTitle() || 'RECEIVE TRANSMISSION', cx, recY);
 
             // Receive dot
             ctx.beginPath();
@@ -719,7 +725,7 @@
                     audio.load();
                 } else {
                     statusEl.classList.remove('loading');
-                    statusEl.textContent = 'RECEIVE TRANSMISSION';
+                    statusEl.textContent = getTrackTitle() || 'RECEIVE TRANSMISSION';
                 }
             } else {
                 if (autoplay) {
@@ -729,7 +735,7 @@
                     startPlayback();
                 } else {
                     statusEl.classList.remove('loading');
-                    statusEl.textContent = 'RECEIVE TRANSMISSION';
+                    statusEl.textContent = getTrackTitle() || 'RECEIVE TRANSMISSION';
                 }
             }
         },
@@ -856,5 +862,13 @@
 
     draw();
     animate();
+
+    // Set initial status to track title (after DOM is ready)
+    setTimeout(function() {
+        var title = getTrackTitle();
+        if (title && !hasStarted) {
+            statusEl.textContent = title;
+        }
+    }, 100);
 
 })();
