@@ -863,7 +863,9 @@
     .focus-mode .tx-frequency-bar,
     .focus-mode .tx-band-selector,
     .focus-mode .tx-status-strip {
-        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none;
+        transition: opacity 0.8s ease;
     }
 
     .focus-mode {
