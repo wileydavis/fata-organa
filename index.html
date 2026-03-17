@@ -896,12 +896,21 @@
     .focus-mode .tx-tagline,
     .focus-mode .tx-footer,
     .focus-mode .scanline-overlay,
-    .focus-mode .noise-overlay,
+    .focus-mode .noise-overlay {
+        opacity: 0 !important;
+        pointer-events: none;
+        transition: opacity 0.8s ease;
+    }
+
     .focus-mode .tx-frequency-bar,
     .focus-mode .tx-band-selector,
     .focus-mode .tx-status-strip {
         opacity: 0 !important;
         pointer-events: none;
+        height: 0;
+        overflow: hidden;
+        padding: 0 !important;
+        margin: 0;
         transition: opacity 0.8s ease;
     }
 
@@ -927,6 +936,16 @@
         border: 1px solid rgba(196, 163, 90, 0.06);
         border-radius: 50%;
         overflow: hidden;
+        max-width: 400px;
+        aspect-ratio: 1 / 1;
+        padding: 0;
+        justify-content: center;
+    }
+
+    /* Shift meter up slightly so the pivot (78% of 280px canvas = 218px) 
+       aligns with circle center (200px). Offset = ~18px upward. */
+    .focus-mode .tx-meter {
+        margin-top: -18px;
     }
 
     .focus-mode .tx-meter .vu-status {
