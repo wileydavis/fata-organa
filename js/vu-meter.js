@@ -421,6 +421,9 @@
         audio = new Audio();
         audio.crossOrigin = 'anonymous';
         audio.preload = 'auto';
+        // Mobile: allow background playback
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
 
         audio.addEventListener('ended', function() {
             isPlaying = false;
@@ -429,6 +432,7 @@
                 return;
             }
             statusEl.textContent = 'TRANSMISSION COMPLETE';
+            updateMediaSession(false);
             if (window.focusMode && window.focusMode.isActive()) {
                 window.focusMode.exit();
             }
@@ -464,6 +468,30 @@
             }
         });
 
+        // Mobile: handle stall recovery
+        audio.addEventListener('stalled', function() {
+            if (isPlaying) {
+                statusEl.textContent = 'RECOVERING SIGNAL\u2026';
+                statusEl.classList.add('loading');
+            }
+        });
+
+        audio.addEventListener('playing', function() {
+            statusEl.classList.remove('loading');
+            if (isPlaying) {
+                statusEl.textContent = 'RECEIVING TRANSMISSION';
+            }
+        });
+
+        // Mobile: handle audio interruptions (phone call, etc)
+        audio.addEventListener('pause', function() {
+            // Only handle external pauses (not our own togglePlay pause)
+            if (isPlaying) {
+                isPlaying = false;
+                statusEl.textContent = 'SIGNAL INTERRUPTED \u2014 TAP TO RESUME';
+            }
+        });
+
         audio.addEventListener('error', function(e) {
             console.error('Audio error:', audio.error ? audio.error.code + ' ' + audio.error.message : e);
             isLoading = false;
@@ -473,6 +501,50 @@
         });
 
         audio.src = audioSrc;
+    }
+
+    // --- Media Session API (background playback on mobile) ---
+    function updateMediaSession(playing) {
+        if (!('mediaSession' in navigator)) return;
+
+        if (playing) {
+            // Get current track title
+            var title = 'Fata Organa';
+            var nowPlaying = document.getElementById('now-playing-title');
+            if (nowPlaying && nowPlaying.textContent) {
+                title = nowPlaying.textContent;
+            }
+            var epDisplay = document.getElementById('ep-display');
+            var ep = epDisplay ? epDisplay.textContent.trim() : '';
+
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: 'Fata Organa',
+                album: ep ? 'Transmission ' + ep : 'Transmissions'
+            });
+
+            navigator.mediaSession.setActionHandler('play', function() {
+                doPlay();
+            });
+            navigator.mediaSession.setActionHandler('pause', function() {
+                if (audio && isPlaying) {
+                    audio.pause();
+                    isPlaying = false;
+                    statusEl.textContent = 'PAUSED \u2014 TAP TO RESUME';
+                }
+            });
+            navigator.mediaSession.setActionHandler('previoustrack', function() {
+                if (window.playPrev) window.playPrev();
+            });
+            navigator.mediaSession.setActionHandler('nexttrack', function() {
+                if (window.playNext) window.playNext();
+            });
+            navigator.mediaSession.setActionHandler('seekto', function(details) {
+                if (audio && details.seekTime !== undefined) {
+                    audio.currentTime = details.seekTime;
+                }
+            });
+        }
     }
 
     function initAnalyser() {
@@ -496,15 +568,25 @@
         if (!audioCtx && audio) {
             initAnalyser();
         }
+
+        // On mobile, AudioContext must be resumed before playing
+        // Otherwise buffered audio replays causing stutter
+        var resumePromise;
         if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(function() {});
+            resumePromise = audioCtx.resume();
+        } else {
+            resumePromise = Promise.resolve();
         }
-        audio.play().then(function() {
+
+        resumePromise.then(function() {
+            return audio.play();
+        }).then(function() {
             isPlaying = true;
             hasStarted = true;
             isLoading = false;
             statusEl.classList.remove('loading');
             statusEl.textContent = 'RECEIVING TRANSMISSION';
+            updateMediaSession(true);
             if (window.focusMode && !window.focusMode.isActive()) {
                 window.focusMode.enter();
             }
@@ -513,7 +595,7 @@
             isLoading = false;
             statusEl.classList.remove('loading');
             if (err.name === 'NotAllowedError') {
-                statusEl.textContent = 'SIGNAL READY \u2014 CLICK TO RECEIVE';
+                statusEl.textContent = 'SIGNAL READY \u2014 TAP TO RECEIVE';
             } else {
                 statusEl.textContent = 'SIGNAL ERROR \u2014 TRY AGAIN';
             }
@@ -538,9 +620,9 @@
             return;
         }
         if (isPlaying) {
+            isPlaying = false; // set before pause so the pause event listener knows it's intentional
             audio.pause();
-            isPlaying = false;
-            statusEl.textContent = 'PAUSED \u2014 CLICK TO RESUME';
+            statusEl.textContent = 'PAUSED \u2014 TAP TO RESUME';
             if (window.focusMode && window.focusMode.isActive()) {
                 window.focusMode.exit();
             }
