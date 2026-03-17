@@ -852,6 +852,18 @@
     }
 
     /* === FOCUS MODE === */
+    /* Step 1: fade to black before fullscreen */
+    .focus-fading .focus-blackout {
+        opacity: 1;
+    }
+
+    .focus-fading .transmitter,
+    .focus-fading .site-nav,
+    .focus-fading #atmosphere {
+        opacity: 0 !important;
+        transition: opacity 0.5s ease;
+    }
+
     .focus-blackout {
         position: fixed;
         top: 0;
@@ -886,11 +898,15 @@
 
     .focus-mode #atmosphere {
         z-index: 6 !important;
+        opacity: 1 !important;
+        transition: opacity 0.8s ease;
     }
 
     .focus-mode .transmitter {
         z-index: 7;
         background: transparent !important;
+        opacity: 1 !important;
+        transition: opacity 0.8s ease;
     }
 
     .focus-mode .tx-panel {
@@ -1282,44 +1298,59 @@
             if (inFocus) return;
             inFocus = true;
 
-            // Request fullscreen first
-            var el = document.documentElement;
-            var fsPromise;
-            if (el.requestFullscreen) {
-                fsPromise = el.requestFullscreen().catch(function() {});
-            } else if (el.webkitRequestFullscreen) {
-                el.webkitRequestFullscreen();
-                fsPromise = Promise.resolve();
-            } else {
-                fsPromise = Promise.resolve();
-            }
+            // Step 1: Fade everything to black
+            body.classList.add('focus-fading');
 
-            // Apply focus-mode after fullscreen has settled
-            fsPromise.then(function() {
-                setTimeout(function() {
-                    body.classList.add('focus-mode');
-                }, 150);
-            });
+            // Step 2: After fade completes, go fullscreen
+            setTimeout(function() {
+                var el = document.documentElement;
+                var fsPromise;
+                if (el.requestFullscreen) {
+                    fsPromise = el.requestFullscreen().catch(function() {});
+                } else if (el.webkitRequestFullscreen) {
+                    el.webkitRequestFullscreen();
+                    fsPromise = Promise.resolve();
+                } else {
+                    fsPromise = Promise.resolve();
+                }
+
+                // Step 3: After fullscreen settles, apply focus mode and fade back in
+                (fsPromise || Promise.resolve()).then(function() {
+                    setTimeout(function() {
+                        body.classList.remove('focus-fading');
+                        body.classList.add('focus-mode');
+                    }, 200);
+                });
+            }, 600);
         }
 
         function exitFocus() {
             if (!inFocus) return;
             inFocus = false;
 
-            // Remove compensation before exiting
+            // Step 1: Fade to black
+            body.classList.add('focus-fading');
+            body.classList.remove('focus-mode');
+
+            // Step 2: Exit fullscreen after fade
+            setTimeout(function() {
+                if (document.fullscreenElement || document.webkitFullscreenElement) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().catch(function() {});
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                }
+
+                // Step 3: Fade back in after fullscreen exits
+                setTimeout(function() {
+                    body.classList.remove('focus-fading');
+                }, 200);
+            }, 500);
+
             if (txPanel) {
                 txPanel.style.transform = '';
                 txPanel.style.transition = '';
-            }
-
-            body.classList.remove('focus-mode');
-
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(function() {});
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
             }
         }
 
