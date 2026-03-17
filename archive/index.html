@@ -281,7 +281,13 @@
                     <p>Compiled by researchers studying the effects of the Adjustment on the Containment Zone. Select a document from the sidebar to begin.</p>
                     <div class="clearance-callout" style="text-align:left; max-width:480px; margin:1.5rem auto;">
                         <p>These manuals contain information that unfolds across twelve transmissions. To preserve the integrity of the sequence, material is <strong>redacted by default</strong>.</p>
-                        <p>Set your <strong>Spoiler Clearance</strong> level to match the number of episodes you&rsquo;ve completed. At level 0, most entries are classified. At level 12, the archive is fully declassified. You can adjust your clearance at any time using the control in the sidebar, or by clicking any redacted element.</p>
+                        <p>Set your <strong>Spoiler Clearance</strong> level to match the number of episodes you&rsquo;ve completed. At level 0, most entries are classified. At level 12, the archive is fully declassified.</p>
+                        <div style="display:flex; align-items:center; justify-content:center; gap:0.75rem; padding:1rem 0 0.5rem;">
+                            <span style="font-family:var(--mono); font-size:0.55rem; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-dim);">Clearance Level</span>
+                            <button class="fm-sidebar-clearance-btn" id="fm-welcome-cl-down">&minus;</button>
+                            <span class="fm-sidebar-clearance-display" id="fm-welcome-cl-display" style="font-size:1rem; min-width:2rem;">0</span>
+                            <button class="fm-sidebar-clearance-btn" id="fm-welcome-cl-up">+</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -372,6 +378,8 @@
         function updateClearanceDisplay(level) {
             var display = document.getElementById('fm-cl-display');
             if (display) display.textContent = String(level);
+            var welcomeDisplay = document.getElementById('fm-welcome-cl-display');
+            if (welcomeDisplay) welcomeDisplay.textContent = String(level);
         }
 
         updateClearanceDisplay(getLevel());
@@ -385,6 +393,22 @@
             var lvl = getLevel();
             if (lvl < MAX_LEVEL) setLevel(lvl + 1);
         });
+
+        // Welcome page clearance controls
+        var welcomeDown = document.getElementById('fm-welcome-cl-down');
+        var welcomeUp = document.getElementById('fm-welcome-cl-up');
+        if (welcomeDown) {
+            welcomeDown.addEventListener('click', function() {
+                var lvl = getLevel();
+                if (lvl > 0) setLevel(lvl - 1);
+            });
+        }
+        if (welcomeUp) {
+            welcomeUp.addEventListener('click', function() {
+                var lvl = getLevel();
+                if (lvl < MAX_LEVEL) setLevel(lvl + 1);
+            });
+        }
 
         // --- Document loading ---
         function loadDocument(url) {
