@@ -103,9 +103,8 @@
         align-items: center;
         justify-content: space-between;
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(196, 163, 90, 0.17);
-        border-bottom: none;
-        background: rgba(196, 163, 90, 0.03);
+        border: none;
+        background: transparent;
     }
 
     .tx-freq-label {
@@ -167,9 +166,8 @@
         align-items: center;
         justify-content: center;
         gap: 0.4rem;
-        border-left: 1px solid rgba(196, 163, 90, 0.17);
-        border-right: 1px solid rgba(196, 163, 90, 0.17);
-        background: rgba(196, 163, 90, 0.02);
+        border: none;
+        background: transparent;
         padding: 0.35rem 1rem;
         position: relative;
     }
@@ -257,10 +255,13 @@
     }
 
     .tx-meter .vu-progress-wrap {
-        width: 100%;
-        height: 3px;
-        background: rgba(42, 42, 47, 0.8);
+        width: 80%;
+        max-width: 320px;
+        height: 2px;
+        background: rgba(42, 42, 47, 0.5);
         cursor: pointer;
+        margin: 0.25rem auto 0;
+        border-radius: 1px;
     }
 
     .tx-meter .vu-progress-bar {
@@ -295,9 +296,8 @@
     /* Status strip below meter */
     .tx-status-strip {
         display: flex;
-        border: 1px solid rgba(196, 163, 90, 0.17);
-        border-top: none;
-        background: rgba(196, 163, 90, 0.03);
+        border: none;
+        background: transparent;
         font-family: var(--mono);
         font-size: 0.7rem;
     }
@@ -309,7 +309,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
-        border-right: 1px solid rgba(196, 163, 90, 0.13);
+        border-right: 1px solid rgba(196, 163, 90, 0.08);
     }
 
     .tx-status-cell:last-of-type {
