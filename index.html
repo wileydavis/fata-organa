@@ -1270,35 +1270,48 @@
         });
     })();
 
-    // Focus mode — CSS blackout + optional fullscreen on desktop
+    // Focus mode — fullscreen with position compensation
     (function() {
         var focusBtn = document.getElementById('btn-focus');
         var body = document.body;
         var inFocus = false;
-        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        var txPanel = document.querySelector('.tx-panel');
+        var meterPosY = 0; // meter's Y position before fullscreen
 
         function enterFocus() {
             if (inFocus) return;
             inFocus = true;
+
+            // Capture meter position before fullscreen changes viewport
+            if (txPanel) {
+                var rect = txPanel.getBoundingClientRect();
+                meterPosY = rect.top + rect.height / 2;
+            }
+
             body.classList.add('focus-mode');
 
-            // Fullscreen on desktop only (mobile causes position shift)
-            if (!isMobile) {
-                var el = document.documentElement;
-                if (el.requestFullscreen) {
-                    el.requestFullscreen().catch(function() {});
-                } else if (el.webkitRequestFullscreen) {
-                    el.webkitRequestFullscreen();
-                }
+            // Request fullscreen
+            var el = document.documentElement;
+            if (el.requestFullscreen) {
+                el.requestFullscreen().catch(function() {});
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen();
             }
         }
 
         function exitFocus() {
             if (!inFocus) return;
             inFocus = false;
+
+            // Remove compensation before exiting
+            if (txPanel) {
+                txPanel.style.transform = '';
+                txPanel.style.transition = '';
+            }
+
             body.classList.remove('focus-mode');
 
-            if (!isMobile && (document.fullscreenElement || document.webkitFullscreenElement)) {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(function() {});
                 } else if (document.webkitExitFullscreen) {
@@ -1307,22 +1320,57 @@
             }
         }
 
+        // After fullscreen activates, compensate for the viewport change
+        function compensatePosition() {
+            if (!inFocus || !txPanel) return;
+
+            // Small delay to let the browser settle into fullscreen
+            setTimeout(function() {
+                var rect = txPanel.getBoundingClientRect();
+                var newPosY = rect.top + rect.height / 2;
+                var shift = meterPosY - newPosY;
+
+                if (Math.abs(shift) > 2) {
+                    txPanel.style.transition = 'none';
+                    txPanel.style.transform = 'translateY(' + shift + 'px)';
+
+                    // Smooth transition back to natural position over 2 seconds
+                    setTimeout(function() {
+                        txPanel.style.transition = 'transform 2s ease-out';
+                        txPanel.style.transform = 'translateY(0)';
+                    }, 50);
+                }
+            }, 100);
+        }
+
         if (focusBtn) {
             focusBtn.addEventListener('click', function() {
                 if (inFocus) exitFocus(); else enterFocus();
             });
         }
 
-        // Sync with browser fullscreen exit
+        // Sync with fullscreen changes
         document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement && inFocus) {
+            if (document.fullscreenElement && inFocus) {
+                compensatePosition();
+            } else if (!document.fullscreenElement && inFocus) {
                 inFocus = false;
+                if (txPanel) {
+                    txPanel.style.transform = '';
+                    txPanel.style.transition = '';
+                }
                 body.classList.remove('focus-mode');
             }
         });
         document.addEventListener('webkitfullscreenchange', function() {
-            if (!document.webkitFullscreenElement && inFocus) {
+            if (document.webkitFullscreenElement && inFocus) {
+                compensatePosition();
+            } else if (!document.webkitFullscreenElement && inFocus) {
                 inFocus = false;
+                if (txPanel) {
+                    txPanel.style.transform = '';
+                    txPanel.style.transition = '';
+                }
                 body.classList.remove('focus-mode');
             }
         });
