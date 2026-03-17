@@ -17,10 +17,10 @@
     var FADE_OUT_SPEED = 0.012;  // how fast light returns
     var DARKNESS_MAX   = 0.97;   // max darkness of surrounding page
 
-    // Color temperature range (warm amber → bright gold → pale warm white)
-    var COLOR_COOL = { r: 196, g: 163, b: 90  };  // resting amber
-    var COLOR_WARM = { r: 220, g: 190, b: 110 };   // mid energy
-    var COLOR_HOT  = { r: 240, g: 220, b: 170 };   // peak energy
+    // Color temperature range (dark candle → warm gold → bright yellow-white)
+    var COLOR_COOL = { r: 180, g: 120, b: 50  };  // dark candle flame
+    var COLOR_WARM = { r: 220, g: 180, b: 90  };  // warm gold
+    var COLOR_HOT  = { r: 255, g: 240, b: 200 };  // bright yellow-white
 
     // --- State ---
     var darkness = 0;       // 0 = normal, 1 = full dark
@@ -136,19 +136,19 @@
             var coreAlpha = Math.min(0.22, glowAlpha * 0.25);
             var cs = c.r + ',' + c.g + ',' + c.b;
 
-            // Circle glow — large, subtle, fills much of the screen
-            var radius = 55 + glowEnergy * 30; // % of viewport
+            // Circle glow — 35% larger, candle-to-white color
+            var radius = (55 + glowEnergy * 30) * 1.35; // % of viewport, 35% bigger
             ambientGlow.style.opacity = 1;
             ambientGlow.style.background = ''
                 + 'radial-gradient('
                 + 'circle at 50% 45%, '
                 + 'rgba(' + cs + ',' + (coreAlpha * 0.6) + ') 0%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.4) + ') ' + (radius * 0.15) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.25) + ') ' + (radius * 0.3) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.12) + ') ' + (radius * 0.5) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.05) + ') ' + (radius * 0.75) + '%, '
-                + 'rgba(' + cs + ',' + (coreAlpha * 0.02) + ') ' + radius + '%, '
-                + 'transparent ' + (radius * 1.2) + '%)';
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.4) + ') ' + (radius * 0.12) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.25) + ') ' + (radius * 0.25) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.12) + ') ' + (radius * 0.4) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.05) + ') ' + (radius * 0.6) + '%, '
+                + 'rgba(' + cs + ',' + (coreAlpha * 0.02) + ') ' + (radius * 0.8) + '%, '
+                + 'transparent ' + radius + '%)';
         } else {
             ambientGlow.style.opacity = 0;
         }
