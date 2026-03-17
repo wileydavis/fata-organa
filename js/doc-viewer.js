@@ -460,6 +460,9 @@
         // Skip audio/file links
         if (href.match(/\.(mp3|pdf|xml|png|jpg|css|js)$/i)) return;
 
+        // Skip the field manuals page — let it navigate normally
+        if (href === '/archive/' || href === '/archive') return;
+
         // Home link — just close viewer if open
         if (href === '/' || href === '') {
             if (isOpen) {
