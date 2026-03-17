@@ -852,59 +852,54 @@
     }
 
     /* === FOCUS MODE === */
-    /* Focus overlay covers the entire viewport */
-    .focus-overlay {
+    .focus-blackout {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 9000;
+        z-index: 5;
         background: #000;
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
         opacity: 0;
+        pointer-events: none;
         transition: opacity 0.8s ease;
     }
 
-    .focus-overlay.active {
-        display: flex;
+    .focus-mode .focus-blackout {
         opacity: 1;
     }
 
-    .focus-overlay .focus-meter-wrap {
+    .focus-mode .site-nav,
+    .focus-mode .tx-header,
+    .focus-mode .tx-panel-buttons,
+    .focus-mode .tx-tagline,
+    .focus-mode .tx-footer,
+    .focus-mode .scanline-overlay,
+    .focus-mode .noise-overlay,
+    .focus-mode .tx-frequency-bar,
+    .focus-mode .tx-band-selector,
+    .focus-mode .tx-status-strip {
+        opacity: 0 !important;
+        pointer-events: none;
+        transition: opacity 0.8s ease;
+    }
+
+    .focus-mode #atmosphere {
+        z-index: 6 !important;
+    }
+
+    .focus-mode .transmitter {
+        z-index: 7;
+        background: transparent !important;
+    }
+
+    .focus-mode .tx-panel {
         background: rgba(8, 8, 10, 0.7);
         border: 1px solid rgba(196, 163, 90, 0.06);
-        border-radius: 4px;
-        padding: 0.5rem 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
     }
 
-    .focus-overlay .focus-meter-wrap canvas {
-        display: block;
-        max-width: 85vw;
-        height: auto;
-    }
-
-    .focus-overlay .focus-progress-wrap {
-        width: 80%;
-        max-width: 320px;
-        height: 2px;
-        background: rgba(30, 28, 24, 0.9);
-        cursor: pointer;
-        margin: 0.25rem auto 0;
-        border-radius: 1px;
-    }
-
-    .focus-overlay .focus-progress-bar {
-        height: 100%;
-        width: 0%;
-        background: rgba(196, 163, 90, 0.54);
-        transition: width 0.1s linear;
+    .focus-mode .tx-meter .vu-status {
+        display: none;
     }
 
     /* Now playing title */
@@ -955,6 +950,9 @@
         background: none;
         border-color: rgba(196, 163, 90, 0.08);
     }
+    .focus-mode .tx-now-playing {
+        display: flex;
+    }
 
     /* Focus mode exit hint */
     .focus-exit-hint {
@@ -966,15 +964,14 @@
         font-size: 0.5rem;
         text-transform: uppercase;
         letter-spacing: 0.2em;
-        color: rgba(196, 163, 90, 0.2);
+        color: rgba(196, 163, 90, 0);
         pointer-events: none;
-        z-index: 9010;
-        display: none;
+        z-index: 9999;
+        transition: color 0.8s ease;
     }
 
-    .focus-overlay.active + .focus-exit-hint,
-    .focus-overlay.active ~ .focus-exit-hint {
-        display: block;
+    .focus-mode .focus-exit-hint {
+        color: rgba(196, 163, 90, 0.2);
     }
 
     /* Mobile */
@@ -1070,15 +1067,8 @@
         <p class="tx-tagline">They thought it was a weapon. But it's a gift.</p>
     </div>
 
-    <!-- Focus mode overlay -->
-    <div class="focus-overlay" id="focus-overlay">
-        <div class="focus-meter-wrap" id="focus-meter-wrap"></div>
-        <div class="tx-now-playing" id="focus-now-playing" style="display:flex;">
-            <button class="tx-now-playing-nav" id="focus-prev2">&#9666;</button>
-            <span class="tx-now-playing-title" id="focus-now-playing-title"></span>
-            <button class="tx-now-playing-nav" id="focus-next2">&#9656;</button>
-        </div>
-    </div>
+    <!-- Focus mode blackout -->
+    <div class="focus-blackout"></div>
     <div class="focus-exit-hint" id="focus-exit-hint">Pause or press Escape to exit</div>
 
     <!-- Overlay -->
@@ -1280,122 +1270,62 @@
         });
     })();
 
-    // Focus mode — overlay approach
+    // Focus mode — CSS blackout + optional fullscreen on desktop
     (function() {
         var focusBtn = document.getElementById('btn-focus');
+        var body = document.body;
         var inFocus = false;
-        var focusOverlay = document.getElementById('focus-overlay');
-        var focusMeterWrap = document.getElementById('focus-meter-wrap');
-        var focusTitle = document.getElementById('focus-now-playing-title');
-        var focusPrev2 = document.getElementById('focus-prev2');
-        var focusNext2 = document.getElementById('focus-next2');
-
-        // The actual meter elements we'll move
-        var vuPlayer = document.getElementById('vu-player');
-        var txMeter = vuPlayer ? vuPlayer.parentElement : null; // .tx-meter
-        var originalParent = txMeter ? txMeter.parentElement : null;
-        var originalNext = txMeter ? txMeter.nextElementSibling : null;
-
-        // Move atmosphere canvas into overlay so it renders on top
-        var atmosphere = document.getElementById('atmosphere');
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         function enterFocus() {
             if (inFocus) return;
             inFocus = true;
+            body.classList.add('focus-mode');
 
-            // Sync title
-            var nowPlaying = document.getElementById('now-playing-title');
-            if (focusTitle && nowPlaying) {
-                focusTitle.textContent = nowPlaying.textContent;
+            // Fullscreen on desktop only (mobile causes position shift)
+            if (!isMobile) {
+                var el = document.documentElement;
+                if (el.requestFullscreen) {
+                    el.requestFullscreen().catch(function() {});
+                } else if (el.webkitRequestFullscreen) {
+                    el.webkitRequestFullscreen();
+                }
             }
-
-            // Move meter into focus overlay
-            if (txMeter && focusMeterWrap) {
-                focusMeterWrap.appendChild(txMeter);
-            }
-
-            // Move atmosphere into overlay (above the black background)
-            if (atmosphere && focusOverlay) {
-                focusOverlay.insertBefore(atmosphere, focusOverlay.firstChild);
-                atmosphere.style.zIndex = '0';
-            }
-
-            // Show overlay
-            focusOverlay.style.display = 'flex';
-            requestAnimationFrame(function() {
-                focusOverlay.classList.add('active');
-            });
         }
 
         function exitFocus() {
             if (!inFocus) return;
             inFocus = false;
+            body.classList.remove('focus-mode');
 
-            // Move meter back to transmitter
-            if (txMeter && originalParent) {
-                if (originalNext) {
-                    originalParent.insertBefore(txMeter, originalNext);
-                } else {
-                    originalParent.appendChild(txMeter);
+            if (!isMobile && (document.fullscreenElement || document.webkitFullscreenElement)) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(function() {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
                 }
             }
-
-            // Move atmosphere back to body
-            if (atmosphere) {
-                document.body.insertBefore(atmosphere, document.body.firstChild);
-                atmosphere.style.zIndex = '1';
-            }
-
-            // Hide overlay
-            focusOverlay.classList.remove('active');
-            setTimeout(function() {
-                if (!inFocus) focusOverlay.style.display = 'none';
-            }, 800);
         }
 
-        // Focus button
         if (focusBtn) {
             focusBtn.addEventListener('click', function() {
                 if (inFocus) exitFocus(); else enterFocus();
             });
         }
 
-        // Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && inFocus) {
-                exitFocus();
+        // Sync with browser fullscreen exit
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement && inFocus) {
+                inFocus = false;
+                body.classList.remove('focus-mode');
             }
         });
-
-        // Focus overlay nav buttons
-        if (focusPrev2) {
-            focusPrev2.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (window.playPrev) window.playPrev();
-                // Sync title after track change
-                setTimeout(function() {
-                    var np = document.getElementById('now-playing-title');
-                    if (focusTitle && np) focusTitle.textContent = np.textContent;
-                }, 200);
-            });
-        }
-        if (focusNext2) {
-            focusNext2.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (window.playNext) window.playNext();
-                setTimeout(function() {
-                    var np = document.getElementById('now-playing-title');
-                    if (focusTitle && np) focusTitle.textContent = np.textContent;
-                }, 200);
-            });
-        }
-
-        // Sync focus title when tracks change (called by loadTrack)
-        var origUpdateNowPlaying = window._updateNowPlayingHook;
-        window._updateNowPlayingHook = function(title) {
-            if (focusTitle && inFocus) focusTitle.textContent = title;
-            if (origUpdateNowPlaying) origUpdateNowPlaying(title);
-        };
+        document.addEventListener('webkitfullscreenchange', function() {
+            if (!document.webkitFullscreenElement && inFocus) {
+                inFocus = false;
+                body.classList.remove('focus-mode');
+            }
+        });
 
         window.focusMode = { enter: enterFocus, exit: exitFocus, isActive: function() { return inFocus; } };
     })();
