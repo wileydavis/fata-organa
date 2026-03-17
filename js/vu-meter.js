@@ -64,8 +64,8 @@
     var needleLen = meterRadius * 0.88;
     var arcRadius = needleLen * 0.78;
     var BASE_ANGLE = -Math.PI / 2; // straight up
-    var minAngle = -0.75; // sweep left
-    var maxAngle = 0.75;  // sweep right
+    var minAngle = -1.0;  // sweep left
+    var maxAngle = 1.0;   // sweep right
     var dbMarks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3];
 
     function dbToAngle(db) {
