@@ -101,7 +101,7 @@
     .tx-frequency-bar {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         padding: 0.5rem 1rem;
         border: none;
         background: transparent;
@@ -1043,12 +1043,8 @@
         <div class="tx-panel">
             <!-- Frequency bar / episode selector -->
             <div class="tx-frequency-bar">
-                <span class="tx-freq-label">FREQUENCY 7.83 MHz</span>
-                <div class="tx-episode-nav">
-                    <button class="tx-ep-btn" id="ep-prev" disabled>&#9666;</button>
-                    <span class="tx-ep-current" id="ep-display">INTRO</span>
-                    <button class="tx-ep-btn" id="ep-next" disabled>&#9656;</button>
-                </div>
+                <span class="tx-freq-label">146.520 MHz</span>
+                <span class="tx-ep-current" id="ep-display" style="display:none;">INTRO</span>
             </div>
 
             <!-- Band Selector -->
@@ -1518,9 +1514,9 @@
 
             // Update frequency label
             if (band === 'score') {
-                freqLabel.textContent = 'FREQUENCY 7.83 MHz \u2014 SCORE';
+                freqLabel.textContent = '146.520 MHz \u2014 SCORE';
             } else {
-                freqLabel.textContent = 'FREQUENCY 7.83 MHz';
+                freqLabel.textContent = '146.520 MHz';
             }
 
             // Swap drawer content
