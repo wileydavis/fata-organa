@@ -1282,21 +1282,24 @@
             if (inFocus) return;
             inFocus = true;
 
-            // Capture meter position before fullscreen changes viewport
-            if (txPanel) {
-                var rect = txPanel.getBoundingClientRect();
-                meterPosY = rect.top + rect.height / 2;
-            }
-
-            body.classList.add('focus-mode');
-
-            // Request fullscreen
+            // Request fullscreen first
             var el = document.documentElement;
+            var fsPromise;
             if (el.requestFullscreen) {
-                el.requestFullscreen().catch(function() {});
+                fsPromise = el.requestFullscreen().catch(function() {});
             } else if (el.webkitRequestFullscreen) {
                 el.webkitRequestFullscreen();
+                fsPromise = Promise.resolve();
+            } else {
+                fsPromise = Promise.resolve();
             }
+
+            // Apply focus-mode after fullscreen has settled
+            fsPromise.then(function() {
+                setTimeout(function() {
+                    body.classList.add('focus-mode');
+                }, 150);
+            });
         }
 
         function exitFocus() {
