@@ -936,16 +936,22 @@
         border: 1px solid rgba(196, 163, 90, 0.06);
         border-radius: 50%;
         overflow: hidden;
-        max-width: 400px;
+        max-width: 440px;
         aspect-ratio: 1 / 1;
         padding: 0;
         justify-content: center;
     }
 
-    /* Shift meter up slightly so the pivot (78% of 280px canvas = 218px) 
-       aligns with circle center (200px). Offset = ~18px upward. */
+    /* Canvas is 400x280. Meter pivot at (200, 218).
+       Meter arc radius = 176px * 0.78 * 0.88 ≈ 121px from pivot.
+       The visual center of the meter (midpoint of arc top and pivot) is at about
+       y = 218 - 60 = 158px from canvas top. Canvas center would be 140px.
+       Circle is 440px, center at 220px. Canvas is 280px tall, positioned in center
+       of 440px circle = starts at 80px from circle top. So canvas y=158 maps to
+       circle y = 80 + 158 = 238px. Circle center = 220px. Need to shift up 18px. */
     .focus-mode .tx-meter {
-        margin-top: -18px;
+        margin-top: -36px;
+        margin-bottom: -36px;
     }
 
     .focus-mode .tx-meter .vu-status {
