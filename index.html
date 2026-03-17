@@ -155,8 +155,7 @@
     /* VU meter container */
     .tx-meter {
         text-align: center;
-        border-left: 1px solid rgba(196, 163, 90, 0.17);
-        border-right: 1px solid rgba(196, 163, 90, 0.17);
+        border: none;
         background: transparent;
         padding: 0;
         line-height: 0;
@@ -253,7 +252,7 @@
     .tx-meter #vu-player canvas {
         border: none;
         display: block;
-        width: 100% !important;
+        max-width: 100%;
         height: auto !important;
     }
 
@@ -895,15 +894,15 @@
     }
 
     .focus-mode .tx-meter {
-        border: 1px solid rgba(196, 163, 90, 0.13);
+        border: none;
         transform: none;
         background: transparent !important;
-        box-shadow: 0 0 40px rgba(196, 163, 90, 0.05);
+        box-shadow: none;
     }
 
     .focus-mode .tx-meter #vu-player canvas {
-        width: 480px !important;
-        max-width: 90vw !important;
+        width: 400px !important;
+        max-width: 85vw !important;
         height: auto !important;
     }
 
