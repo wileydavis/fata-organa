@@ -857,14 +857,18 @@
     }
 
     /* === FOCUS MODE === */
-    /* Step 1: fade to black before fullscreen */
+    /* Step 1: fade to black before/after fullscreen */
     .focus-fading .focus-blackout {
         opacity: 1;
     }
 
     .focus-fading .transmitter,
     .focus-fading .site-nav,
-    .focus-fading #atmosphere {
+    .focus-fading #atmosphere,
+    .focus-fading .ambient-glow,
+    .focus-fading.focus-mode .transmitter,
+    .focus-fading.focus-mode #atmosphere,
+    .focus-fading.focus-mode .ambient-glow {
         opacity: 0 !important;
         transition: opacity 1.2s ease;
     }
@@ -921,6 +925,8 @@
     .focus-mode .tx-panel {
         background: rgba(8, 8, 10, 0.7);
         border: 1px solid rgba(196, 163, 90, 0.06);
+        border-radius: 50%;
+        overflow: hidden;
     }
 
     .focus-mode .tx-meter .vu-status {
@@ -1337,12 +1343,13 @@
             if (!inFocus) return;
             inFocus = false;
 
-            // Step 1: Fade to black
+            // Step 1: Fade to black (keep focus-mode so circle stays during fade)
             body.classList.add('focus-fading');
-            body.classList.remove('focus-mode');
 
-            // Step 2: Exit fullscreen after fade
+            // Step 2: After fade completes, remove focus-mode and exit fullscreen
             setTimeout(function() {
+                body.classList.remove('focus-mode');
+
                 if (document.fullscreenElement || document.webkitFullscreenElement) {
                     if (document.exitFullscreen) {
                         document.exitFullscreen().catch(function() {});
