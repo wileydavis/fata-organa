@@ -367,23 +367,9 @@
         ctx.fillStyle = 'rgba(180, 60, 50, 0.5)';
         ctx.fill();
 
-        // === RECEIVE / PLAY INDICATOR ===
+        // === PLAY INDICATOR ===
         if (!hasStarted) {
             var flash = Math.sin(time * 0.08) * 0.5 + 0.5;
-            var recAlpha = 0.35 + flash * 0.5;
-
-            // Small receive indicator below scale
-            var recY = cy - meterRadius * 0.15;
-            ctx.font = '500 7px "JetBrains Mono", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(70, 185, 80, ' + (recAlpha * 0.9) + ')';
-            ctx.fillText(getTrackTitle() || 'RECEIVE TRANSMISSION', cx, recY);
-
-            // Receive dot
-            ctx.beginPath();
-            ctx.arc(cx - 72, recY - 3, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(70, 190, 80, ' + recAlpha + ')';
-            ctx.fill();
 
             // Play triangle — centered on meter face
             var triSize = 30;
@@ -401,14 +387,6 @@
             ctx.strokeStyle = 'rgba(196, 163, 90, ' + (triPulse + 0.08) + ')';
             ctx.lineWidth = 1;
             ctx.stroke();
-
-        } else if (isPlaying) {
-            // Small receiving indicator
-            var recY2 = cy - meterRadius * 0.15;
-            ctx.beginPath();
-            ctx.arc(cx, recY2, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(70, 190, 80, 0.6)';
-            ctx.fill();
         }
     }
 
