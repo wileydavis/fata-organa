@@ -1320,27 +1320,9 @@
             }
         }
 
-        // After fullscreen activates, compensate for the viewport change
+        // After fullscreen activates, no compensation — instant reposition
         function compensatePosition() {
-            if (!inFocus || !txPanel) return;
-
-            // Small delay to let the browser settle into fullscreen
-            setTimeout(function() {
-                var rect = txPanel.getBoundingClientRect();
-                var newPosY = rect.top + rect.height / 2;
-                var shift = meterPosY - newPosY;
-
-                if (Math.abs(shift) > 2) {
-                    txPanel.style.transition = 'none';
-                    txPanel.style.transform = 'translateY(' + shift + 'px)';
-
-                    // Smooth transition back to natural position over 2 seconds
-                    setTimeout(function() {
-                        txPanel.style.transition = 'transform 2s ease-out';
-                        txPanel.style.transform = 'translateY(0)';
-                    }, 50);
-                }
-            }, 100);
+            // intentionally empty — let the meter snap to center
         }
 
         if (focusBtn) {
