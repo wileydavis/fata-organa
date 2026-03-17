@@ -1,5 +1,6 @@
 /* ============================================
    FATA ORGANA — VU Meter Audio Player
+   Round semicircular meter face
    ============================================ */
 
 (function() {
@@ -25,11 +26,11 @@
     var glowIntensity = 0;
     var time = 0;
 
-    // --- Canvas setup ---
+    // --- Canvas setup (square for round meter) ---
     var canvas = document.createElement('canvas');
     var dpr = window.devicePixelRatio || 1;
-    var W = 480;
-    var H = 220;
+    var W = 400;
+    var H = 280; // semicircle + sconce area
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width = W + 'px';
@@ -56,20 +57,16 @@
     container.appendChild(statusEl);
 
     // --- Meter geometry ---
+    // Semicircle centered horizontally, pivot near bottom
     var cx = W / 2;
-    var cy = H * 0.88;
-    var needleLen = H * 0.72;
+    var cy = H * 0.78;
+    var meterRadius = W * 0.44; // radius of the semicircle face
+    var needleLen = meterRadius * 0.88;
     var arcRadius = needleLen * 0.78;
     var BASE_ANGLE = -Math.PI / 2; // straight up
-    var minAngle = -0.75; // sweep left of center
-    var maxAngle = 0.75;  // sweep right of center
+    var minAngle = -0.75; // sweep left
+    var maxAngle = 0.75;  // sweep right
     var dbMarks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3];
-
-    // Indicator geometry
-    var recX = W - 138;
-    var recY = 12;
-    var recW = 128;
-    var recH = 16;
 
     function dbToAngle(db) {
         var normalized = (db + 20) / 23;
@@ -78,12 +75,10 @@
         return minAngle + normalized * (maxAngle - minAngle);
     }
 
-    // Convert needle-space angle to canvas angle
     function toCanvas(a) {
         return BASE_ANGLE + a;
     }
 
-    // Get tip position
     function tip(a, len) {
         var ca = toCanvas(a);
         return { x: cx + Math.cos(ca) * len, y: cy + Math.sin(ca) * len };
@@ -97,16 +92,12 @@
         // Read signal data for backlight
         var sig = window.vuSignal || {};
         var energy = sig.smoothRms || 0;
-        var lowE = sig.smoothLow || 0;
         var playing = sig.isPlaying && sig.hasStarted;
 
-        // Breathing modulation (slow sine, matches ambient-light.js)
-        var breath = Math.sin(time * 0.006 / (60/1000) + 0) * 0.5 + 0.5;
-        // Simpler: use frame count
         var breathSlow = Math.sin(time * 0.01) * 0.5 + 0.5;
         var breathMod = 0.85 + breathSlow * 0.15;
 
-        // Color temperature from energy (matches ambient-light.js palette)
+        // Color temperature from energy
         var cTemp = Math.min(1, energy * 2);
         var cr, cg, cb;
         if (cTemp < 0.5) {
@@ -121,142 +112,194 @@
             cb = 110 + t2 * (170 - 110);
         }
 
-        // Backlight intensity: base level + audio-driven boost
         var blBase = playing ? (0.14 + energy * 0.35) : 0.16;
         var blIntensity = blBase * breathMod;
 
-        // Face background — circular with transparent edges
-        var faceBright = playing ? Math.max(0.4, 1 - energy * 0.8) : 1;
-        var faceRadius = Math.max(W, H) * 0.52;
-        var faceCx = cx;
-        var faceCy = cy - H * 0.1;
-        var faceGrad = ctx.createRadialGradient(faceCx, faceCy, 0, faceCx, faceCy, faceRadius);
-        var fr = Math.round(37 * faceBright);
-        var fg = Math.round(32 * faceBright);
-        var fb = Math.round(24 * faceBright);
-        faceGrad.addColorStop(0, 'rgb(' + fr + ',' + fg + ',' + fb + ')');
-        fr = Math.round(26 * faceBright);
-        fg = Math.round(23 * faceBright);
-        fb = Math.round(16 * faceBright);
-        faceGrad.addColorStop(0.5, 'rgb(' + fr + ',' + fg + ',' + fb + ')');
-        faceGrad.addColorStop(0.78, 'rgb(' + Math.round(17 * faceBright) + ',' + Math.round(16 * faceBright) + ',' + Math.round(16 * faceBright) + ')');
-        faceGrad.addColorStop(1, 'rgba(10, 10, 12, 0)');
+        // === SEMICIRCULAR FACE ===
+        // Clip to semicircle for all face painting
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, meterRadius + 2, Math.PI, 0); // upper semicircle
+        ctx.lineTo(cx + meterRadius + 2, cy + 8);
+        ctx.lineTo(cx - meterRadius - 2, cy + 8);
+        ctx.closePath();
+        ctx.clip();
+
+        // Warm face background — like backlit amber glass
+        var faceBright = playing ? Math.max(0.5, 1 - energy * 0.6) : 1;
+        var faceGrad = ctx.createRadialGradient(cx, cy + meterRadius * 0.3, 0, cx, cy - meterRadius * 0.2, meterRadius * 1.1);
+        // Warm amber tones — brighter than before, like the reference photo
+        var r1 = Math.round(55 * faceBright);
+        var g1 = Math.round(42 * faceBright);
+        var b1 = Math.round(22 * faceBright);
+        faceGrad.addColorStop(0, 'rgb(' + r1 + ',' + g1 + ',' + b1 + ')');
+        var r2 = Math.round(40 * faceBright);
+        var g2 = Math.round(33 * faceBright);
+        var b2 = Math.round(16 * faceBright);
+        faceGrad.addColorStop(0.5, 'rgb(' + r2 + ',' + g2 + ',' + b2 + ')');
+        faceGrad.addColorStop(1, 'rgb(' + Math.round(25 * faceBright) + ',' + Math.round(22 * faceBright) + ',' + Math.round(14 * faceBright) + ')');
         ctx.fillStyle = faceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Internal sconce light — emanates from below the sconce lip
-        var sconceX = cx;
-        var sconceY = cy + 12; // light source hidden below the sconce
-        var sconceRadius = H * (0.85 + energy * 0.1);
-        var sconceGrad = ctx.createRadialGradient(sconceX, sconceY, 0, sconceX, sconceY, sconceRadius);
-        var sconceIntensity = blIntensity * 0.45;
-        sconceGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.7) + ')');
-        sconceGrad.addColorStop(0.06, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.45) + ')');
-        sconceGrad.addColorStop(0.15, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.2) + ')');
-        sconceGrad.addColorStop(0.35, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.06) + ')');
-        sconceGrad.addColorStop(0.6, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (sconceIntensity * 0.015) + ')');
+        // Sconce light — from below the pivot, illuminating upward
+        var sconceY = cy + 15;
+        var sconceR = meterRadius * (1.1 + energy * 0.1);
+        var sconceGrad = ctx.createRadialGradient(cx, sconceY, 0, cx, sconceY, sconceR);
+        var si = blIntensity * 0.6;
+        sconceGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (si * 0.8) + ')');
+        sconceGrad.addColorStop(0.08, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (si * 0.5) + ')');
+        sconceGrad.addColorStop(0.2, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (si * 0.2) + ')');
+        sconceGrad.addColorStop(0.45, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (si * 0.05) + ')');
         sconceGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = sconceGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // Upward wash — very dim, fades to nothing well before the top
-        var washIntensity = playing ? (0.015 + energy * 0.02) * breathMod : 0.01;
-        var upGrad = ctx.createLinearGradient(0, H, 0, 0);
-        upGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washIntensity + ')');
-        upGrad.addColorStop(0.2, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.2) + ')');
-        upGrad.addColorStop(0.5, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washIntensity * 0.03) + ')');
+        // Upward wash
+        var washI = playing ? (0.02 + energy * 0.025) * breathMod : 0.015;
+        var upGrad = ctx.createLinearGradient(0, cy, 0, cy - meterRadius);
+        upGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + washI + ')');
+        upGrad.addColorStop(0.3, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + (washI * 0.2) + ')');
         upGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = upGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // VU label
-        ctx.font = '500 11px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(196, 163, 90, 0.3)';
-        ctx.textAlign = 'center';
-        ctx.fillText('VU', cx, cy - needleLen + 20);
+        ctx.restore(); // end semicircle clip
 
-        // Scale arc
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.45)';
-        ctx.lineWidth = 0.5;
+        // === SEMICIRCLE EDGE ===
+        // Subtle rim around the face
+        ctx.beginPath();
+        ctx.arc(cx, cy, meterRadius, Math.PI, 0);
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.12)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Outer glow on the rim
+        ctx.beginPath();
+        ctx.arc(cx, cy, meterRadius + 1, Math.PI, 0);
+        var rimGlow = playing ? 0.04 + energy * 0.03 : 0.02;
+        ctx.strokeStyle = 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + rimGlow + ')';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // === VU LABEL ===
+        ctx.font = '600 13px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(196, 163, 90, 0.35)';
+        ctx.textAlign = 'center';
+        ctx.fillText('VU', cx, cy - needleLen + 28);
+
+        // === SCALE ARC ===
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.5)';
+        ctx.lineWidth = 0.6;
         ctx.beginPath();
         ctx.arc(cx, cy, arcRadius, toCanvas(minAngle), toCanvas(maxAngle));
         ctx.stroke();
 
-        // Red zone
+        // Percent scale arc (inner)
+        var pctRadius = arcRadius - 18;
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.2)';
+        ctx.lineWidth = 0.4;
+        ctx.beginPath();
+        ctx.arc(cx, cy, pctRadius, toCanvas(minAngle), toCanvas(maxAngle));
+        ctx.stroke();
+
+        // === RED ZONE ===
         var redStart = dbToAngle(0);
         ctx.beginPath();
-        ctx.arc(cx, cy, arcRadius + 7, toCanvas(redStart), toCanvas(maxAngle));
+        ctx.arc(cx, cy, arcRadius + 8, toCanvas(redStart), toCanvas(maxAngle));
         ctx.arc(cx, cy, arcRadius - 3, toCanvas(maxAngle), toCanvas(redStart), true);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(180, 60, 50, 0.3)';
+        ctx.fillStyle = 'rgba(180, 60, 50, 0.35)';
         ctx.fill();
 
-        // DB markings
-        ctx.font = '10px "JetBrains Mono", monospace';
+        // === DB MARKINGS ===
+        ctx.font = '500 10px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         for (var i = 0; i < dbMarks.length; i++) {
             var db = dbMarks[i];
             var a = dbToAngle(db);
-            var inner = tip(a, arcRadius - 5);
-            var outer = tip(a, arcRadius + 4);
-            var text = tip(a, arcRadius + 16);
+            var inner = tip(a, arcRadius - 6);
+            var outer = tip(a, arcRadius + 5);
+            var text = tip(a, arcRadius + 18);
 
             ctx.beginPath();
             ctx.moveTo(inner.x, inner.y);
             ctx.lineTo(outer.x, outer.y);
-            ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.55)' : 'rgba(196, 163, 90, 0.45)';
-            ctx.lineWidth = db === 0 || db === -20 ? 1.2 : 0.6;
+            ctx.strokeStyle = db >= 0 ? 'rgba(180, 60, 50, 0.6)' : 'rgba(196, 163, 90, 0.5)';
+            ctx.lineWidth = db === 0 || db === -20 ? 1.2 : 0.7;
             ctx.stroke();
 
-            ctx.fillStyle = db >= 0 ? 'rgba(180, 60, 50, 0.6)' : 'rgba(196, 163, 90, 0.55)';
+            ctx.fillStyle = db >= 0 ? 'rgba(180, 60, 50, 0.65)' : 'rgba(196, 163, 90, 0.6)';
             var label = db === 0 ? '0' : db > 0 ? '+' + db : String(db);
             ctx.fillText(label, text.x, text.y + 3);
         }
 
-        // Sub-ticks
+        // === PERCENT MARKINGS (inner scale) ===
+        var pctMarks = [0, 30, 50, 70, 100];
+        var pctDbMap = { 0: -20, 30: -10, 50: -7, 70: -5, 100: 0 };
+        ctx.font = '400 8px "JetBrains Mono", monospace';
+        for (var pi = 0; pi < pctMarks.length; pi++) {
+            var pct = pctMarks[pi];
+            var pctDb = pctDbMap[pct];
+            var pa = dbToAngle(pctDb);
+            var pInner = tip(pa, pctRadius - 3);
+            var pOuter = tip(pa, pctRadius + 3);
+            var pText = tip(pa, pctRadius - 14);
+
+            ctx.beginPath();
+            ctx.moveTo(pInner.x, pInner.y);
+            ctx.lineTo(pOuter.x, pOuter.y);
+            ctx.strokeStyle = 'rgba(196, 163, 90, 0.25)';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(196, 163, 90, 0.3)';
+            ctx.fillText(pct + '%', pText.x, pText.y + 3);
+        }
+
+        // === SUB-TICKS ===
         for (var d = -20; d <= 3; d += 1) {
             if (dbMarks.indexOf(d) !== -1) continue;
             var sa = dbToAngle(d);
-            var si = tip(sa, arcRadius - 2);
-            var so = tip(sa, arcRadius + 2);
+            var sti = tip(sa, arcRadius - 2);
+            var sto = tip(sa, arcRadius + 2);
             ctx.beginPath();
-            ctx.moveTo(si.x, si.y);
-            ctx.lineTo(so.x, so.y);
-            ctx.strokeStyle = d >= 0 ? 'rgba(180, 60, 50, 0.22)' : 'rgba(196, 163, 90, 0.18)';
+            ctx.moveTo(sti.x, sti.y);
+            ctx.lineTo(sto.x, sto.y);
+            ctx.strokeStyle = d >= 0 ? 'rgba(180, 60, 50, 0.25)' : 'rgba(196, 163, 90, 0.2)';
             ctx.lineWidth = 0.5;
             ctx.stroke();
         }
 
-        // --- Needle ---
+        // === NEEDLE ===
         var nt = tip(needleAngle, needleLen);
 
         // Shadow
         ctx.beginPath();
-        ctx.moveTo(cx + 2, cy + 1);
-        ctx.lineTo(nt.x + 2, nt.y + 1);
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.15)';
+        ctx.moveTo(cx + 1.5, cy + 1);
+        ctx.lineTo(nt.x + 1.5, nt.y + 1);
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
         ctx.stroke();
 
-        // Body
+        // Body — dark needle like the reference
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(nt.x, nt.y);
-        ctx.strokeStyle = 'rgba(210, 178, 100, 0.95)';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(30, 25, 20, 0.9)';
+        ctx.lineWidth = 1.8;
         ctx.lineCap = 'round';
         ctx.stroke();
 
         // Tip glow
-        var tipGlowAlpha = playing ? Math.min(0.4, energy * 0.5) : 0;
+        var tipGlowAlpha = playing ? Math.min(0.3, energy * 0.4) : 0;
         if (tipGlowAlpha > 0.02) {
-            var tipGrad = ctx.createRadialGradient(nt.x, nt.y, 0, nt.x, nt.y, 10);
+            var tipGrad = ctx.createRadialGradient(nt.x, nt.y, 0, nt.x, nt.y, 12);
             tipGrad.addColorStop(0, 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + tipGlowAlpha + ')');
             tipGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = tipGrad;
             ctx.beginPath();
-            ctx.arc(nt.x, nt.y, 10, 0, Math.PI * 2);
+            ctx.arc(nt.x, nt.y, 12, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -267,75 +310,79 @@
             ctx.beginPath();
             ctx.moveTo(pkBase.x, pkBase.y);
             ctx.lineTo(pkTip.x, pkTip.y);
-            ctx.strokeStyle = 'rgba(196, 163, 90, 0.18)';
+            ctx.strokeStyle = 'rgba(196, 163, 90, 0.15)';
             ctx.lineWidth = 1;
             ctx.stroke();
         }
 
-        // Pivot cap (behind sconce)
+        // === SCONCE ===
+        // Physical sconce — chrome/metal housing at the pivot
+        var sconceW = meterRadius * 0.32;
+        var sconceH = 16;
+        var sconceTop = cy - 6;
+
+        // Sconce body
         ctx.beginPath();
-        ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#2a2520';
+        ctx.ellipse(cx, sconceTop + sconceH, sconceW, sconceH, 0, Math.PI, 0);
+        ctx.lineTo(cx + sconceW, cy + 20);
+        ctx.lineTo(cx - sconceW, cy + 20);
+        ctx.closePath();
+        var sBodyGrad = ctx.createLinearGradient(0, sconceTop, 0, sconceTop + sconceH + 10);
+        sBodyGrad.addColorStop(0, '#2a2722');
+        sBodyGrad.addColorStop(0.3, '#1e1c18');
+        sBodyGrad.addColorStop(1, '#121110');
+        ctx.fillStyle = sBodyGrad;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(196, 163, 90, 0.18)';
+
+        // Sconce chrome rim
+        ctx.beginPath();
+        ctx.ellipse(cx, sconceTop + sconceH, sconceW, sconceH, 0, Math.PI, Math.PI * 2);
+        var edgeA = playing ? 0.15 + energy * 0.1 : 0.08;
+        ctx.strokeStyle = 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + edgeA + ')';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Pivot dot (on sconce)
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#1a1815';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(196, 163, 90, 0.15)';
         ctx.lineWidth = 0.5;
         ctx.stroke();
 
-        // --- Physical sconce — dark arc covering the pivot and light source ---
-        // A curved lip that bumps up above the pivot, hiding the light from direct view
-        var sconceW = 50;
-        var sconceH = 14;
-        var sconceTop = cy - 4;
-
-        // Sconce body — dark with slight gradient
+        // Red dot (reference point like in the photo)
+        var dotAngle = dbToAngle(0);
+        var dotPos = tip(dotAngle, arcRadius - 22);
         ctx.beginPath();
-        ctx.ellipse(cx, sconceTop + sconceH, sconceW, sconceH, 0, Math.PI, 0);
-        ctx.lineTo(cx + sconceW, H);
-        ctx.lineTo(cx - sconceW, H);
-        ctx.closePath();
-        var sconceBodyGrad = ctx.createLinearGradient(0, sconceTop, 0, sconceTop + sconceH + 10);
-        sconceBodyGrad.addColorStop(0, '#1e1c18');
-        sconceBodyGrad.addColorStop(0.4, '#151410');
-        sconceBodyGrad.addColorStop(1, '#0e0d0b');
-        ctx.fillStyle = sconceBodyGrad;
+        ctx.arc(dotPos.x, dotPos.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180, 60, 50, 0.5)';
         ctx.fill();
 
-        // Sconce top edge — faint highlight as light catches the lip
-        ctx.beginPath();
-        ctx.ellipse(cx, sconceTop + sconceH, sconceW, sconceH, 0, Math.PI, Math.PI * 2);
-        var edgeAlpha = playing ? 0.12 + energy * 0.08 : 0.06;
-        ctx.strokeStyle = 'rgba(' + Math.round(cr) + ',' + Math.round(cg) + ',' + Math.round(cb) + ',' + edgeAlpha + ')';
-        ctx.lineWidth = 0.75;
-        ctx.stroke();
-
-        // --- RECEIVE indicator ---
+        // === RECEIVE / PLAY INDICATOR ===
         if (!hasStarted) {
             var flash = Math.sin(time * 0.08) * 0.5 + 0.5;
             var recAlpha = 0.35 + flash * 0.5;
 
-            ctx.fillStyle = 'rgba(50, 140, 60, ' + (recAlpha * 0.35) + ')';
-            ctx.fillRect(recX, recY, recW, recH);
-            ctx.strokeStyle = 'rgba(60, 160, 70, ' + (recAlpha * 0.6) + ')';
-            ctx.lineWidth = 0.5;
-            ctx.strokeRect(recX, recY, recW, recH);
+            // Small receive indicator below scale
+            var recY = cy - meterRadius * 0.15;
+            ctx.font = '500 7px "JetBrains Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(70, 185, 80, ' + (recAlpha * 0.9) + ')';
+            ctx.fillText('RECEIVE TRANSMISSION', cx, recY);
 
+            // Receive dot
             ctx.beginPath();
-            ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
+            ctx.arc(cx - 72, recY - 3, 2.5, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(70, 190, 80, ' + recAlpha + ')';
             ctx.fill();
 
-            ctx.font = '500 7px "JetBrains Mono", monospace';
-            ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(70, 185, 80, ' + (recAlpha * 0.95) + ')';
-            ctx.fillText('RECEIVE TRANSMISSION', recX + 16, recY + recH / 2 + 2.5);
-
-            // --- Play triangle — centered on meter face ---
-            var triSize = 28;
-            var triX = cx + 3; // slight offset right to optically center the triangle
-            var triY = cy - arcRadius * 0.45;
+            // Play triangle — centered on meter face
+            var triSize = 30;
+            var triX = cx + 3;
+            var triY = cy - arcRadius * 0.5;
             var triPulse = 0.12 + Math.sin(time * 0.06) * 0.06;
 
-            // Glow behind
             ctx.beginPath();
             ctx.moveTo(triX - triSize * 0.42, triY - triSize * 0.5);
             ctx.lineTo(triX + triSize * 0.55, triY);
@@ -343,35 +390,18 @@
             ctx.closePath();
             ctx.fillStyle = 'rgba(196, 163, 90, ' + (triPulse * 0.3) + ')';
             ctx.fill();
-
-            // Triangle outline
-            ctx.beginPath();
-            ctx.moveTo(triX - triSize * 0.42, triY - triSize * 0.5);
-            ctx.lineTo(triX + triSize * 0.55, triY);
-            ctx.lineTo(triX - triSize * 0.42, triY + triSize * 0.5);
-            ctx.closePath();
             ctx.strokeStyle = 'rgba(196, 163, 90, ' + (triPulse + 0.08) + ')';
             ctx.lineWidth = 1;
             ctx.stroke();
 
         } else if (isPlaying) {
-            ctx.fillStyle = 'rgba(50, 140, 60, 0.2)';
-            ctx.fillRect(recX, recY, recW, recH);
-            ctx.strokeStyle = 'rgba(60, 160, 70, 0.35)';
-            ctx.lineWidth = 0.5;
-            ctx.strokeRect(recX, recY, recW, recH);
-
+            // Small receiving indicator
+            var recY2 = cy - meterRadius * 0.15;
             ctx.beginPath();
-            ctx.arc(recX + 9, recY + recH / 2, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(70, 190, 80, 0.65)';
+            ctx.arc(cx, recY2, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(70, 190, 80, 0.6)';
             ctx.fill();
-
-            ctx.font = '500 7px "JetBrains Mono", monospace';
-            ctx.textAlign = 'left';
-            ctx.fillStyle = 'rgba(70, 185, 80, 0.55)';
-            ctx.fillText('RECEIVING', recX + 16, recY + recH / 2 + 2.5);
         }
-
     }
 
     // --- Audio ---
@@ -395,12 +425,9 @@
         audio.addEventListener('ended', function() {
             isPlaying = false;
             isLoading = false;
-            // Try to play next track in the current band
             if (window.playNext && window.playNext()) {
-                // Next track is loading/playing
                 return;
             }
-            // No more tracks — exit focus and show complete
             statusEl.textContent = 'TRANSMISSION COMPLETE';
             if (window.focusMode && window.focusMode.isActive()) {
                 window.focusMode.exit();
@@ -413,7 +440,6 @@
             }
         });
 
-        // Loading states
         audio.addEventListener('loadstart', function() {
             if (isLoading) {
                 statusEl.textContent = 'TUNING SIGNAL\u2026';
@@ -431,7 +457,6 @@
         audio.addEventListener('canplay', function() {
             statusEl.classList.remove('loading');
             if (isLoading && !isPlaying) {
-                // Auto-start when enough data is buffered
                 isLoading = false;
                 doPlay();
             } else if (isPlaying) {
@@ -468,7 +493,6 @@
     }
 
     function doPlay() {
-        // Only init analyser after first user gesture and audio is ready
         if (!audioCtx && audio) {
             initAnalyser();
         }
@@ -481,7 +505,6 @@
             isLoading = false;
             statusEl.classList.remove('loading');
             statusEl.textContent = 'RECEIVING TRANSMISSION';
-            // Enter focus when playback starts
             if (window.focusMode && !window.focusMode.isActive()) {
                 window.focusMode.enter();
             }
@@ -500,11 +523,9 @@
     function startPlayback() {
         if (!audio) initAudio();
 
-        // If audio has enough data, play immediately
         if (audio.readyState >= 3) {
             doPlay();
         } else {
-            // Start loading, will auto-play on canplay
             isLoading = true;
             statusEl.textContent = 'TUNING SIGNAL\u2026';
             audio.load();
@@ -520,7 +541,6 @@
             audio.pause();
             isPlaying = false;
             statusEl.textContent = 'PAUSED \u2014 CLICK TO RESUME';
-            // Exit focus on pause
             if (window.focusMode && window.focusMode.isActive()) {
                 window.focusMode.exit();
             }
@@ -531,7 +551,6 @@
 
     // --- Click ---
     canvas.addEventListener('click', function(e) {
-        // Stop the click from propagating to the focus mode exit handler
         e.stopPropagation();
         togglePlay();
     });
@@ -545,28 +564,26 @@
 
     // --- Expose signal data for ambient light system ---
     window.vuSignal = {
-        rms: 0,           // overall level 0-1
-        low: 0,           // low frequency energy 0-1 (kick/drone)
-        high: 0,          // high frequency energy 0-1 (hiss/texture)
-        peak: 0,          // recent peak 0-1
+        rms: 0,
+        low: 0,
+        high: 0,
+        peak: 0,
         isPlaying: false,
         hasStarted: false,
-        smoothRms: 0,     // heavily smoothed for slow breathing
-        smoothLow: 0      // heavily smoothed low end
+        smoothRms: 0,
+        smoothLow: 0
     };
 
-    // --- Public API for loading new audio sources ---
+    // --- Public API ---
     window.vuPlayer = {
         loadSource: function(src, autoplay) {
             if (!src) return;
 
-            // Stop current playback
             if (audio) {
                 audio.pause();
                 isPlaying = false;
             }
 
-            // Update source
             audioSrc = src;
             hasStarted = false;
             isLoading = false;
@@ -602,7 +619,6 @@
     };
 
     // --- Animate ---
-    // Smoothed values for needle drive
     var smoothedLevel = 0;
     var smoothedLow = 0;
     var smoothedMid = 0;
@@ -615,85 +631,60 @@
             var dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(dataArray);
 
-            // Frequency bin layout (fftSize=256, 128 bins, ~172Hz per bin at 44100Hz):
-            //   bins 0-1:   0-344Hz    (sub-bass, kick drum)
-            //   bins 1-3:   172-688Hz  (bass, low voice)
-            //   bins 3-12:  516-2064Hz (voice fundamental, midrange)
-            //   bins 12-23: 2064-3956Hz (voice presence, clarity)
-            //   bins 23+:   4000Hz+    (sibilance, air)
-
             var binCount = analyser.frequencyBinCount;
 
-            // Sub-bass / kick: bins 0-2 (0-516Hz)
             var subSum = 0;
             for (var i = 0; i < 3 && i < binCount; i++) subSum += dataArray[i];
             var subLevel = subSum / (3 * 255);
 
-            // Voice band: bins 2-23 (344-3956Hz)
             var voiceSum = 0;
             var voiceBins = Math.min(23, binCount) - 2;
             for (var i = 2; i < 23 && i < binCount; i++) voiceSum += dataArray[i];
             var voiceLevel = voiceBins > 0 ? voiceSum / (voiceBins * 255) : 0;
 
-            // High presence: bins 23-40
             var highSum = 0;
             var highBins = Math.min(40, binCount) - 23;
             for (var i = 23; i < 40 && i < binCount; i++) highSum += dataArray[i];
             var highLevel = highBins > 0 ? highSum / (highBins * 255) : 0;
 
-            // Overall RMS for signal data
             var totalSum = 0;
             var totalCount = Math.min(binCount, 64);
             for (var i = 0; i < totalCount; i++) totalSum += dataArray[i];
             var rmsLevel = totalSum / (totalCount * 255);
 
-            // --- Band-aware needle drive ---
             var needleLevel;
             var isScore = window.currentBand === 'score';
 
             if (isScore) {
-                // Score mode: follow kick/bass pulse
-                // Weight heavily toward sub-bass with some mid for melodic movement
                 needleLevel = subLevel * 0.7 + voiceLevel * 0.2 + highLevel * 0.1;
             } else {
-                // Transmission mode: follow voice energy
-                // Weight toward voice band with sub for room/breath
                 needleLevel = voiceLevel * 0.65 + subLevel * 0.15 + highLevel * 0.2;
             }
 
-            // Transient detection — boost the needle on sudden increases
             var delta = needleLevel - prevLevel;
             if (delta > 0.02) {
                 transientBoost = Math.min(delta * 3, 0.25);
             }
-            transientBoost *= 0.85; // decay
+            transientBoost *= 0.85;
             prevLevel = needleLevel;
 
-            // Apply transient boost
             needleLevel += transientBoost;
 
-            // Heavy smoothing — different rates for attack vs release
-            // Fast attack (voice onset / kick hit), slow release (natural decay)
             if (needleLevel > smoothedLevel) {
-                smoothedLevel += (needleLevel - smoothedLevel) * 0.25; // attack
+                smoothedLevel += (needleLevel - smoothedLevel) * 0.25;
             } else {
-                smoothedLevel += (needleLevel - smoothedLevel) * 0.06; // release
+                smoothedLevel += (needleLevel - smoothedLevel) * 0.06;
             }
 
-            // Smooth the sub-bands for vuSignal exposure
             smoothedLow += (subLevel - smoothedLow) * 0.08;
             smoothedMid += (voiceLevel - smoothedMid) * 0.1;
             smoothedHigh += (highLevel - smoothedHigh) * 0.1;
 
-            // Drive the needle from smoothed level
-            // Scale to sit comfortably in the middle of the arc
-            // pow(x, 0.5) compresses dynamic range; * 0.75 keeps it from pegging right
             var scaledLevel = Math.pow(smoothedLevel, 0.5) * 0.75;
             scaledLevel = Math.min(scaledLevel, 1.0);
             targetAngle = dbToAngle(-20 + scaledLevel * 20);
             glowIntensity += (1 - glowIntensity) * 0.05;
 
-            // Update exposed signal data
             window.vuSignal.rms = rmsLevel;
             window.vuSignal.low = smoothedLow;
             window.vuSignal.high = smoothedHigh;
@@ -702,7 +693,6 @@
             window.vuSignal.smoothRms += (rmsLevel - window.vuSignal.smoothRms) * 0.03;
             window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
         } else if (isPlaying && !analyserConnected) {
-            // Cross-origin audio without CORS — simulate gentle needle activity
             time += 0.016;
             var fakeLevel = 0.35 + Math.sin(time * 1.7) * 0.08 + Math.sin(time * 3.1) * 0.05 + Math.random() * 0.03;
             targetAngle = dbToAngle(-20 + fakeLevel * 26);
