@@ -66,12 +66,14 @@
     var BASE_ANGLE = -Math.PI / 2; // straight up
     var minAngle = -1.0;  // sweep left
     var maxAngle = 1.0;   // sweep right
-    var dbMarks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3];
+    var dbMarks = [-20, -10, -7, -5, -3, -1, 0, +1, +3];
 
     function dbToAngle(db) {
+        // Map -20 to +3 across the arc
+        // Use less compression so the red zone (+0 to +3) gets more space
         var normalized = (db + 20) / 23;
         normalized = Math.max(0, Math.min(1, normalized));
-        normalized = Math.pow(normalized, 0.7);
+        normalized = Math.pow(normalized, 0.55);
         return minAngle + normalized * (maxAngle - minAngle);
     }
 
