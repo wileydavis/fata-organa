@@ -7,11 +7,263 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/spoiler.css">
     <link rel="stylesheet" href="/css/document.css">
+    <style>
+    /* Two-panel layout */
+    .fm-layout {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+    }
+
+    /* Document area (left / main) */
+    .fm-document {
+        flex: 1;
+        overflow-y: auto;
+        padding: 60px var(--gutter) 3rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .fm-document-inner {
+        max-width: 780px;
+        margin: 0 auto;
+    }
+
+    /* Welcome state — shown when no document is loaded */
+    .fm-welcome {
+        padding-top: 15vh;
+        text-align: center;
+    }
+
+    .fm-welcome-classification {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        color: rgba(196, 163, 90, 0.4);
+        background: rgba(196, 163, 90, 0.04);
+        padding: 0.2rem 0.6rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(196, 163, 90, 0.1);
+    }
+
+    .fm-welcome h1 {
+        font-family: var(--mono);
+        font-size: 1.1rem;
+        font-weight: 400;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-bright);
+        margin-bottom: 1rem;
+    }
+
+    .fm-welcome p {
+        font-family: var(--serif);
+        font-size: 1rem;
+        line-height: 1.7;
+        color: var(--text-dim);
+        max-width: 480px;
+        margin: 0 auto 1rem;
+    }
+
+    /* Loading state */
+    .fm-loading {
+        padding-top: 20vh;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: rgba(196, 163, 90, 0.4);
+        animation: fmPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes fmPulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.8; }
+    }
+
+    /* Sidebar (right) */
+    .fm-sidebar {
+        width: 280px;
+        flex-shrink: 0;
+        border-left: 1px solid var(--border);
+        background: rgba(15, 15, 18, 0.6);
+        overflow-y: auto;
+        padding: 60px 0 2rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .fm-sidebar-header {
+        padding: 1rem 1.25rem 0.75rem;
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--text-dim);
+    }
+
+    .fm-sidebar-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .fm-sidebar-item {
+        display: block;
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.4);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+        text-decoration: none;
+    }
+
+    .fm-sidebar-item:hover {
+        background: rgba(196, 163, 90, 0.03);
+    }
+
+    .fm-sidebar-item.active {
+        background: rgba(196, 163, 90, 0.05);
+        border-left: 2px solid rgba(196, 163, 90, 0.4);
+        padding-left: calc(1.25rem - 2px);
+    }
+
+    .fm-sidebar-num {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        color: var(--text-dim);
+        display: block;
+        margin-bottom: 0.2rem;
+        letter-spacing: 0.1em;
+    }
+
+    .fm-sidebar-title {
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        color: var(--text-primary);
+        display: block;
+        line-height: 1.4;
+    }
+
+    .fm-sidebar-meta {
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        color: var(--text-dim);
+        display: block;
+        margin-top: 0.15rem;
+        line-height: 1.3;
+    }
+
+    /* Clearance control in sidebar */
+    .fm-sidebar-clearance {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .fm-sidebar-clearance-label {
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-dim);
+    }
+
+    .fm-sidebar-clearance-control {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .fm-sidebar-clearance-btn {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        width: 1.3rem;
+        height: 1.3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: color 0.2s, border-color 0.2s;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .fm-sidebar-clearance-btn:hover {
+        color: var(--accent);
+        border-color: var(--accent-dim);
+    }
+
+    .fm-sidebar-clearance-display {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: var(--accent);
+        min-width: 1.5rem;
+        text-align: center;
+    }
+
+    /* Back to transmitter link */
+    .fm-back {
+        display: block;
+        padding: 0.75rem 1.25rem;
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        text-decoration: none;
+        transition: color 0.2s;
+        border-bottom: 1px solid rgba(42, 42, 47, 0.4);
+    }
+
+    .fm-back:hover {
+        color: var(--accent);
+    }
+
+    /* Document content styling (reuse page-content rules) */
+    .fm-document .page-content,
+    .fm-document .document {
+        max-width: none;
+        padding: 0;
+    }
+
+    /* Mobile: sidebar becomes top bar or collapses */
+    @media (max-width: 768px) {
+        .fm-layout {
+            flex-direction: column-reverse;
+        }
+
+        .fm-sidebar {
+            width: 100%;
+            max-height: 35vh;
+            border-left: none;
+            border-top: 1px solid var(--border);
+            padding-top: 0.5rem;
+        }
+
+        .fm-document {
+            padding-top: 1rem;
+        }
+
+        .fm-welcome {
+            padding-top: 5vh;
+        }
+    }
+    </style>
 </head>
 <body>
     <div class="scanline-overlay"></div>
     <div class="noise-overlay"></div>
-    
+
     <nav class="site-nav">
         <a href="/" class="nav-logo">FATA ORGANA</a>
         <div class="nav-links">
@@ -19,57 +271,208 @@
         </div>
     </nav>
 
-    <main class="page-content document">
-        <div class="document-header">
-            <span class="document-classification">RESEARCH DIVISION — OPEN ACCESS</span>
-            <h1>Field Manuals</h1>
-            <p class="page-subtitle">Compiled by researchers studying the effects of the Adjustment on the Containment Zone</p>
+    <div class="fm-layout">
+        <!-- Document area -->
+        <div class="fm-document" id="fm-document">
+            <div class="fm-document-inner" id="fm-content">
+                <div class="fm-welcome">
+                    <span class="fm-welcome-classification">RESEARCH DIVISION — OPEN ACCESS</span>
+                    <h1>Field Manuals</h1>
+                    <p>Compiled by researchers studying the effects of the Adjustment on the Containment Zone. Select a document from the sidebar to begin.</p>
+                    <p>Material is redacted by default to preserve the integrity of the transmission sequence. Set your spoiler clearance level to match the number of episodes you've completed.</p>
+                </div>
+            </div>
         </div>
 
-        <div class="clearance-callout">
-            <p>These manuals contain information that unfolds across twelve transmissions. To preserve the integrity of the sequence, material is <strong>redacted by default</strong>.</p>
-            <p>Set your <strong>Spoiler Clearance</strong> level to match the number of episodes you've completed. At level 0, most entries are classified. At level 12, the archive is fully declassified.</p>
+        <!-- Sidebar -->
+        <div class="fm-sidebar" id="fm-sidebar">
+            <a href="/" class="fm-back">&larr; Back to Transmitter</a>
+
+            <div class="fm-sidebar-clearance">
+                <span class="fm-sidebar-clearance-label">Clearance</span>
+                <div class="fm-sidebar-clearance-control">
+                    <button class="fm-sidebar-clearance-btn" id="fm-cl-down">&minus;</button>
+                    <span class="fm-sidebar-clearance-display" id="fm-cl-display">0</span>
+                    <button class="fm-sidebar-clearance-btn" id="fm-cl-up">+</button>
+                </div>
+            </div>
+
+            <div class="fm-sidebar-header">Documents</div>
+
+            <div class="fm-sidebar-list">
+                <a class="fm-sidebar-item" data-url="/archive/sound-manual/">
+                    <span class="fm-sidebar-num">FM-001</span>
+                    <span class="fm-sidebar-title">Sound Manual</span>
+                    <span class="fm-sidebar-meta">Signal Processing & Acoustic Phenomena</span>
+                </a>
+                <a class="fm-sidebar-item" data-url="/archive/continuity-protocol/">
+                    <span class="fm-sidebar-num">FM-002</span>
+                    <span class="fm-sidebar-title">Continuity Protocol</span>
+                    <span class="fm-sidebar-meta">Automation Maintenance Across Discontinuity Events</span>
+                </a>
+                <a class="fm-sidebar-item" data-url="/archive/terminology/">
+                    <span class="fm-sidebar-num">FM-003</span>
+                    <span class="fm-sidebar-title">Terminology Index</span>
+                    <span class="fm-sidebar-meta">Containment Zone Lexicon</span>
+                </a>
+                <a class="fm-sidebar-item" data-url="/archive/writing-process/">
+                    <span class="fm-sidebar-num">FM-004</span>
+                    <span class="fm-sidebar-title">The Writing Process</span>
+                    <span class="fm-sidebar-meta">Human/AI Collaborative Narrative Construction</span>
+                </a>
+                <a class="fm-sidebar-item" data-url="/archive/transmission-fx/">
+                    <span class="fm-sidebar-num">FM-005</span>
+                    <span class="fm-sidebar-title">Transmission FX Chain</span>
+                    <span class="fm-sidebar-meta">Signal Conditioning & Emotional Modulation</span>
+                </a>
+                <a class="fm-sidebar-item" data-url="/archive/dev-log/">
+                    <span class="fm-sidebar-num">LOG</span>
+                    <span class="fm-sidebar-title">Project Log</span>
+                    <span class="fm-sidebar-meta">Chronological Development Record</span>
+                </a>
+            </div>
         </div>
+    </div>
 
-        <ul class="doc-list">
-            <li>
-                <a href="/archive/sound-manual/">
-                    <span class="doc-title">FM-001: Sound Manual</span>
-                    <span class="doc-meta">Signal Processing &amp; Acoustic Phenomena</span>
-                </a>
-            </li>
-            <li>
-                <a href="/archive/continuity-protocol/">
-                    <span class="doc-title">FM-002: Continuity Protocol</span>
-                    <span class="doc-meta">Automation Maintenance Across Discontinuity Events</span>
-                </a>
-            </li>
-            <li>
-                <a href="/archive/terminology/">
-                    <span class="doc-title">FM-003: Terminology Index</span>
-                    <span class="doc-meta">Containment Zone Lexicon — 68 Entries</span>
-                </a>
-            </li>
-            <li>
-                <a href="/archive/writing-process/">
-                    <span class="doc-title">FM-004: The Writing Process</span>
-                    <span class="doc-meta">Human/AI Collaborative Narrative Construction</span>
-                </a>
-            </li>
-            <li>
-                <a href="/archive/transmission-fx/">
-                    <span class="doc-title">FM-005: Transmission FX Chain</span>
-                    <span class="doc-meta">Signal Conditioning & Emotional Modulation</span>
-                </a>
-            </li>
-        </ul>
-    </main>
-
-    <footer class="site-footer">
-        <p>FATA ORGANA is a work of fiction. The transmissions are not real. The Containment Zone does not exist.</p>
-        <p class="footer-sub">Created by Wiley Davis</p>
-    </footer>
     <script src="/js/spoiler.js"></script>
-    <script src="/js/spa-redirect.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var contentArea = document.getElementById('fm-content');
+        var documentArea = document.getElementById('fm-document');
+        var items = document.querySelectorAll('.fm-sidebar-item');
+        var currentUrl = null;
+
+        // --- Clearance controls ---
+        var STORAGE_KEY = 'fataorgana_clearance';
+        var MAX_LEVEL = 12;
+
+        function getLevel() {
+            try {
+                var stored = localStorage.getItem(STORAGE_KEY);
+                if (stored !== null) {
+                    var n = parseInt(stored, 10);
+                    if (!isNaN(n) && n >= 0 && n <= MAX_LEVEL) return n;
+                }
+            } catch(e) {}
+            return 0;
+        }
+
+        function setLevel(n) {
+            try { localStorage.setItem(STORAGE_KEY, String(n)); } catch(e) {}
+            updateClearanceDisplay(n);
+            // Re-apply spoilers if spoiler system is loaded
+            if (window.spoilerSystem) window.spoilerSystem.init();
+        }
+
+        function updateClearanceDisplay(level) {
+            var display = document.getElementById('fm-cl-display');
+            if (display) display.textContent = String(level);
+        }
+
+        updateClearanceDisplay(getLevel());
+
+        document.getElementById('fm-cl-down').addEventListener('click', function() {
+            var lvl = getLevel();
+            if (lvl > 0) setLevel(lvl - 1);
+        });
+
+        document.getElementById('fm-cl-up').addEventListener('click', function() {
+            var lvl = getLevel();
+            if (lvl < MAX_LEVEL) setLevel(lvl + 1);
+        });
+
+        // --- Document loading ---
+        function loadDocument(url) {
+            if (url === currentUrl) return;
+            currentUrl = url;
+
+            // Update active state
+            items.forEach(function(item) {
+                item.classList.toggle('active', item.getAttribute('data-url') === url);
+            });
+
+            // Show loading
+            contentArea.innerHTML = '<div class="fm-loading">Receiving Signal</div>';
+            documentArea.scrollTop = 0;
+
+            fetch(url)
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                    // Parse and extract the main content
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(html, 'text/html');
+
+                    // Try to find the main content area
+                    var main = doc.querySelector('.page-content') || doc.querySelector('main') || doc.querySelector('body');
+
+                    if (main) {
+                        contentArea.innerHTML = '';
+
+                        // Clone content
+                        var nodes = main.cloneNode(true);
+                        contentArea.appendChild(nodes);
+
+                        // Extract and inject any inline styles
+                        var styles = doc.querySelectorAll('style');
+                        styles.forEach(function(style) {
+                            var newStyle = document.createElement('style');
+                            newStyle.textContent = style.textContent;
+                            contentArea.appendChild(newStyle);
+                        });
+
+                        // Extract and run inline scripts (for appendix panels etc)
+                        var scripts = doc.querySelectorAll('script:not([src])');
+                        scripts.forEach(function(script) {
+                            try { new Function(script.textContent)(); } catch(e) {}
+                        });
+
+                        // Re-init spoiler system on new content
+                        if (window.spoilerSystem) window.spoilerSystem.init();
+
+                        // Handle internal links within the document
+                        contentArea.querySelectorAll('a[href^="/archive/"]').forEach(function(link) {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                loadDocument(link.getAttribute('href'));
+                            });
+                        });
+                    } else {
+                        contentArea.innerHTML = '<div class="fm-loading">Signal Lost</div>';
+                    }
+                })
+                .catch(function() {
+                    contentArea.innerHTML = '<div class="fm-loading">Signal Lost — Try Again</div>';
+                });
+
+            // Update URL
+            history.pushState({ doc: url }, '', '/archive/' + '?doc=' + encodeURIComponent(url));
+        }
+
+        // --- Sidebar clicks ---
+        items.forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = item.getAttribute('data-url');
+                if (url) loadDocument(url);
+            });
+        });
+
+        // --- Handle back/forward ---
+        window.addEventListener('popstate', function(e) {
+            if (e.state && e.state.doc) {
+                loadDocument(e.state.doc);
+            }
+        });
+
+        // --- Auto-load from URL params ---
+        var params = new URLSearchParams(window.location.search);
+        var docParam = params.get('doc');
+        if (docParam) {
+            loadDocument(decodeURIComponent(docParam));
+        }
+    })();
+    </script>
 </body>
 </html>
