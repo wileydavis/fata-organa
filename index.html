@@ -1092,7 +1092,6 @@
         <!-- Panel buttons -->
         <div class="tx-panel-buttons">
             <button class="tx-drawer-btn" id="btn-archive">Field Manuals</button>
-            <button class="tx-drawer-btn" id="btn-log">Project Log</button>
         </div>
 
         <p class="tx-tagline">They thought it was a weapon. But it's a gift.</p>
@@ -1330,17 +1329,6 @@
         document.querySelectorAll('[data-close]').forEach(function(btn) {
             btn.addEventListener('click', closeAll);
         });
-
-        // Project Log button opens document in projector (doc-viewer loads after this script)
-        var logBtn = document.getElementById('btn-log');
-        if (logBtn) {
-            logBtn.addEventListener('click', function() {
-                closeAll();
-                if (window.docViewer) {
-                    window.docViewer.open('/archive/dev-log/');
-                }
-            });
-        }
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
