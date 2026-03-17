@@ -861,7 +861,7 @@
     .focus-fading .site-nav,
     .focus-fading #atmosphere {
         opacity: 0 !important;
-        transition: opacity 0.5s ease;
+        transition: opacity 1.2s ease;
     }
 
     .focus-blackout {
@@ -874,7 +874,7 @@
         background: #000;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.8s ease;
+        transition: opacity 1.2s ease;
     }
 
     .focus-mode .focus-blackout {
@@ -899,14 +899,14 @@
     .focus-mode #atmosphere {
         z-index: 6 !important;
         opacity: 1 !important;
-        transition: opacity 0.8s ease;
+        transition: opacity 1.5s ease;
     }
 
     .focus-mode .transmitter {
         z-index: 7;
         background: transparent !important;
         opacity: 1 !important;
-        transition: opacity 0.8s ease;
+        transition: opacity 1.5s ease;
     }
 
     .focus-mode .tx-panel {
@@ -1319,9 +1319,9 @@
                     setTimeout(function() {
                         body.classList.remove('focus-fading');
                         body.classList.add('focus-mode');
-                    }, 200);
+                    }, 400);
                 });
-            }, 600);
+            }, 1400);
         }
 
         function exitFocus() {
@@ -1345,8 +1345,8 @@
                 // Step 3: Fade back in after fullscreen exits
                 setTimeout(function() {
                     body.classList.remove('focus-fading');
-                }, 200);
-            }, 500);
+                }, 400);
+            }, 1400);
 
             if (txPanel) {
                 txPanel.style.transform = '';
