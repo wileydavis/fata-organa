@@ -549,10 +549,31 @@
         }
     }
 
+    // Detect mobile for background playback compatibility
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     function initAnalyser() {
         if (audioCtx) return;
+        // On mobile, skip AudioContext entirely — it takes exclusive ownership
+        // of the audio element and kills playback when the page backgrounds.
+        // The VU needle will use simulated movement on mobile.
+        if (isMobile) {
+            analyserConnected = false;
+            return;
+        }
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            connectAnalyser();
+        } catch(e) {
+            console.error('Analyser init error:', e);
+            analyserConnected = false;
+        }
+    }
+
+    function connectAnalyser() {
+        if (!audioCtx || !audio) return;
+        if (source) return;
+        try {
             source = audioCtx.createMediaElementSource(audio);
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 256;
@@ -561,10 +582,26 @@
             analyser.connect(audioCtx.destination);
             analyserConnected = true;
         } catch(e) {
-            console.error('Analyser init error:', e);
+            console.error('Analyser connect error:', e);
             analyserConnected = false;
         }
     }
+
+    // --- Background/foreground handling ---
+    document.addEventListener('visibilitychange', function() {
+        if (!audio) return;
+
+        if (!document.hidden) {
+            // Page returning to foreground
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(function() {});
+            }
+            // Resume if audio was interrupted
+            if (audio.paused && isPlaying) {
+                audio.play().catch(function() {});
+            }
+        }
+    });
 
     function doPlay() {
         if (!audioCtx && audio) {
