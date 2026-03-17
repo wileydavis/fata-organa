@@ -1295,32 +1295,15 @@
         function enterFocus() {
             inFocus = true;
             body.classList.add('focus-mode');
-
-            // Request fullscreen
-            var el = document.documentElement;
-            if (el.requestFullscreen) {
-                el.requestFullscreen().catch(function() {});
-            } else if (el.webkitRequestFullscreen) {
-                el.webkitRequestFullscreen();
-            }
         }
 
         function exitFocus() {
             if (!inFocus) return;
             inFocus = false;
             body.classList.remove('focus-mode');
-
-            // Exit fullscreen if active
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(function() {});
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
         }
 
-        // Button click enters focus
+        // Button click toggles focus
         if (focusBtn) {
             focusBtn.addEventListener('click', function() {
                 if (inFocus) {
@@ -1330,21 +1313,6 @@
                 }
             });
         }
-
-        // Sync with browser fullscreen exit (user presses Escape in fullscreen)
-        document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement && inFocus) {
-                inFocus = false;
-                body.classList.remove('focus-mode');
-            }
-        });
-
-        document.addEventListener('webkitfullscreenchange', function() {
-            if (!document.webkitFullscreenElement && inFocus) {
-                inFocus = false;
-                body.classList.remove('focus-mode');
-            }
-        });
 
         window.focusMode = { enter: enterFocus, exit: exitFocus, isActive: function() { return inFocus; } };
     })();
