@@ -96,8 +96,8 @@
         max-width: 580px;
         flex-shrink: 0;
         background: rgba(8, 8, 10, 0.7);
-        border: 1px solid rgba(196, 163, 90, 0.06);
-        border-radius: 200px;
+        border: 1px solid rgba(196, 163, 90, 0.2);
+        border-radius: 75px;
         padding: 0.5rem 0;
         aspect-ratio: 1 / 1;
         display: flex;
@@ -111,11 +111,11 @@
     /* Corner screws — centered on the corner radius arc */
     .tx-screw {
         position: absolute;
-        width: 10px;
-        height: 10px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
         background: radial-gradient(circle at 40% 35%, #3a3530 0%, #1e1c18 60%, #151310 100%);
-        border: 0.5px solid rgba(196, 163, 90, 0.08);
+        border: 0.5px solid rgba(196, 163, 90, 0.12);
         z-index: 2;
     }
 
@@ -125,17 +125,17 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%) rotate(35deg);
-        width: 6px;
+        width: 8px;
         height: 0.5px;
-        background: rgba(196, 163, 90, 0.12);
+        background: rgba(196, 163, 90, 0.18);
     }
 
     /* Position screws at 45° along the 24px radius arc
        offset from corner = radius - radius * cos(45°) ≈ 24 - 17 = 7px */
-    .tx-screw-tl { top: 59px; left: 59px; }
-    .tx-screw-tr { top: 59px; right: 59px; }
-    .tx-screw-bl { bottom: 59px; left: 59px; }
-    .tx-screw-br { bottom: 59px; right: 59px; }
+    .tx-screw-tl { top: 18px; left: 18px; }
+    .tx-screw-tr { top: 18px; right: 18px; }
+    .tx-screw-bl { bottom: 18px; left: 18px; }
+    .tx-screw-br { bottom: 18px; right: 18px; }
 
     /* Faceplate — inset border matching outer radius */
     .tx-faceplate {
@@ -145,7 +145,7 @@
         right: 6px;
         bottom: 6px;
         border: 1px solid rgba(196, 163, 90, 0.04);
-        border-radius: 194px;
+        border-radius: 69px;
         pointer-events: none;
     }
 
