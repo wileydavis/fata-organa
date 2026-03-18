@@ -565,6 +565,12 @@
         params: {}
     };
 
+    // --- Pattern transition ---
+    var transitionFrom = 'scatter';
+    var transitionFromParams = {};
+    var transitionBlend = 1; // 1 = fully arrived at current pattern
+    var transitionSpeed = 0; // per-frame increment
+
     // --- Pattern param definitions ---
     var patternParams = {
         spiral: [
@@ -645,7 +651,19 @@
     }
 
     selPattern.addEventListener('change', function() {
-        state.pattern = selPattern.value;
+        var newPattern = selPattern.value;
+        if (newPattern !== state.pattern) {
+            transitionFrom = state.pattern;
+            transitionFromParams = JSON.parse(JSON.stringify(state.params));
+            var transSec = parseFloat(document.getElementById('inp-transition').value) || 0;
+            if (transSec > 0) {
+                transitionBlend = 0;
+                transitionSpeed = 1 / (transSec * 60); // assuming ~60fps
+            } else {
+                transitionBlend = 1;
+            }
+        }
+        state.pattern = newPattern;
         state.params = {};
         buildParamSliders();
     });
@@ -726,6 +744,14 @@
         time++;
         ctx.clearRect(0, 0, width, height);
 
+        // Advance transition
+        if (transitionBlend < 1) {
+            transitionBlend = Math.min(1, transitionBlend + transitionSpeed);
+        }
+        // Smoothstep the blend
+        var blend = transitionBlend;
+        blend = blend * blend * (3 - 2 * blend);
+
         var cx = width / 2, cy = height / 2;
         var deadR = Math.min(width, height) * 0.18;
         var rot = time * state.rotation;
@@ -733,8 +759,17 @@
 
         for (var pi = 0; pi < particles.length; pi++) {
             var pt = particles[pi];
-            var target = patternPosition(state.pattern, pt.idx, particles.length, state.params);
-            var tx = target.x, ty = target.y;
+
+            var tx, ty;
+            if (blend >= 1) {
+                var target = patternPosition(state.pattern, pt.idx, particles.length, state.params);
+                tx = target.x; ty = target.y;
+            } else {
+                var from = patternPosition(transitionFrom, pt.idx, particles.length, transitionFromParams);
+                var to = patternPosition(state.pattern, pt.idx, particles.length, state.params);
+                tx = from.x + (to.x - from.x) * blend;
+                ty = from.y + (to.y - from.y) * blend;
+            }
 
             // Rotation
             var rtx = tx - cx, rty = ty - cy;
