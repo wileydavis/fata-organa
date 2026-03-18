@@ -1415,29 +1415,52 @@
             });
         }
 
-        // Sync with fullscreen changes
+        // Escape key exits focus mode with fade
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && inFocus) {
+                e.preventDefault();
+                exitFocus();
+            }
+        });
+
+        // Sync with fullscreen changes (browser Escape exits fullscreen first)
+        // When fullscreen exits unexpectedly, clean up focus mode with fade
         document.addEventListener('fullscreenchange', function() {
             if (document.fullscreenElement && inFocus) {
                 compensatePosition();
-            } else if (!document.fullscreenElement && inFocus) {
+            } else if (!document.fullscreenElement && inFocus && !body.classList.contains('focus-fading')) {
+                // Fullscreen exited without our fade (e.g. browser Escape)
+                // Apply fade-out then clean up
                 inFocus = false;
+                body.classList.add('focus-fading');
+                setTimeout(function() {
+                    body.classList.remove('focus-mode');
+                    setTimeout(function() {
+                        body.classList.remove('focus-fading');
+                    }, 400);
+                }, 1400);
                 if (txPanel) {
                     txPanel.style.transform = '';
                     txPanel.style.transition = '';
                 }
-                body.classList.remove('focus-mode');
             }
         });
         document.addEventListener('webkitfullscreenchange', function() {
             if (document.webkitFullscreenElement && inFocus) {
                 compensatePosition();
-            } else if (!document.webkitFullscreenElement && inFocus) {
+            } else if (!document.webkitFullscreenElement && inFocus && !body.classList.contains('focus-fading')) {
                 inFocus = false;
+                body.classList.add('focus-fading');
+                setTimeout(function() {
+                    body.classList.remove('focus-mode');
+                    setTimeout(function() {
+                        body.classList.remove('focus-fading');
+                    }, 400);
+                }, 1400);
                 if (txPanel) {
                     txPanel.style.transform = '';
                     txPanel.style.transition = '';
                 }
-                body.classList.remove('focus-mode');
             }
         });
 
