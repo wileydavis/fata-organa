@@ -424,6 +424,8 @@
         // Mobile: allow background playback
         audio.setAttribute('playsinline', '');
         audio.setAttribute('webkit-playsinline', '');
+        // Expose for atmosphere particle system
+        window._fataAudio = audio;
 
         audio.addEventListener('ended', function() {
             isPlaying = false;
