@@ -529,7 +529,11 @@
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: title,
                 artist: 'Wiley Davis',
-                album: 'Fata Organa — ' + albumName
+                album: 'Fata Organa — ' + albumName,
+                artwork: [
+                    { src: '/img/fata-organa-192.png', sizes: '192x192', type: 'image/png' },
+                    { src: '/img/fata-organa-512.png', sizes: '512x512', type: 'image/png' }
+                ]
             });
 
             navigator.mediaSession.setActionHandler('play', function() {
