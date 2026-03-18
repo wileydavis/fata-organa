@@ -185,6 +185,14 @@
         text-align: left;
     }
 
+    .ctrl-row[title] {
+        cursor: help;
+    }
+
+    .ctrl-row[title]:hover label {
+        color: rgba(196, 163, 90, 0.7);
+    }
+
     /* Buttons */
     .ctrl-buttons {
         display: flex;
@@ -366,14 +374,19 @@
                 </select>
             </div>
 
-            <div class="ctrl-row"><label>Speed</label><input type="range" id="sl-speed" min="0.1" max="8" step="0.1" value="3"><span class="ctrl-val" id="v-speed">3</span></div>
-            <div class="ctrl-row"><label>Attraction</label><input type="range" id="sl-attraction" min="0.001" max="0.1" step="0.001" value="0.04"><span class="ctrl-val" id="v-attraction">0.04</span></div>
-            <div class="ctrl-row"><label>Wander</label><input type="range" id="sl-wander" min="0" max="0.02" step="0.0001" value="0.0005"><span class="ctrl-val" id="v-wander">0.0005</span></div>
-            <div class="ctrl-row"><label>Damping</label><input type="range" id="sl-damping" min="0.8" max="0.99" step="0.01" value="0.88"><span class="ctrl-val" id="v-damping">0.88</span></div>
-            <div class="ctrl-row"><label>Rotation</label><input type="range" id="sl-rotation" min="0" max="0.003" step="0.00005" value="0.0003"><span class="ctrl-val" id="v-rotation">0.0003</span></div>
-            <div class="ctrl-row"><label>Brightness</label><input type="range" id="sl-brightness" min="0.1" max="2" step="0.05" value="0.9"><span class="ctrl-val" id="v-brightness">0.9</span></div>
-            <div class="ctrl-row"><label>Conn Dist</label><input type="range" id="sl-connectionDist" min="0" max="200" step="5" value="0"><span class="ctrl-val" id="v-connectionDist">0</span></div>
-            <div class="ctrl-row"><label>Conn Alpha</label><input type="range" id="sl-connectionAlpha" min="0" max="0.2" step="0.005" value="0"><span class="ctrl-val" id="v-connectionAlpha">0</span></div>
+            <div class="ctrl-row" title="Velocity multiplier — how fast particles move toward targets. Higher = snappier formation."><label>Speed</label><input type="range" id="sl-speed" min="0.1" max="8" step="0.1" value="3"><span class="ctrl-val" id="v-speed">3</span></div>
+            <div class="ctrl-row" title="Pull strength toward pattern positions. Low (0.003) = loose drift. High (0.06) = particles lock into place."><label>Attraction</label><input type="range" id="sl-attraction" min="0.001" max="0.1" step="0.001" value="0.04"><span class="ctrl-val" id="v-attraction">0.04</span></div>
+            <div class="ctrl-row" title="Random drift per frame. High = chaotic, organic movement. Low = particles hold their positions tightly."><label>Wander</label><input type="range" id="sl-wander" min="0" max="0.02" step="0.0001" value="0.0005"><span class="ctrl-val" id="v-wander">0.0005</span></div>
+            <div class="ctrl-row" title="Velocity friction. Low (0.84) = particles brake hard, crisp formations. High (0.96) = momentum, floaty overshoot."><label>Damping</label><input type="range" id="sl-damping" min="0.8" max="0.99" step="0.01" value="0.88"><span class="ctrl-val" id="v-damping">0.88</span></div>
+            <div class="ctrl-row" title="Global rotation speed of the entire pattern around center. 0 = static. Higher = spinning."><label>Rotation</label><input type="range" id="sl-rotation" min="0" max="0.003" step="0.00005" value="0.0003"><span class="ctrl-val" id="v-rotation">0.0003</span></div>
+            <div class="ctrl-row" title="Particle opacity multiplier. Below 1 = dim, ghostly. Above 1 = bright, vivid."><label>Brightness</label><input type="range" id="sl-brightness" min="0.1" max="2" step="0.05" value="0.9"><span class="ctrl-val" id="v-brightness">0.9</span></div>
+            <div class="ctrl-row" title="Max distance for drawing lines between nearby particles. 0 = no connections. Higher = denser web."><label>Conn Dist</label><input type="range" id="sl-connectionDist" min="0" max="200" step="5" value="0"><span class="ctrl-val" id="v-connectionDist">0</span></div>
+            <div class="ctrl-row" title="Opacity of connection lines. Higher = more visible network between particles."><label>Conn Alpha</label><input type="range" id="sl-connectionAlpha" min="0" max="0.2" step="0.005" value="0"><span class="ctrl-val" id="v-connectionAlpha">0</span></div>
+
+            <div class="ctrl-label" style="margin-top: 4px;">Color</div>
+            <div class="ctrl-row" title="Hue offset from base amber (38°). 0 = default amber. Positive = warmer/red. Negative = cooler/green. ±180 = full spectrum shift."><label>Hue Shift</label><input type="range" id="sl-hueShift" min="-180" max="180" step="1" value="0"><span class="ctrl-val" id="v-hueShift">0</span></div>
+            <div class="ctrl-row" title="Saturation offset. Positive = more vivid color. Negative = desaturated, grey."><label>Sat Shift</label><input type="range" id="sl-satShift" min="-40" max="40" step="1" value="0"><span class="ctrl-val" id="v-satShift">0</span></div>
+            <div class="ctrl-row" title="Lightness offset. Positive = brighter particles. Negative = darker."><label>Lit Shift</label><input type="range" id="sl-litShift" min="-30" max="30" step="1" value="0"><span class="ctrl-val" id="v-litShift">0</span></div>
 
             <!-- Pattern-specific params -->
             <div id="params-container"></div>
@@ -562,6 +575,9 @@
         brightness: 0.9,
         connectionDist: 0,
         connectionAlpha: 0,
+        hueShift: 0,
+        satShift: 0,
+        litShift: 0,
         params: {}
     };
 
@@ -614,7 +630,7 @@
     };
 
     // --- UI binding ---
-    var sliders = ['speed', 'attraction', 'wander', 'damping', 'rotation', 'brightness', 'connectionDist', 'connectionAlpha'];
+    var sliders = ['speed', 'attraction', 'wander', 'damping', 'rotation', 'brightness', 'connectionDist', 'connectionAlpha', 'hueShift', 'satShift', 'litShift'];
     var selPattern = document.getElementById('sel-pattern');
     var paramsContainer = document.getElementById('params-container');
 
@@ -702,6 +718,9 @@
         cue.brightness = state.brightness;
         if (state.connectionDist > 0) cue.connectionDist = state.connectionDist;
         if (state.connectionAlpha > 0) cue.connectionAlpha = state.connectionAlpha;
+        if (state.hueShift !== 0) cue.hueShift = state.hueShift;
+        if (state.satShift !== 0) cue.satShift = state.satShift;
+        if (state.litShift !== 0) cue.litShift = state.litShift;
         cue.transition = parseFloat(document.getElementById('inp-transition').value) || 0;
         var defs = patternParams[state.pattern];
         if (defs && Object.keys(state.params).length > 0) cue.params = JSON.parse(JSON.stringify(state.params));
@@ -733,6 +752,7 @@
         state.speed = 3; state.attraction = 0.04; state.wander = 0.0005;
         state.damping = 0.88; state.rotation = 0.0003; state.brightness = 0.9;
         state.connectionDist = 0; state.connectionAlpha = 0;
+        state.hueShift = 0; state.satShift = 0; state.litShift = 0;
         sliders.forEach(function(key) {
             document.getElementById('sl-' + key).value = state[key];
             document.getElementById('v-' + key).textContent = state[key];
@@ -808,9 +828,13 @@
             pt.alpha = pt.baseAlpha * breathe * state.brightness;
 
             if (pt.alpha > 0.01) {
+                var drawSize = pt.size * 1;
+                var h = pt.hue + state.hueShift;
+                var s = Math.max(0, Math.min(100, pt.sat + state.satShift));
+                var l = Math.max(0, Math.min(100, pt.lit + state.litShift));
                 ctx.beginPath();
-                ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'hsla(' + pt.hue + ', ' + pt.sat + '%, ' + pt.lit + '%, ' + pt.alpha + ')';
+                ctx.arc(pt.x, pt.y, drawSize, 0, Math.PI * 2);
+                ctx.fillStyle = 'hsla(' + h + ', ' + s + '%, ' + l + '%, ' + pt.alpha + ')';
                 ctx.fill();
             }
         }
