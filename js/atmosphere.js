@@ -288,8 +288,8 @@
         var cy = height / 2;
         var deadR = Math.min(width, height) * 0.18;
 
-        // Slow global rotation — speeds up over track
-        var patternRotation = time * (0.00005 + smoothProgress * 0.0002);
+        // Global rotation — starts visible, speeds up
+        var patternRotation = time * (0.00015 + smoothProgress * 0.0003);
         var cosR = Math.cos(patternRotation);
         var sinR = Math.sin(patternRotation);
 
@@ -339,15 +339,15 @@
             targetY += Math.cos(dispAngle * 0.7) * audioDisp * 10;
 
             // --- Move toward target ---
-            // Speed ramps from 1x to 5x over track duration
-            var speedMult = 1 + smoothProgress * 4;
-            var attractStrength = (0.002 + smoothProgress * 0.012) * speedMult;
+            // Speed starts faster (2x) and ramps to 8x over track duration
+            var speedMult = 2 + smoothProgress * 6;
+            var attractStrength = (0.004 + smoothProgress * 0.016) * speedMult;
 
             // When idle, just wander
             if (reactivity < 0.1) {
                 pt.wanderAngle += (Math.random() - 0.5) * 0.02;
-                pt.vx += Math.cos(pt.wanderAngle) * 0.003;
-                pt.vy += Math.sin(pt.wanderAngle) * 0.003;
+                pt.vx += Math.cos(pt.wanderAngle) * 0.006;
+                pt.vy += Math.sin(pt.wanderAngle) * 0.006;
             } else {
                 // Attract toward pattern
                 pt.vx += (targetX - pt.x) * attractStrength;
@@ -355,8 +355,8 @@
 
                 // Very subtle wander on top
                 pt.wanderAngle += (Math.random() - 0.5) * 0.01;
-                pt.vx += Math.cos(pt.wanderAngle) * 0.001 * speedMult;
-                pt.vy += Math.sin(pt.wanderAngle) * 0.001 * speedMult;
+                pt.vx += Math.cos(pt.wanderAngle) * 0.002 * speedMult;
+                pt.vy += Math.sin(pt.wanderAngle) * 0.002 * speedMult;
             }
 
             // --- Center repulsion ---
@@ -369,8 +369,8 @@
                 pt.vy += (cdy / cDist) * repel;
             }
 
-            // Damping eases over track duration (0.93 → 0.97 = less friction)
-            var damping = 0.93 + smoothProgress * 0.04;
+            // Damping: less friction from start (0.95), even less by end (0.98)
+            var damping = 0.95 + smoothProgress * 0.03;
             pt.vx *= damping;
             pt.vy *= damping;
 
