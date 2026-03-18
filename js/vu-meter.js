@@ -551,6 +551,12 @@
 
     function initAnalyser() {
         if (audioCtx) return;
+        // On mobile, skip AudioContext — createMediaElementSource hijacks audio output
+        // and iOS suspends it in background, killing playback. Use simulation instead.
+        if (isMobile) {
+            analyserConnected = false;
+            return;
+        }
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             connectAnalyser();
