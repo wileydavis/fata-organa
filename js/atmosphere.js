@@ -192,21 +192,30 @@
         // New cue triggered
         if (newIdx !== currentCueIdx && newIdx >= 0) {
             // If seeking backward, rebuild accumulated state from scratch
-            if (newIdx < currentCueIdx) {
+            if (newIdx < currentCueIdx || currentCueIdx < 0) {
                 accumulatedState = cloneState(DEFAULT_STATE);
                 for (var ri = 0; ri <= newIdx; ri++) {
                     accumulatedState = mergeState(accumulatedState, activeCues[ri]);
                 }
             } else {
-                // Forward: merge just the new cue
-                accumulatedState = mergeState(accumulatedState, activeCues[newIdx]);
+                // Forward: merge all skipped cues in order
+                for (var fi = currentCueIdx + 1; fi <= newIdx; fi++) {
+                    accumulatedState = mergeState(accumulatedState, activeCues[fi]);
+                }
             }
 
             var cue = activeCues[newIdx];
             cueFrom = cloneState(cueState);
             cueTo = cloneState(accumulatedState);
-            cueTransitionStart = audioTime;
-            cueTransitionDur = cue.transition || 0;
+            cueTransitionStart = cue.t; // start from the cue's timestamp, not audioTime
+            
+            // Transition duration — clamp to gap before next cue
+            var requestedDur = cue.transition || 0;
+            if (requestedDur > 0 && newIdx < activeCues.length - 1) {
+                var gap = activeCues[newIdx + 1].t - cue.t;
+                if (requestedDur > gap) requestedDur = gap;
+            }
+            cueTransitionDur = requestedDur;
             currentCueIdx = newIdx;
 
             if (cueTransitionDur <= 0) {
