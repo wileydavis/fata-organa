@@ -3,119 +3,39 @@
   "duration": 211,
   "cues": [
     {
-      "t": 0,
+      "t": 28.8,
       "pattern": "scatter",
-      "speed": 1.5,
-      "attraction": 0.015,
-      "wander": 0.0133,
+      "speed": 3.3,
+      "attraction": 0.1,
+      "wander": 0,
       "damping": 0.88,
-      "rotation": 0.0002,
+      "rotation": 0.00085,
       "brightness": 1.6,
-      "transition": 3,
+      "transition": 15,
       "connectionDist": 200,
-      "connectionAlpha": 0.15,
-      "hueShift": 1,
-      "satShift": 40,
-      "litShift": -15
+      "connectionAlpha": 0.195,
+      "hueShift": 4,
+      "satShift": 24,
+      "litShift": -21
     },
     {
-      "t": 10.2,
+      "t": 79.6,
       "pattern": "waveform",
       "speed": 3.3,
       "attraction": 0.1,
       "wander": 0,
       "damping": 0.88,
-      "rotation": 0,
-      "brightness": 1.6,
-      "transition": 10,
-      "connectionDist": 200,
-      "connectionAlpha": 0.045,
-      "hueShift": -71,
-      "satShift": 24,
-      "litShift": -15,
-      "params": {
-        "frequency": 6,
-        "amplitude": 50
-      }
-    },
-    {
-      "t": 83.2,
-      "pattern": "lissajous",
-      "speed": 3.3,
-      "attraction": 0.1,
-      "wander": 0,
-      "damping": 0.88,
       "rotation": 0.00085,
       "brightness": 1.6,
-      "transition": 10,
-      "connectionDist": 200,
-      "connectionAlpha": 0.1,
-      "hueShift": 160,
-      "satShift": 24,
-      "litShift": -15,
-      "params": {
-        "a": 3,
-        "b": 2,
-        "delta": 1.57
-      }
-    },
-    {
-      "t": 152.1,
-      "pattern": "ring",
-      "speed": 3.3,
-      "attraction": 0.1,
-      "wander": 0,
-      "damping": 0.88,
-      "rotation": 0.00085,
-      "brightness": 1.6,
-      "transition": 10,
-      "connectionDist": 200,
-      "connectionAlpha": 0.045,
-      "hueShift": 4,
-      "satShift": 24,
-      "litShift": -21,
-      "params": {
-        "radius": 310
-      }
-    },
-    {
-      "t": 191.9,
-      "pattern": "concentric",
-      "speed": 3.3,
-      "attraction": 0.1,
-      "wander": 0,
-      "damping": 0.88,
-      "rotation": 0.00085,
-      "brightness": 1.6,
-      "transition": 10,
+      "transition": 15,
       "connectionDist": 200,
       "connectionAlpha": 0.195,
       "hueShift": 4,
       "satShift": 24,
       "litShift": -21,
       "params": {
-        "rings": 5
-      }
-    },
-    {
-      "t": 208.6,
-      "pattern": "converge",
-      "speed": 3.3,
-      "attraction": 0.1,
-      "wander": 0,
-      "damping": 0.88,
-      "rotation": 0.00085,
-      "brightness": 1.6,
-      "transition": 2.9,
-      "connectionDist": 200,
-      "connectionAlpha": 0.195,
-      "hueShift": 4,
-      "satShift": 24,
-      "litShift": -21,
-      "params": {
-        "x": 0.5,
-        "y": 0.5,
-        "radius": 4
+        "frequency": 3,
+        "amplitude": 120
       }
     }
   ]
