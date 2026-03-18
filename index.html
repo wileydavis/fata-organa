@@ -28,6 +28,70 @@
         z-index: 600;
     }
 
+    /* Hamburger button — hidden on desktop */
+    .nav-hamburger {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        width: 28px;
+        height: 22px;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .nav-hamburger span {
+        display: block;
+        width: 100%;
+        height: 1.5px;
+        background: var(--text-dim);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .nav-hamburger.open span:nth-child(1) {
+        transform: translateY(9px) rotate(45deg);
+    }
+    .nav-hamburger.open span:nth-child(2) {
+        opacity: 0;
+    }
+    .nav-hamburger.open span:nth-child(3) {
+        transform: translateY(-9px) rotate(-45deg);
+    }
+
+    /* Mobile nav collapse */
+    @media (max-width: 520px) {
+        .nav-hamburger {
+            display: flex;
+        }
+
+        .nav-links {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 12, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            flex-direction: column;
+            padding: 0;
+            gap: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .nav-links.open {
+            max-height: 200px;
+        }
+
+        .nav-links a {
+            display: block;
+            padding: 0.75rem var(--gutter);
+            border-top: 1px solid rgba(42, 42, 47, 0.3);
+        }
+    }
+
     /* Full-viewport layout */
     .transmitter {
         position: fixed;
@@ -1166,8 +1230,12 @@
     <nav class="site-nav">
         <a href="/" class="nav-logo">FATA ORGANA</a>
         <div class="nav-links">
+            <a href="/archive/">Field Manuals</a>
             <a href="/about/">About</a>
         </div>
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
     </nav>
 
     <div class="transmitter">
@@ -1245,11 +1313,6 @@
                     <button class="tx-now-playing-nav" id="focus-next">&#9656;</button>
                 </div>
             </div>
-        </div>
-
-        <!-- Panel buttons -->
-        <div class="tx-panel-buttons">
-            <a href="/archive/" class="tx-drawer-btn" id="btn-archive">Field Manuals</a>
         </div>
 
         <p class="tx-tagline tx-tagline-credit">An ambient narrative by Wiley Davis</p>
@@ -1998,5 +2061,24 @@
     })();
     </script>
     <script src="/js/doc-viewer.js"></script>
+    <script>
+    // Hamburger nav toggle
+    (function() {
+        var btn = document.getElementById('nav-hamburger');
+        var links = document.querySelector('.site-nav .nav-links');
+        if (!btn || !links) return;
+        btn.addEventListener('click', function() {
+            btn.classList.toggle('open');
+            links.classList.toggle('open');
+        });
+        // Close on link click
+        links.querySelectorAll('a').forEach(function(a) {
+            a.addEventListener('click', function() {
+                btn.classList.remove('open');
+                links.classList.remove('open');
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
