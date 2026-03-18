@@ -224,21 +224,14 @@
     // Track changes — check frequently and also load on first detection
     var lastSrc = '';
     function checkTrackChange() {
-        var src = '';
-        try {
-            var audioEls = document.querySelectorAll('audio');
-            for (var i = 0; i < audioEls.length; i++) {
-                if (audioEls[i].src) { src = audioEls[i].src; break; }
-            }
-        } catch(e) {}
-
+        var a = window._fataAudio;
+        var src = a ? a.src : '';
         if (src && src !== lastSrc) {
             lastSrc = src;
             loadScore(src);
         }
     }
 
-    // Also check immediately and on short interval for initial load
     checkTrackChange();
     setInterval(checkTrackChange, 1000);
 
@@ -467,15 +460,10 @@
 
         // Audio time
         var audioTime = 0;
-        try {
-            var audioEls = document.querySelectorAll('audio');
-            for (var ai = 0; ai < audioEls.length; ai++) {
-                if (audioEls[ai].duration > 0 && !isNaN(audioEls[ai].duration)) {
-                    audioTime = audioEls[ai].currentTime;
-                    break;
-                }
-            }
-        } catch(e) {}
+        var a = window._fataAudio;
+        if (a && a.duration > 0 && !isNaN(a.duration)) {
+            audioTime = a.currentTime;
+        }
 
         updateCues(audioTime);
 
