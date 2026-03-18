@@ -70,6 +70,7 @@
         }
 
         .nav-links {
+            display: none;
             position: absolute;
             top: 100%;
             left: 0;
@@ -80,13 +81,10 @@
             flex-direction: column;
             padding: 0;
             gap: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
         }
 
         .nav-links.open {
-            max-height: 200px;
+            display: flex;
         }
 
         .nav-links a {
