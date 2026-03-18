@@ -1,7 +1,7 @@
 /* ============================================
    FATA ORGANA — Atmosphere
-   Slow particles that form geometric patterns
-   over the duration of a track
+   Particle system driven by per-track visual
+   score (JSON cue sheets).
    ============================================ */
 
 (function() {
@@ -31,13 +31,11 @@
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
-        computePatternPositions();
     }
 
     window.addEventListener('resize', resize);
     resize();
 
-    // --- Audio ---
     function getSignal() {
         return window.vuSignal || {
             rms: 0, low: 0, high: 0, peak: 0,
@@ -46,92 +44,367 @@
         };
     }
 
-    // --- Pattern generation ---
-    // Each particle has target positions for different pattern phases.
-    // Progress (0→1 over track) blends between them.
+    // Seeded PRNG for deterministic positions
+    function seedRandom(seed) {
+        return function() {
+            seed = (seed * 16807 + 0) % 2147483647;
+            return (seed - 1) / 2147483646;
+        };
+    }
 
-    var PARTICLE_COUNT = Math.min(Math.floor(width * height / 4000), 300);
-    var particles = [];
+    function clampX(x) { return Math.max(30, Math.min(width - 30, x)); }
+    function clampY(y) { return Math.max(30, Math.min(height - 30, y)); }
 
-    // Pattern target arrays (computed on resize)
-    var gridPositions = [];
-    var spiralPositions = [];
-    var concentricPositions = [];
+    // =========================================
+    // VISUAL SCORE — Cue System
+    // =========================================
 
-    function computePatternPositions() {
-        gridPositions = [];
-        spiralPositions = [];
-        concentricPositions = [];
+    var scoreMap = {
+        'https://media.fataorgana.fm/episodes/Teaser-Intro.mp3': '/data/score_intro.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2': '/data/score_ep01.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3': '/data/score_ep01.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2': '/data/score_ep01_score.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3': '/data/score_ep01_score.json'
+    };
 
+    var activeCues = null;
+    var currentCueIdx = -1;
+
+    // The interpolated state that drives particles each frame
+    var cueState = {};
+    var cueTransitionStart = 0;
+    var cueTransitionDur = 0;
+    var cueFrom = {};
+    var cueTo = {};
+    // Track the "accumulated" state — each cue overrides only the fields it specifies
+    var accumulatedState = {};
+
+    var DEFAULT_STATE = {
+        speed: 1,
+        pattern: 'scatter',
+        rotation: 0.0002,
+        attraction: 0.006,
+        wander: 0.006,
+        damping: 0.95,
+        connectionDist: 0,
+        connectionAlpha: 0,
+        brightness: 1,
+        params: {}
+    };
+
+    function cloneState(s) {
+        var out = {};
+        for (var k in s) {
+            if (k === 'params') out.params = JSON.parse(JSON.stringify(s[k] || {}));
+            else out[k] = s[k];
+        }
+        return out;
+    }
+
+    // Merge override fields onto base
+    function mergeState(base, override) {
+        var out = cloneState(base);
+        for (var k in override) {
+            if (k === 't' || k === 'transition') continue;
+            if (k === 'params') {
+                if (!out.params) out.params = {};
+                for (var pk in override.params) out.params[pk] = override.params[pk];
+            } else {
+                out[k] = override[k];
+            }
+        }
+        return out;
+    }
+
+    // Lerp numeric fields, snap string fields at t=1
+    function lerpState(a, b, t) {
+        var out = {};
+        for (var k in DEFAULT_STATE) {
+            if (k === 'pattern') {
+                // Snap to new pattern at transition midpoint for visual smoothness
+                out[k] = t < 0.5 ? a[k] || DEFAULT_STATE[k] : b[k] || DEFAULT_STATE[k];
+            } else if (k === 'params') {
+                // Lerp numeric params, snap others
+                out.params = {};
+                var ap = a.params || {};
+                var bp = b.params || {};
+                var allKeys = {};
+                for (var pk in ap) allKeys[pk] = true;
+                for (var pk2 in bp) allKeys[pk2] = true;
+                for (var pk3 in allKeys) {
+                    if (typeof ap[pk3] === 'number' && typeof bp[pk3] === 'number') {
+                        out.params[pk3] = ap[pk3] + (bp[pk3] - ap[pk3]) * t;
+                    } else {
+                        out.params[pk3] = t < 0.5 ? (ap[pk3] !== undefined ? ap[pk3] : bp[pk3]) : (bp[pk3] !== undefined ? bp[pk3] : ap[pk3]);
+                    }
+                }
+            } else {
+                var va = (a[k] !== undefined) ? a[k] : DEFAULT_STATE[k];
+                var vb = (b[k] !== undefined) ? b[k] : DEFAULT_STATE[k];
+                out[k] = va + (vb - va) * t;
+            }
+        }
+        return out;
+    }
+
+    // Init
+    cueState = cloneState(DEFAULT_STATE);
+    accumulatedState = cloneState(DEFAULT_STATE);
+
+    function loadScore(audioUrl) {
+        activeCues = null;
+        currentCueIdx = -1;
+        cueState = cloneState(DEFAULT_STATE);
+        accumulatedState = cloneState(DEFAULT_STATE);
+
+        var path = scoreMap[audioUrl] || scoreMap[audioUrl.split('?')[0]];
+        if (!path) return;
+
+        fetch(path)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data && data.cues && data.cues.length > 0) {
+                    activeCues = data.cues;
+                    // Apply first cue if t=0
+                    if (activeCues[0].t === 0) {
+                        accumulatedState = mergeState(DEFAULT_STATE, activeCues[0]);
+                        cueState = cloneState(accumulatedState);
+                        currentCueIdx = 0;
+                    }
+                }
+            })
+            .catch(function(e) { console.error('Score load error:', e); });
+    }
+
+    function updateCues(audioTime) {
+        if (!activeCues) return;
+
+        // Find which cue we should be on
+        var newIdx = currentCueIdx;
+        for (var i = 0; i < activeCues.length; i++) {
+            if (activeCues[i].t <= audioTime) newIdx = i;
+            else break;
+        }
+
+        // New cue triggered
+        if (newIdx !== currentCueIdx && newIdx >= 0) {
+            var cue = activeCues[newIdx];
+            cueFrom = cloneState(cueState);
+            // Build the accumulated target
+            accumulatedState = mergeState(accumulatedState, cue);
+            cueTo = cloneState(accumulatedState);
+            cueTransitionStart = audioTime;
+            cueTransitionDur = cue.transition || 0;
+            currentCueIdx = newIdx;
+
+            // If no transition, snap immediately
+            if (cueTransitionDur <= 0) {
+                cueState = cloneState(cueTo);
+            }
+        }
+
+        // Interpolate during transition
+        if (cueTransitionDur > 0) {
+            var elapsed = audioTime - cueTransitionStart;
+            var t = Math.min(1, elapsed / cueTransitionDur);
+            // Smoothstep
+            t = t * t * (3 - 2 * t);
+            cueState = lerpState(cueFrom, cueTo, t);
+        }
+    }
+
+    // Track changes
+    var lastSrc = '';
+    function checkTrackChange() {
+        var src = '';
+        try {
+            var audioEls = document.querySelectorAll('audio');
+            for (var i = 0; i < audioEls.length; i++) {
+                if (audioEls[i].src) { src = audioEls[i].src; break; }
+            }
+        } catch(e) {}
+
+        if (src && src !== lastSrc) {
+            lastSrc = src;
+            loadScore(src);
+        }
+    }
+
+    // =========================================
+    // PATTERN LIBRARY
+    // =========================================
+
+    function patternPosition(name, idx, count, params) {
         var cx = width / 2;
         var cy = height / 2;
+        var t = idx / count;
+        var margin = 30;
         var deadR = Math.min(width, height) * 0.18;
-        var margin = 40;
 
-        for (var i = 0; i < PARTICLE_COUNT; i++) {
-            var t = i / PARTICLE_COUNT;
+        switch (name) {
 
-            // --- Grid: evenly spaced, avoiding center ---
-            var cols = Math.ceil(Math.sqrt(PARTICLE_COUNT * (width / height)));
-            var rows = Math.ceil(PARTICLE_COUNT / cols);
-            var col = i % cols;
-            var row = Math.floor(i / cols);
+        case 'scatter': {
+            var rng = seedRandom(idx * 7919);
+            return {
+                x: margin + rng() * (width - margin * 2),
+                y: margin + rng() * (height - margin * 2)
+            };
+        }
+
+        case 'grid': {
+            var cols = Math.ceil(Math.sqrt(count * (width / height)));
+            var rows = Math.ceil(count / cols);
+            var col = idx % cols;
+            var row = Math.floor(idx / cols);
             var gx = margin + (col + 0.5) * ((width - margin * 2) / cols);
             var gy = margin + (row + 0.5) * ((height - margin * 2) / rows);
-            // Push away from center
-            var gdx = gx - cx;
-            var gdy = gy - cy;
+            var gdx = gx - cx, gdy = gy - cy;
             var gDist = Math.sqrt(gdx * gdx + gdy * gdy) || 1;
             if (gDist < deadR) {
                 gx = cx + (gdx / gDist) * (deadR + 20);
                 gy = cy + (gdy / gDist) * (deadR + 20);
             }
-            gridPositions.push({ x: gx, y: gy });
+            return { x: gx, y: gy };
+        }
 
-            // --- Spiral: logarithmic spiral from center outward ---
-            var spiralAngle = t * Math.PI * 8 + Math.PI * 0.5;
-            var spiralR = deadR + 30 + t * (Math.max(width, height) * 0.45);
-            var sx = cx + Math.cos(spiralAngle) * spiralR;
-            var sy = cy + Math.sin(spiralAngle) * spiralR;
-            // Clamp to screen
-            sx = Math.max(margin, Math.min(width - margin, sx));
-            sy = Math.max(margin, Math.min(height - margin, sy));
-            spiralPositions.push({ x: sx, y: sy });
+        case 'spiral': {
+            var arms = (params && params.arms) || 3;
+            var tightness = (params && params.tightness) || 0.8;
+            var arm = idx % arms;
+            var armT = Math.floor(idx / arms) / Math.ceil(count / arms);
+            var sa = armT * Math.PI * 6 * tightness + (arm * Math.PI * 2 / arms);
+            var sr = deadR + 30 + armT * (Math.max(width, height) * 0.42);
+            return { x: clampX(cx + Math.cos(sa) * sr), y: clampY(cy + Math.sin(sa) * sr) };
+        }
 
-            // --- Concentric rings ---
-            var numRings = 5;
+        case 'concentric': {
+            var numRings = (params && params.rings) || 5;
             var ring = Math.floor(t * numRings);
             var ringT = (t * numRings) % 1;
             var ringR = deadR + 40 + ring * ((Math.min(width, height) * 0.42) / numRings);
-            var ringAngle = ringT * Math.PI * 2 + ring * 0.4;
-            var rx = cx + Math.cos(ringAngle) * ringR;
-            var ry = cy + Math.sin(ringAngle) * ringR;
-            rx = Math.max(margin, Math.min(width - margin, rx));
-            ry = Math.max(margin, Math.min(height - margin, ry));
-            concentricPositions.push({ x: rx, y: ry });
+            var ringA = ringT * Math.PI * 2 + ring * 0.4;
+            return { x: clampX(cx + Math.cos(ringA) * ringR), y: clampY(cy + Math.sin(ringA) * ringR) };
+        }
+
+        case 'lattice': {
+            var spacing = (params && params.spacing) || 40;
+            var side = Math.ceil(Math.pow(count, 1/3));
+            var xi = idx % side;
+            var yi = Math.floor(idx / side) % side;
+            var zi = Math.floor(idx / (side * side));
+            var ox = (xi - side/2) * spacing;
+            var oy = (yi - side/2) * spacing;
+            var oz = (zi - side/2) * spacing * 0.6;
+            var perspective = 400;
+            var scale = perspective / (perspective + oz);
+            return { x: cx + ox * scale, y: cy + oy * scale };
+        }
+
+        case 'waveform': {
+            var freq = (params && params.frequency) || 2;
+            var amp = (params && params.amplitude) || 80;
+            var wx = margin + t * (width - margin * 2);
+            var wy = cy + Math.sin(t * Math.PI * 2 * freq) * amp;
+            return { x: wx, y: wy };
+        }
+
+        case 'helix': {
+            var strand = idx % 2;
+            var helixT = Math.floor(idx / 2) / Math.ceil(count / 2);
+            var hFreq = (params && params.frequency) || 3;
+            var hAmp = (params && params.amplitude) || 60;
+            var hx = margin + helixT * (width - margin * 2);
+            var phase = strand * Math.PI;
+            var hy = cy + Math.sin(helixT * Math.PI * 2 * hFreq + phase) * hAmp;
+            return { x: hx, y: hy };
+        }
+
+        case 'fibonacci': {
+            var golden = (1 + Math.sqrt(5)) / 2;
+            var fAngle = idx * golden * Math.PI * 2;
+            var fR = deadR + Math.sqrt(idx / count) * (Math.min(width, height) * 0.42);
+            return { x: clampX(cx + Math.cos(fAngle) * fR), y: clampY(cy + Math.sin(fAngle) * fR) };
+        }
+
+        case 'lissajous': {
+            var la = (params && params.a) || 3;
+            var lb = (params && params.b) || 2;
+            var ld = (params && params.delta) || Math.PI / 2;
+            var lScale = Math.min(width, height) * 0.35;
+            return {
+                x: cx + Math.sin(la * t * Math.PI * 2 + ld) * lScale,
+                y: cy + Math.sin(lb * t * Math.PI * 2) * lScale
+            };
+        }
+
+        case 'converge': {
+            var tx = (params && params.x !== undefined) ? params.x * width : cx;
+            var ty = (params && params.y !== undefined) ? params.y * height : cy;
+            var cAngle = (idx / count) * Math.PI * 2;
+            var cR = (params && params.radius) || 3;
+            return { x: tx + Math.cos(cAngle) * cR, y: ty + Math.sin(cAngle) * cR };
+        }
+
+        case 'explode': {
+            var eAngle = seedRandom(idx * 3571)() * Math.PI * 2;
+            var eR = Math.max(width, height) * 0.6 + seedRandom(idx * 9137)() * 100;
+            return { x: clampX(cx + Math.cos(eAngle) * eR), y: clampY(cy + Math.sin(eAngle) * eR) };
+        }
+
+        case 'ring': {
+            var ringRadius = (params && params.radius) || Math.min(width, height) * 0.3;
+            var rAngle = t * Math.PI * 2;
+            return { x: cx + Math.cos(rAngle) * ringRadius, y: cy + Math.sin(rAngle) * ringRadius };
+        }
+
+        case 'column': {
+            var colW = (params && params.width) || 60;
+            var rng2 = seedRandom(idx * 4513);
+            return {
+                x: cx + (rng2() - 0.5) * colW,
+                y: margin + t * (height - margin * 2)
+            };
+        }
+
+        case 'horizon': {
+            var hY = (params && params.y !== undefined) ? params.y * height : cy;
+            var spread = (params && params.spread) || 8;
+            var rng3 = seedRandom(idx * 2741);
+            return {
+                x: margin + t * (width - margin * 2),
+                y: hY + (rng3() - 0.5) * spread
+            };
+        }
+
+        default:
+            return patternPosition('scatter', idx, count, params);
         }
     }
 
+    // =========================================
+    // PARTICLES
+    // =========================================
+
+    var PARTICLE_COUNT = Math.min(Math.floor(window.innerWidth * window.innerHeight / 4000), 300);
+    var particles = [];
+
     function createParticle(idx) {
+        var rng = seedRandom(idx * 7919);
         return {
-            x: Math.random() * width,
-            y: Math.random() * height,
-            homeX: Math.random() * width,  // random scatter home
-            homeY: Math.random() * height,
-            size: Math.random() * 1.8 + 0.5,
-            baseAlpha: Math.random() * 0.4 + 0.15,
+            x: rng() * width,
+            y: rng() * height,
+            size: rng() * 1.8 + 0.5,
+            baseAlpha: rng() * 0.4 + 0.15,
             alpha: 0,
             vx: 0,
             vy: 0,
-            phase: Math.random() * Math.PI * 2,
-            freq: Math.random() * 0.008 + 0.002,
-            hue: 38 + Math.random() * 15,
-            sat: 30 + Math.random() * 30,
-            lit: 55 + Math.random() * 25,
+            phase: rng() * Math.PI * 2,
+            freq: rng() * 0.008 + 0.002,
+            hue: 38 + rng() * 15,
+            sat: 30 + rng() * 30,
+            lit: 55 + rng() * 25,
             idx: idx,
-            // Wander — very slow random drift
-            wanderAngle: Math.random() * Math.PI * 2,
-            wanderSpeed: Math.random() * 0.0005 + 0.0002
+            wanderAngle: rng() * Math.PI * 2
         };
     }
 
@@ -139,19 +412,17 @@
         particles.push(createParticle(i));
     }
 
-    // --- Signal lines ---
+    // Signal lines
     var signalLines = [];
     function createSignal() {
         return {
-            y: Math.random() * height,
-            alpha: 0,
+            y: Math.random() * height, alpha: 0,
             targetAlpha: Math.random() * 0.06 + 0.02,
             w: Math.random() * width * 0.6 + width * 0.1,
             x: Math.random() * width * 0.5,
             thickness: Math.random() < 0.3 ? 1.5 : 0.5,
             speed: (Math.random() - 0.5) * 0.15,
-            life: Math.random() * 600 + 200,
-            maxLife: 0,
+            life: Math.random() * 600 + 200, maxLife: 0,
             phase: Math.random() * Math.PI * 2
         };
     }
@@ -162,60 +433,55 @@
         s.x = Math.random() * width * 0.5;
         s.thickness = Math.random() < 0.3 ? 1.5 : 0.5;
         s.speed = (Math.random() - 0.5) * 0.15;
-        s.life = Math.random() * 600 + 200;
-        s.maxLife = s.life;
+        s.life = Math.random() * 600 + 200; s.maxLife = s.life;
         s.phase = Math.random() * Math.PI * 2;
     }
     for (var j = 0; j < 8; j++) {
-        var s = createSignal();
-        s.maxLife = s.life;
-        signalLines.push(s);
+        var sl = createSignal(); sl.maxLife = sl.life; signalLines.push(sl);
     }
 
-    // --- State ---
     var reactivity = 0;
-    var progress = 0;       // 0→1 over track duration
-    var smoothProgress = 0; // smoothed for gentle transitions
-    var connectionAlpha = 0;
 
-    computePatternPositions();
+    // =========================================
+    // RENDER
+    // =========================================
 
-    // --- Render ---
     function render() {
         time++;
         var sig = getSignal();
 
-        // --- Reactivity ---
+        if (time % 60 === 0) checkTrackChange();
+
         var targetReactivity = sig.isPlaying ? 1 : 0;
         reactivity += (targetReactivity - reactivity) * 0.005;
 
-        // --- Track progress ---
-        // Try to read from audio element duration
+        // Audio time
+        var audioTime = 0;
         try {
             var audioEls = document.querySelectorAll('audio');
             for (var ai = 0; ai < audioEls.length; ai++) {
                 if (audioEls[ai].duration > 0 && !isNaN(audioEls[ai].duration)) {
-                    progress = audioEls[ai].currentTime / audioEls[ai].duration;
+                    audioTime = audioEls[ai].currentTime;
                     break;
                 }
             }
         } catch(e) {}
 
-        // Smooth progress for pattern transitions (never goes backward)
-        var targetSmooth = Math.max(smoothProgress, progress);
-        smoothProgress += (targetSmooth - smoothProgress) * 0.001;
+        updateCues(audioTime);
 
-        // Pattern blend:
-        // 0.0 - 0.3: scattered → grid
-        // 0.3 - 0.6: grid → concentric rings
-        // 0.6 - 1.0: concentric → spiral
-        var patternBlend = smoothProgress;
+        // Read state
+        var speed = cueState.speed || 1;
+        var pattern = cueState.pattern || 'scatter';
+        var rotation = cueState.rotation || 0.0002;
+        var attraction = cueState.attraction || 0.006;
+        var wander = cueState.wander || 0.006;
+        var damping = cueState.damping || 0.95;
+        var connDist = cueState.connectionDist || 0;
+        var connAlpha = cueState.connectionAlpha || 0;
+        var brightness = cueState.brightness || 1;
+        var params = cueState.params || {};
 
-        // Connection alpha grows with progress
-        var targetConn = reactivity * smoothProgress * 0.08;
-        connectionAlpha += (targetConn - connectionAlpha) * 0.003;
-
-        // --- Glitch ---
+        // Glitch
         glitchTimer--;
         if (!glitchActive && glitchTimer <= 0) {
             if (Math.random() > 0.6) {
@@ -239,7 +505,7 @@
             glitchTimer = Math.floor(Math.random() * 6) + 2;
         }
 
-        // --- Clear ---
+        // Clear
         ctx.clearRect(0, 0, width, height);
 
         // Vignette
@@ -252,114 +518,73 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, width, height);
 
-        // --- Signal lines ---
+        // Signal lines
         for (var si = 0; si < signalLines.length; si++) {
-            var sl = signalLines[si];
-            sl.life--;
-            var slPct = sl.life / sl.maxLife;
+            var sln = signalLines[si];
+            sln.life--;
+            var slPct = sln.life / sln.maxLife;
             var slFade = slPct < 0.1 ? slPct / 0.1 : slPct > 0.9 ? (1 - slPct) / 0.1 : 1;
-            sl.alpha = sl.targetAlpha * slFade;
-            sl.y += sl.speed;
-            sl.x += Math.sin(time * 0.0005 + sl.phase) * 0.15;
-
-            if (sig.isPlaying) {
-                sl.alpha *= (1 + sig.smoothRms * 1.5);
-            }
-
+            sln.alpha = sln.targetAlpha * slFade;
+            sln.y += sln.speed;
+            sln.x += Math.sin(time * 0.0005 + sln.phase) * 0.15;
+            if (sig.isPlaying) sln.alpha *= (1 + sig.smoothRms * 1.5);
             if (glitchActive && Math.random() > 0.85) {
-                sl.alpha = Math.min(sl.targetAlpha * 4, 0.15);
-                sl.x += (Math.random() - 0.5) * 10;
+                sln.alpha = Math.min(sln.targetAlpha * 4, 0.15);
+                sln.x += (Math.random() - 0.5) * 10;
             }
-
-            if (sl.alpha > 0.005) {
+            if (sln.alpha > 0.005) {
                 ctx.beginPath();
-                ctx.moveTo(sl.x, sl.y);
-                ctx.lineTo(sl.x + sl.w, sl.y);
-                ctx.strokeStyle = 'hsla(40, 25%, 70%, ' + sl.alpha + ')';
-                ctx.lineWidth = sl.thickness;
+                ctx.moveTo(sln.x, sln.y);
+                ctx.lineTo(sln.x + sln.w, sln.y);
+                ctx.strokeStyle = 'hsla(40, 25%, 70%, ' + sln.alpha + ')';
+                ctx.lineWidth = sln.thickness;
                 ctx.stroke();
             }
-
-            if (sl.life <= 0) resetSignal(sl);
+            if (sln.life <= 0) resetSignal(sln);
         }
 
-        // --- Compute pattern targets per particle ---
+        // Global rotation
         var cx = width / 2;
         var cy = height / 2;
         var deadR = Math.min(width, height) * 0.18;
-
-        // Global rotation — starts visible, speeds up
-        var patternRotation = time * (0.00015 + smoothProgress * 0.0003);
+        var patternRotation = time * rotation;
         var cosR = Math.cos(patternRotation);
         var sinR = Math.sin(patternRotation);
 
-        // --- Particles ---
+        // Particles
         for (var pi = 0; pi < particles.length; pi++) {
             var pt = particles[pi];
-            var idx = pt.idx;
 
-            // --- Determine target position based on progress ---
-            var targetX, targetY;
+            var target = patternPosition(pattern, pt.idx, particles.length, params);
+            var targetX = target.x;
+            var targetY = target.y;
 
-            if (patternBlend < 0.3) {
-                // Phase 1: scatter → grid
-                var blend1 = patternBlend / 0.3;
-                blend1 = blend1 * blend1 * (3 - 2 * blend1); // smoothstep
-                var g = gridPositions[idx] || { x: pt.homeX, y: pt.homeY };
-                targetX = pt.homeX + (g.x - pt.homeX) * blend1;
-                targetY = pt.homeY + (g.y - pt.homeY) * blend1;
-            } else if (patternBlend < 0.6) {
-                // Phase 2: grid → concentric rings
-                var blend2 = (patternBlend - 0.3) / 0.3;
-                blend2 = blend2 * blend2 * (3 - 2 * blend2);
-                var g2 = gridPositions[idx] || { x: cx, y: cy };
-                var c = concentricPositions[idx] || { x: cx, y: cy };
-                targetX = g2.x + (c.x - g2.x) * blend2;
-                targetY = g2.y + (c.y - g2.y) * blend2;
-            } else {
-                // Phase 3: concentric → spiral
-                var blend3 = (patternBlend - 0.6) / 0.4;
-                blend3 = blend3 * blend3 * (3 - 2 * blend3);
-                var c2 = concentricPositions[idx] || { x: cx, y: cy };
-                var sp = spiralPositions[idx] || { x: cx, y: cy };
-                targetX = c2.x + (sp.x - c2.x) * blend3;
-                targetY = c2.y + (sp.y - c2.y) * blend3;
-            }
-
-            // Apply slow global rotation around center
+            // Rotation
             var rtx = targetX - cx;
             var rty = targetY - cy;
             targetX = cx + rtx * cosR - rty * sinR;
             targetY = cy + rtx * sinR + rty * cosR;
 
-            // Audio-reactive displacement — gentle sway
+            // Audio displacement
             var audioDisp = sig.smoothRms * reactivity;
             var dispAngle = time * 0.001 + pt.phase;
             targetX += Math.sin(dispAngle) * audioDisp * 15;
             targetY += Math.cos(dispAngle * 0.7) * audioDisp * 10;
 
-            // --- Move toward target ---
-            // Speed starts faster (2x) and ramps to 8x over track duration
-            var speedMult = 2 + smoothProgress * 6;
-            var attractStrength = (0.004 + smoothProgress * 0.016) * speedMult;
-
-            // When idle, just wander
+            // Movement
             if (reactivity < 0.1) {
                 pt.wanderAngle += (Math.random() - 0.5) * 0.02;
-                pt.vx += Math.cos(pt.wanderAngle) * 0.006;
-                pt.vy += Math.sin(pt.wanderAngle) * 0.006;
+                pt.vx += Math.cos(pt.wanderAngle) * wander;
+                pt.vy += Math.sin(pt.wanderAngle) * wander;
             } else {
-                // Attract toward pattern
-                pt.vx += (targetX - pt.x) * attractStrength;
-                pt.vy += (targetY - pt.y) * attractStrength;
-
-                // Very subtle wander on top
+                pt.vx += (targetX - pt.x) * attraction * speed;
+                pt.vy += (targetY - pt.y) * attraction * speed;
                 pt.wanderAngle += (Math.random() - 0.5) * 0.01;
-                pt.vx += Math.cos(pt.wanderAngle) * 0.002 * speedMult;
-                pt.vy += Math.sin(pt.wanderAngle) * 0.002 * speedMult;
+                pt.vx += Math.cos(pt.wanderAngle) * wander * 0.3 * speed;
+                pt.vy += Math.sin(pt.wanderAngle) * wander * 0.3 * speed;
             }
 
-            // --- Center repulsion ---
+            // Center repulsion
             var cdx = pt.x - cx;
             var cdy = pt.y - cy;
             var cDist = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
@@ -369,39 +594,25 @@
                 pt.vy += (cdy / cDist) * repel;
             }
 
-            // Damping: less friction from start (0.95), even less by end (0.98)
-            var damping = 0.95 + smoothProgress * 0.03;
             pt.vx *= damping;
             pt.vy *= damping;
-
             pt.x += pt.vx;
             pt.y += pt.vy;
 
-            // Keep on screen (soft bounce)
             if (pt.x < 10) { pt.x = 10; pt.vx *= -0.5; }
             if (pt.x > width - 10) { pt.x = width - 10; pt.vx *= -0.5; }
             if (pt.y < 10) { pt.y = 10; pt.vy *= -0.5; }
             if (pt.y > height - 10) { pt.y = height - 10; pt.vy *= -0.5; }
 
-            // --- Alpha ---
+            // Alpha
             var breathe = Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7;
-            pt.alpha = pt.baseAlpha * breathe;
-
-            // Brighter as pattern forms
-            pt.alpha *= (0.6 + smoothProgress * 0.4);
-
-            // Audio brightness
-            if (sig.isPlaying) {
-                pt.alpha *= (1 + sig.smoothRms * 0.8);
-            }
-
-            // Glitch
+            pt.alpha = pt.baseAlpha * breathe * brightness;
+            if (sig.isPlaying) pt.alpha *= (1 + sig.smoothRms * 0.8);
             if (glitchActive && Math.random() > 0.93) {
                 pt.x += (Math.random() - 0.5) * glitchIntensity * 15;
                 pt.alpha = Math.min(pt.alpha * 2, 0.7);
             }
 
-            // --- Draw ---
             if (pt.alpha > 0.01) {
                 var drawSize = pt.size * (1 + sig.smoothRms * 0.3);
                 ctx.beginPath();
@@ -411,28 +622,23 @@
             }
         }
 
-        // --- Connection lines (appear gradually with progress) ---
-        if (connectionAlpha > 0.002) {
-            var connDist = 40 + smoothProgress * 100;
+        // Connection lines
+        if (connAlpha > 0.002 && connDist > 0) {
             var connDistSq = connDist * connDist;
             var maxConns = Math.min(particles.length, 200);
-
             ctx.lineWidth = 0.4;
             for (var ci = 0; ci < maxConns; ci++) {
                 var pa = particles[ci];
                 if (pa.alpha < 0.03) continue;
-
                 for (var cj = ci + 1; cj < maxConns; cj++) {
                     var pb = particles[cj];
                     if (pb.alpha < 0.03) continue;
-
                     var ldx = pa.x - pb.x;
                     var ldy = pa.y - pb.y;
                     var ldSq = ldx * ldx + ldy * ldy;
-
                     if (ldSq < connDistSq) {
                         var proximity = 1 - ldSq / connDistSq;
-                        var lineAlpha = connectionAlpha * proximity * Math.min(pa.alpha, pb.alpha) * 1.5;
+                        var lineAlpha = connAlpha * proximity * Math.min(pa.alpha, pb.alpha) * 1.5;
                         if (lineAlpha > 0.002) {
                             ctx.beginPath();
                             ctx.moveTo(pa.x, pa.y);
@@ -445,7 +651,7 @@
             }
         }
 
-        // --- Glitch tear ---
+        // Glitch tear
         if (glitchActive && Math.random() > 0.7) {
             var tearY = Math.random() * height;
             var tearH = Math.random() * 2 + 0.5;
@@ -453,12 +659,9 @@
             ctx.fillRect(0, tearY, width, tearH);
         }
 
-        // --- Rare ambient pulse ---
+        // Ambient pulse
         if (Math.random() > 0.999) {
-            var pg = ctx.createRadialGradient(
-                width / 2, height * 0.4, 0,
-                width / 2, height * 0.4, height * 0.5
-            );
+            var pg = ctx.createRadialGradient(width / 2, height * 0.4, 0, width / 2, height * 0.4, height * 0.5);
             pg.addColorStop(0, 'hsla(38, 40%, 60%, 0.02)');
             pg.addColorStop(1, 'transparent');
             ctx.fillStyle = pg;
