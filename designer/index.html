@@ -575,8 +575,22 @@
     var GH_REPO = 'wileydavis/fata-organa';
     var GH_API = 'https://api.github.com/repos/' + GH_REPO + '/contents/';
 
+    // Deploy requires password
+    var deployAuthed = false;
+    var DEPLOY_PASSWORD = 'containmentzone';
+
     document.getElementById('btn-deploy').addEventListener('click', function() {
         if (cues.length === 0) { toast('No cues to deploy'); return; }
+
+        if (!deployAuthed) {
+            var pw = prompt('Enter deploy password:');
+            if (pw !== DEPLOY_PASSWORD) {
+                toast('Incorrect password');
+                return;
+            }
+            deployAuthed = true;
+        }
+
         var trackUrl = document.getElementById('track-select').value;
         var filePath = scorePathMap[trackUrl];
         if (!filePath) { toast('Unknown track — cannot deploy'); return; }
