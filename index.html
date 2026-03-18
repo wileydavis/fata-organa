@@ -1334,41 +1334,50 @@
         });
     })();
 
-    // Focus mode — fullscreen with position compensation
+    // Focus mode — fullscreen (desktop) or CSS-only (iOS)
     (function() {
         var focusBtn = document.getElementById('btn-focus');
         var body = document.body;
         var inFocus = false;
         var txPanel = document.querySelector('.tx-panel');
-        var meterPosY = 0; // meter's Y position before fullscreen
+
+        // iOS doesn't support Fullscreen API on iPhone at all
+        var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        var canFullscreen = !isIOS && !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+        var didEnterFullscreen = false;
 
         function enterFocus() {
             if (inFocus) return;
             inFocus = true;
+            didEnterFullscreen = false;
 
             // Step 1: Fade everything to black
             body.classList.add('focus-fading');
 
-            // Step 2: After fade completes, go fullscreen
+            // Step 2: After fade, go fullscreen if supported
             setTimeout(function() {
-                var el = document.documentElement;
-                var fsPromise;
-                if (el.requestFullscreen) {
-                    fsPromise = el.requestFullscreen().catch(function() {});
-                } else if (el.webkitRequestFullscreen) {
-                    el.webkitRequestFullscreen();
-                    fsPromise = Promise.resolve();
-                } else {
-                    fsPromise = Promise.resolve();
+                if (!inFocus) return; // cancelled during fade
+
+                if (canFullscreen) {
+                    var el = document.documentElement;
+                    if (el.requestFullscreen) {
+                        el.requestFullscreen().then(function() {
+                            didEnterFullscreen = true;
+                        }).catch(function() {
+                            // Fullscreen denied — continue without it
+                        });
+                    } else if (el.webkitRequestFullscreen) {
+                        el.webkitRequestFullscreen();
+                        didEnterFullscreen = true;
+                    }
                 }
 
-                // Step 3: After fullscreen settles, apply focus mode and fade back in
-                (fsPromise || Promise.resolve()).then(function() {
-                    setTimeout(function() {
-                        body.classList.remove('focus-fading');
-                        body.classList.add('focus-mode');
-                    }, 400);
-                });
+                // Step 3: Apply focus mode after a settle delay
+                setTimeout(function() {
+                    if (!inFocus) return;
+                    body.classList.remove('focus-fading');
+                    body.classList.add('focus-mode');
+                }, 400);
             }, 1400);
         }
 
@@ -1376,22 +1385,23 @@
             if (!inFocus) return;
             inFocus = false;
 
-            // Step 1: Fade to black (keep focus-mode so circle stays during fade)
+            // Step 1: Fade to black
             body.classList.add('focus-fading');
 
-            // Step 2: After fade completes, remove focus-mode and exit fullscreen
+            // Step 2: Remove focus-mode and exit fullscreen
             setTimeout(function() {
                 body.classList.remove('focus-mode');
 
-                if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (didEnterFullscreen && (document.fullscreenElement || document.webkitFullscreenElement)) {
                     if (document.exitFullscreen) {
                         document.exitFullscreen().catch(function() {});
                     } else if (document.webkitExitFullscreen) {
                         document.webkitExitFullscreen();
                     }
                 }
+                didEnterFullscreen = false;
 
-                // Step 3: Fade back in after fullscreen exits
+                // Step 3: Fade back in
                 setTimeout(function() {
                     body.classList.remove('focus-fading');
                 }, 400);
@@ -1403,22 +1413,16 @@
             }
         }
 
-        // After fullscreen activates, no compensation — instant reposition
-        function compensatePosition() {
-            // intentionally empty — let the meter snap to center
-        }
-
         if (focusBtn) {
             focusBtn.addEventListener('click', function() {
                 if (inFocus) exitFocus(); else enterFocus();
             });
         }
 
-        // Escape key pauses playback and exits focus mode with fade
+        // Escape key pauses and exits
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && inFocus) {
                 e.preventDefault();
-                // Pause playback (same as clicking the meter)
                 if (window.vuPlayer && window.vuPlayer.isPlaying()) {
                     window.vuPlayer.pause();
                 }
@@ -1426,45 +1430,31 @@
             }
         });
 
-        // Sync with fullscreen changes (browser Escape exits fullscreen first)
-        // When fullscreen exits unexpectedly, clean up focus mode with fade
-        document.addEventListener('fullscreenchange', function() {
-            if (document.fullscreenElement && inFocus) {
-                compensatePosition();
-            } else if (!document.fullscreenElement && inFocus && !body.classList.contains('focus-fading')) {
-                // Fullscreen exited without our fade (e.g. browser Escape)
-                // Apply fade-out then clean up
-                inFocus = false;
-                body.classList.add('focus-fading');
+        // Handle browser-initiated fullscreen exit (only if we entered fullscreen)
+        function handleFullscreenExit() {
+            if (!inFocus || !didEnterFullscreen) return;
+            if (body.classList.contains('focus-fading')) return;
+
+            inFocus = false;
+            didEnterFullscreen = false;
+            body.classList.add('focus-fading');
+            setTimeout(function() {
+                body.classList.remove('focus-mode');
                 setTimeout(function() {
-                    body.classList.remove('focus-mode');
-                    setTimeout(function() {
-                        body.classList.remove('focus-fading');
-                    }, 400);
-                }, 1400);
-                if (txPanel) {
-                    txPanel.style.transform = '';
-                    txPanel.style.transition = '';
-                }
+                    body.classList.remove('focus-fading');
+                }, 400);
+            }, 1400);
+            if (txPanel) {
+                txPanel.style.transform = '';
+                txPanel.style.transition = '';
             }
+        }
+
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) handleFullscreenExit();
         });
         document.addEventListener('webkitfullscreenchange', function() {
-            if (document.webkitFullscreenElement && inFocus) {
-                compensatePosition();
-            } else if (!document.webkitFullscreenElement && inFocus && !body.classList.contains('focus-fading')) {
-                inFocus = false;
-                body.classList.add('focus-fading');
-                setTimeout(function() {
-                    body.classList.remove('focus-mode');
-                    setTimeout(function() {
-                        body.classList.remove('focus-fading');
-                    }, 400);
-                }, 1400);
-                if (txPanel) {
-                    txPanel.style.transform = '';
-                    txPanel.style.transition = '';
-                }
-            }
+            if (!document.webkitFullscreenElement) handleFullscreenExit();
         });
 
         window.focusMode = { enter: enterFocus, exit: exitFocus, isActive: function() { return inFocus; } };
