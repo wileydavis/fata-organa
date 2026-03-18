@@ -180,7 +180,7 @@
         if (!activeCues) return;
 
         // Find which cue we should be on
-        var newIdx = currentCueIdx;
+        var newIdx = -1;
         for (var i = 0; i < activeCues.length; i++) {
             if (activeCues[i].t <= audioTime) newIdx = i;
             else break;
@@ -188,19 +188,28 @@
 
         // New cue triggered
         if (newIdx !== currentCueIdx && newIdx >= 0) {
+            // If seeking backward, rebuild accumulated state from scratch
+            if (newIdx < currentCueIdx) {
+                accumulatedState = cloneState(DEFAULT_STATE);
+                for (var ri = 0; ri <= newIdx; ri++) {
+                    accumulatedState = mergeState(accumulatedState, activeCues[ri]);
+                }
+            } else {
+                // Forward: merge just the new cue
+                accumulatedState = mergeState(accumulatedState, activeCues[newIdx]);
+            }
+
             var cue = activeCues[newIdx];
             cueFrom = cloneState(cueState);
-            // Build the accumulated target
-            accumulatedState = mergeState(accumulatedState, cue);
             cueTo = cloneState(accumulatedState);
             cueTransitionStart = audioTime;
             cueTransitionDur = cue.transition || 0;
             currentCueIdx = newIdx;
 
-            // If no transition, snap immediately
             if (cueTransitionDur <= 0) {
                 cueState = cloneState(cueTo);
             }
+        }
         }
 
         // Interpolate during transition
