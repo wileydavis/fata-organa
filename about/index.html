@@ -210,7 +210,7 @@
             if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { status.textContent = 'INVALID FREQUENCY'; status.className = 'tx-signup-status error'; return; }
             btn.textContent = 'TUNING...'; btn.disabled = true; status.textContent = '';
             fetch('https://a.klaviyo.com/client/subscriptions/?company_id=WaV2xM', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'revision': '2023-02-22' },
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
                 body: JSON.stringify({ data: { type: 'subscription', attributes: { profile: { data: { type: 'profile', attributes: { email: email } } }, custom_source: 'Fata Organa Website' }, relationships: { list: { data: { type: 'list', id: 'WeCHmw' } } } } })
             }).then(function(res) { if (res.ok || res.status === 202) { status.textContent = 'SIGNAL LOCKED — TRANSMISSIONS INCOMING'; status.className = 'tx-signup-status success'; input.value = ''; form.style.display = 'none'; } else { throw new Error(); }
             }).catch(function() { status.textContent = 'SIGNAL LOST — TRY AGAIN'; status.className = 'tx-signup-status error';
