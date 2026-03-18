@@ -97,7 +97,7 @@
         flex-shrink: 0;
         background: rgba(8, 8, 10, 0.7);
         border: 1px solid rgba(196, 163, 90, 0.06);
-        border-radius: 4px;
+        border-radius: 24px;
         padding: 0.5rem 0;
         aspect-ratio: 1 / 1;
         display: flex;
@@ -108,7 +108,7 @@
     }
 
     /* === TRANSMITTER HARDWARE === */
-    /* Corner screws */
+    /* Corner screws — centered on the corner radius arc */
     .tx-screw {
         position: absolute;
         width: 10px;
@@ -130,12 +130,14 @@
         background: rgba(196, 163, 90, 0.12);
     }
 
-    .tx-screw-tl { top: 10px; left: 10px; }
-    .tx-screw-tr { top: 10px; right: 10px; }
-    .tx-screw-bl { bottom: 10px; left: 10px; }
-    .tx-screw-br { bottom: 10px; right: 10px; }
+    /* Position screws at 45° along the 24px radius arc
+       offset from corner = radius - radius * cos(45°) ≈ 24 - 17 = 7px */
+    .tx-screw-tl { top: 7px; left: 7px; }
+    .tx-screw-tr { top: 7px; right: 7px; }
+    .tx-screw-bl { bottom: 7px; left: 7px; }
+    .tx-screw-br { bottom: 7px; right: 7px; }
 
-    /* Faceplate — inset border */
+    /* Faceplate — inset border matching outer radius */
     .tx-faceplate {
         position: absolute;
         top: 6px;
@@ -143,7 +145,7 @@
         right: 6px;
         bottom: 6px;
         border: 1px solid rgba(196, 163, 90, 0.04);
-        border-radius: 2px;
+        border-radius: 19px;
         pointer-events: none;
     }
 
