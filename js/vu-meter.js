@@ -923,7 +923,9 @@
             window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
         } else if (isPlaying && !analyserConnected) {
             // Mobile: offline PCM analysis — read decoded buffer at current playback position
-            var hasOfflineData = offlineBuffer && audio && analyseOfflineAt(audio.currentTime);
+            // iOS reports currentTime ahead of actual audio output — subtract offset
+            var analysisTime = Math.max(0, audio.currentTime - 0.25);
+            var hasOfflineData = offlineBuffer && audio && analyseOfflineAt(analysisTime);
 
             if (hasOfflineData) {
                 // Use offlineFreqData (same format as getByteFrequencyData)
