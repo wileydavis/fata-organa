@@ -365,7 +365,7 @@
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        gap: 2.5rem;
+        gap: 6rem;
         padding: 0.5rem 1rem 0.75rem;
     }
 
@@ -378,40 +378,46 @@
     }
 
     .tx-indicator-light {
-        width: 16px;
-        height: 16px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
-        background: radial-gradient(circle at 45% 40%, #2a2520 0%, #1a1815 50%, #121010 100%);
+        background: 
+            radial-gradient(circle at 50% 50%, rgba(40, 35, 25, 0.6) 0%, rgba(20, 18, 14, 0.8) 50%, #121010 80%);
         border: 1px solid rgba(196, 163, 90, 0.1);
-        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
         transition: all 0.4s ease;
         position: relative;
     }
 
-    /* Active / lit state */
+    /* Active / lit state — glowing filament behind lens */
     .tx-indicator-light.active {
-        background: radial-gradient(circle at 40% 35%, #d4a840 0%, #b8882a 40%, #8a6520 70%, #5a4018 100%);
-        border-color: rgba(196, 163, 90, 0.3);
+        background: 
+            radial-gradient(circle at 50% 45%, rgba(255, 230, 160, 0.7) 0%, rgba(212, 168, 64, 0.6) 20%, rgba(160, 120, 40, 0.4) 40%, rgba(90, 70, 25, 0.25) 60%, rgba(30, 25, 15, 0.6) 80%, #121010 100%);
+        border-color: rgba(196, 163, 90, 0.25);
         box-shadow: 
-            inset 0 1px 2px rgba(255, 220, 140, 0.2),
-            0 0 8px rgba(196, 163, 90, 0.3),
-            0 0 20px rgba(196, 163, 90, 0.1);
+            inset 0 1px 2px rgba(255, 220, 140, 0.15),
+            0 0 12px rgba(196, 163, 90, 0.25),
+            0 0 30px rgba(196, 163, 90, 0.08);
     }
 
     .tx-indicator-light.active::after {
         content: '';
         position: absolute;
-        top: 2px;
-        left: 3px;
-        width: 5px;
-        height: 4px;
+        top: 4px;
+        left: 5px;
+        width: 6px;
+        height: 5px;
         border-radius: 50%;
-        background: rgba(255, 240, 200, 0.4);
+        background: rgba(255, 240, 200, 0.3);
     }
 
     .tx-indicator:hover .tx-indicator-light:not(.active) {
-        background: radial-gradient(circle at 45% 40%, #3a3025 0%, #252018 50%, #1a1512 100%);
+        background: 
+            radial-gradient(circle at 50% 50%, rgba(55, 45, 30, 0.6) 0%, rgba(30, 25, 18, 0.7) 50%, #151210 80%);
         border-color: rgba(196, 163, 90, 0.15);
+        box-shadow: 
+            inset 0 1px 3px rgba(0, 0, 0, 0.5),
+            0 0 6px rgba(196, 163, 90, 0.04);
     }
 
     .tx-indicator-label {
