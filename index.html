@@ -2048,10 +2048,10 @@
             var keys = Object.keys(sources);
             if (keys.length > 0 && window.vuPlayer) {
                 var ep = keys[0];
-                window.vuPlayer.loadSource(sources[ep]);
                 if (epDisplay) epDisplay.textContent = ep;
                 setActiveListItem(ep, band);
                 updateNowPlaying(ep, band);
+                window.vuPlayer.loadSource(sources[ep]);
             }
 
             return true;
