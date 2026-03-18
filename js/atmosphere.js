@@ -78,6 +78,10 @@
     var cueTo = {};
     // Track the "accumulated" state — each cue overrides only the fields it specifies
     var accumulatedState = {};
+    // Pattern position blending
+    var prevPattern = 'scatter';
+    var prevParams = {};
+    var positionBlend = 1; // 1 = fully at current pattern, 0 = fully at previous
 
     var DEFAULT_STATE = {
         speed: 1,
@@ -208,7 +212,12 @@
             var cue = activeCues[newIdx];
             cueFrom = cloneState(cueState);
             cueTo = cloneState(accumulatedState);
-            cueTransitionStart = cue.t; // start from the cue's timestamp, not audioTime
+            cueTransitionStart = cue.t;
+
+            // Capture previous pattern for position blending
+            prevPattern = cueFrom.pattern || 'scatter';
+            prevParams = cueFrom.params ? JSON.parse(JSON.stringify(cueFrom.params)) : {};
+            positionBlend = 0; // start from the cue's timestamp, not audioTime
             
             // Transition duration — clamp to gap before next cue
             var requestedDur = cue.transition || 0;
@@ -231,6 +240,7 @@
             // Smoothstep
             t = t * t * (3 - 2 * t);
             cueState = lerpState(cueFrom, cueTo, t);
+            positionBlend = t;
         }
     }
 
@@ -570,9 +580,18 @@
         for (var pi = 0; pi < particles.length; pi++) {
             var pt = particles[pi];
 
-            var target = patternPosition(pattern, pt.idx, particles.length, params);
-            var targetX = target.x;
-            var targetY = target.y;
+            var targetX, targetY;
+            if (positionBlend >= 1) {
+                var target = patternPosition(pattern, pt.idx, particles.length, params);
+                targetX = target.x;
+                targetY = target.y;
+            } else {
+                // Blend between previous and current pattern positions
+                var fromPos = patternPosition(prevPattern, pt.idx, particles.length, prevParams);
+                var toPos = patternPosition(pattern, pt.idx, particles.length, params);
+                targetX = fromPos.x + (toPos.x - fromPos.x) * positionBlend;
+                targetY = fromPos.y + (toPos.y - fromPos.y) * positionBlend;
+            }
 
             // Rotation
             var rtx = targetX - cx;
