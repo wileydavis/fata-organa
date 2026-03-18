@@ -311,16 +311,60 @@
         align-items: center;
         justify-content: center;
         padding: 0.5rem 1rem;
-        border: none;
-        background: transparent;
+    }
+
+    .tx-freq-display {
+        position: relative;
+        padding: 0.45rem 1.2rem;
+        border-radius: 3px;
+        border: 1px solid rgba(196, 163, 90, 0.12);
+        background:
+            radial-gradient(ellipse at 50% 60%, rgba(40, 34, 20, 0.9) 0%, rgba(15, 14, 10, 0.95) 60%, rgba(8, 8, 6, 1) 100%);
+        box-shadow:
+            inset 0 1px 4px rgba(0, 0, 0, 0.6),
+            inset 0 -1px 2px rgba(196, 163, 90, 0.03),
+            0 0 8px rgba(196, 163, 90, 0.04);
+        overflow: hidden;
+    }
+
+    /* Subtle scan line texture on the display */
+    .tx-freq-display::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 2px,
+            rgba(0, 0, 0, 0.08) 2px,
+            rgba(0, 0, 0, 0.08) 3px
+        );
+        pointer-events: none;
+        border-radius: 3px;
     }
 
     .tx-freq-label {
         font-family: var(--mono);
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: rgba(196, 163, 90, 0.68);
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        color: rgba(196, 163, 90, 0.85);
+        text-shadow:
+            0 0 8px rgba(196, 163, 90, 0.3),
+            0 0 20px rgba(196, 163, 90, 0.1);
+        position: relative;
+        z-index: 1;
+    }
+
+    .tx-freq-unit {
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 0.1em;
+        color: rgba(196, 163, 90, 0.45);
+        margin-left: 0.3rem;
     }
 
     .tx-episode-nav {
@@ -1341,9 +1385,11 @@
                 <div class="tx-vent"></div>
             </div>
 
-            <!-- Frequency bar / episode selector -->
+            <!-- Frequency display -->
             <div class="tx-frequency-bar">
-                <span class="tx-freq-label">146.520 MHz</span>
+                <div class="tx-freq-display">
+                    <span class="tx-freq-label">146.520<span class="tx-freq-unit">MHz</span></span>
+                </div>
                 <span class="tx-ep-current" id="ep-display" style="display:none;">INTRO</span>
             </div>
 
@@ -1868,9 +1914,9 @@
 
             // Update frequency label
             if (band === 'score') {
-                freqLabel.textContent = '146.520 MHz \u2014 SCORE';
+                freqLabel.innerHTML = '146.520<span class="tx-freq-unit">MHz \u2014 SCORE</span>';
             } else {
-                freqLabel.textContent = '146.520 MHz';
+                freqLabel.innerHTML = '146.520<span class="tx-freq-unit">MHz</span>';
             }
 
             // Swap drawer content
