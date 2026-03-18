@@ -89,6 +89,9 @@
         connectionDist: 0,
         connectionAlpha: 0,
         brightness: 1,
+        hueShift: 0,
+        satShift: 0,
+        litShift: 0,
         params: {}
     };
 
@@ -477,6 +480,9 @@
         var connDist = cueState.connectionDist || 0;
         var connAlpha = cueState.connectionAlpha || 0;
         var brightness = cueState.brightness || 1;
+        var hueShift = cueState.hueShift || 0;
+        var satShift = cueState.satShift || 0;
+        var litShift = cueState.litShift || 0;
         var params = cueState.params || {};
 
         // Glitch
@@ -617,9 +623,12 @@
 
             if (pt.alpha > 0.01) {
                 var drawSize = pt.size * (1 + sig.smoothRms * 0.3);
+                var h = pt.hue + hueShift;
+                var s = Math.max(0, Math.min(100, pt.sat + satShift));
+                var l = Math.max(0, Math.min(100, pt.lit + litShift));
                 ctx.beginPath();
                 ctx.arc(pt.x, pt.y, drawSize, 0, Math.PI * 2);
-                ctx.fillStyle = 'hsla(' + pt.hue + ', ' + pt.sat + '%, ' + pt.lit + '%, ' + pt.alpha + ')';
+                ctx.fillStyle = 'hsla(' + h + ', ' + s + '%, ' + l + '%, ' + pt.alpha + ')';
                 ctx.fill();
             }
         }
