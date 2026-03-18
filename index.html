@@ -940,6 +940,7 @@
         aspect-ratio: 1 / 1;
         padding: 0;
         justify-content: center;
+        position: relative;
     }
 
     /* Canvas is 400x280. Meter pivot at (200, 218).
@@ -1010,8 +1011,10 @@
     }
     .focus-mode .tx-now-playing {
         display: flex;
-        margin-top: auto;
-        padding-bottom: 2rem;
+        position: absolute;
+        bottom: 2rem;
+        left: 0;
+        right: 0;
     }
 
     /* Focus mode exit hint */
