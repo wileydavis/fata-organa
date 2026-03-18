@@ -242,6 +242,7 @@
         <div class="ctrl-row" title="Global spin speed. 0 = static."><label>Rotation</label><input type="range" id="sl-rotation" min="0" max="0.003" step="0.00005" value="0.0003"><span class="ctrl-val" id="v-rotation">0.0003</span></div>
 
         <div class="ctrl-label">Appearance</div>
+        <div class="ctrl-row" title="Particle size multiplier. 1 = default. 0.3 = tiny pinpoints. 3 = large orbs."><label>Size</label><input type="range" id="sl-size" min="0.2" max="4" step="0.1" value="1"><span class="ctrl-val" id="v-size">1</span></div>
         <div class="ctrl-row" title="Opacity multiplier. Below 1 = dim. Above 1 = vivid."><label>Bright</label><input type="range" id="sl-brightness" min="0.1" max="2" step="0.05" value="0.9"><span class="ctrl-val" id="v-brightness">0.9</span></div>
         <div class="ctrl-row" title="Max distance for connection lines. 0 = off."><label>Conn Dist</label><input type="range" id="sl-connectionDist" min="0" max="200" step="5" value="0"><span class="ctrl-val" id="v-connectionDist">0</span></div>
         <div class="ctrl-row" title="Connection line opacity."><label>Conn Alpha</label><input type="range" id="sl-connectionAlpha" min="0" max="0.2" step="0.005" value="0"><span class="ctrl-val" id="v-connectionAlpha">0</span></div>
@@ -350,7 +351,7 @@
     // === STATE ===
     var state = {
         pattern: 'scatter', speed: 3, attraction: 0.04, wander: 0.0005, damping: 0.88,
-        rotation: 0.0003, brightness: 0.9, connectionDist: 0, connectionAlpha: 0,
+        rotation: 0.0003, brightness: 0.9, size: 1, connectionDist: 0, connectionAlpha: 0,
         hueShift: 0, satShift: 0, litShift: 0, params: {}
     };
 
@@ -371,7 +372,7 @@
     };
 
     // === UI BINDING ===
-    var sliderKeys = ['speed','attraction','wander','damping','rotation','brightness','connectionDist','connectionAlpha','hueShift','satShift','litShift','transition'];
+    var sliderKeys = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift','transition'];
     sliderKeys.forEach(function(key) {
         var sl = document.getElementById('sl-' + key);
         var val = document.getElementById('v-' + key);
@@ -467,7 +468,7 @@
             t: Math.round(audio.currentTime * 10) / 10,
             pattern: state.pattern, speed: state.speed, attraction: state.attraction,
             wander: state.wander, damping: state.damping, rotation: state.rotation,
-            brightness: state.brightness,
+            brightness: state.brightness, size: state.size,
             transition: parseFloat(document.getElementById('sl-transition').value) || 0
         };
         if (state.connectionDist > 0) cue.connectionDist = state.connectionDist;
@@ -511,7 +512,7 @@
 
     function loadCueIntoUI(cue) {
         state.pattern = cue.pattern; selPattern.value = cue.pattern;
-        var fields = ['speed','attraction','wander','damping','rotation','brightness','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
+        var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
         fields.forEach(function(k) {
             if (cue[k] !== undefined) state[k] = cue[k];
             else if (k === 'connectionDist' || k === 'connectionAlpha' || k === 'hueShift' || k === 'satShift' || k === 'litShift') state[k] = 0;
@@ -699,7 +700,7 @@
 
             if (pt.alpha > 0.01) {
                 var h = pt.hue + state.hueShift, s = Math.max(0, Math.min(100, pt.sat + state.satShift)), l = Math.max(0, Math.min(100, pt.lit + state.litShift));
-                ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size * state.size, 0, Math.PI * 2);
                 ctx.fillStyle = 'hsla(' + h + ',' + s + '%,' + l + '%,' + pt.alpha + ')'; ctx.fill();
             }
         }
