@@ -578,53 +578,81 @@
             });
     }
 
-    // Simple DFT on a small window of PCM samples to get frequency magnitudes
-    // Precompute cosine/sine tables for performance
-    var DFT_SIZE = 256;
-    var DFT_BINS = 40; // we only need bins 0-40 for sub/voice/high analysis
-    var cosTable = [];
-    var sinTable = [];
-    for (var k = 0; k < DFT_BINS; k++) {
-        cosTable[k] = new Float32Array(DFT_SIZE);
-        sinTable[k] = new Float32Array(DFT_SIZE);
-        for (var n = 0; n < DFT_SIZE; n++) {
-            var angle = -2 * Math.PI * k * n / DFT_SIZE;
-            cosTable[k][n] = Math.cos(angle);
-            sinTable[k][n] = Math.sin(angle);
-        }
-    }
-
+    // Band-pass energy analysis using RMS of filtered sample windows
+    // Much faster than DFT and better suited for VU meter driving
+    var ANALYSIS_WINDOW = 2048; // ~46ms at 44100Hz — captures full voice cycles
     var offlineFrameCount = 0;
 
     function analyseOfflineAt(timeSec) {
         if (!offlineBuffer || !audio) return false;
 
-        // Throttle to every 3rd frame
+        // Throttle to every 2nd frame
         offlineFrameCount++;
-        if (offlineFrameCount % 3 !== 0) return true; // return true to use cached data
+        if (offlineFrameCount % 2 !== 0) return true;
 
         var channel = offlineBuffer.getChannelData(0);
         var sampleIdx = Math.floor(timeSec * offlineSampleRate);
 
-        if (sampleIdx < 0 || sampleIdx + DFT_SIZE > channel.length) return false;
+        // Bounds check
+        if (sampleIdx < 0 || sampleIdx + ANALYSIS_WINDOW > channel.length) return false;
 
-        // Extract windowed samples
-        var real = new Float32Array(DFT_SIZE);
-        for (var i = 0; i < DFT_SIZE; i++) {
-            var w = 0.5 * (1 - Math.cos(2 * Math.PI * i / DFT_SIZE));
-            real[i] = channel[sampleIdx + i] * w;
+        // Compute RMS energy in different frequency-correlated windows
+        // Short window (~3ms) captures high freq transients
+        // Medium window (~12ms) captures voice fundamentals  
+        // Long window (~46ms) captures bass/sub
+
+        var shortWin = 128;   // ~3ms — sibilance, consonants
+        var medWin = 512;     // ~12ms — voice fundamental
+        var longWin = 2048;   // ~46ms — bass, drone
+
+        // Short window RMS (high frequency indicator)
+        var shortSum = 0;
+        for (var i = 0; i < shortWin; i++) {
+            var s = channel[sampleIdx + i];
+            shortSum += s * s;
+        }
+        var shortRms = Math.sqrt(shortSum / shortWin);
+
+        // Medium window RMS (voice indicator)
+        var medSum = 0;
+        for (var i = 0; i < medWin; i++) {
+            var s = channel[sampleIdx + i];
+            medSum += s * s;
+        }
+        var medRms = Math.sqrt(medSum / medWin);
+
+        // Long window RMS (bass/overall indicator)
+        var longSum = 0;
+        for (var i = 0; i < longWin; i++) {
+            var s = channel[sampleIdx + i];
+            longSum += s * s;
+        }
+        var longRms = Math.sqrt(longSum / longWin);
+
+        // Estimate band energy from the window differences
+        // High energy = what short window has that medium doesn't
+        var highEnergy = Math.max(0, shortRms - medRms * 0.8);
+        // Voice energy = medium window content
+        var voiceEnergy = medRms;
+        // Bass energy = what long window has
+        var bassEnergy = longRms;
+
+        // Scale to 0-255 to match getByteFrequencyData format
+        // Voice/narration typically peaks around 0.1-0.3 RMS
+        offlineFreqData[0] = Math.min(255, Math.round(bassEnergy * 800));   // sub
+        offlineFreqData[1] = Math.min(255, Math.round(bassEnergy * 700));   // bass
+        offlineFreqData[2] = Math.min(255, Math.round(bassEnergy * 600));   // low
+
+        // Voice range bins (3-23)
+        var voiceVal = Math.min(255, Math.round(voiceEnergy * 900));
+        for (var k = 3; k < 23; k++) {
+            offlineFreqData[k] = voiceVal;
         }
 
-        // DFT with precomputed trig
-        for (var k = 0; k < DFT_BINS; k++) {
-            var sumR = 0, sumI = 0;
-            var ct = cosTable[k], st = sinTable[k];
-            for (var n = 0; n < DFT_SIZE; n++) {
-                sumR += real[n] * ct[n];
-                sumI += real[n] * st[n];
-            }
-            var magnitude = Math.sqrt(sumR * sumR + sumI * sumI) / DFT_SIZE;
-            offlineFreqData[k] = Math.min(255, Math.round(magnitude * 512));
+        // High range bins (23-40)
+        var highVal = Math.min(255, Math.round(highEnergy * 1200));
+        for (var k = 23; k < 40; k++) {
+            offlineFreqData[k] = highVal;
         }
 
         return true;
