@@ -1010,8 +1010,8 @@
     }
     .focus-mode .tx-now-playing {
         display: flex;
-        z-index: 8;
-        margin-top: 0.75rem;
+        margin-top: auto;
+        padding-bottom: 2rem;
     }
 
     /* Focus mode exit hint */
@@ -1110,14 +1110,14 @@
                 </div>
                 <button class="tx-focus-btn" id="btn-focus" title="Focus mode — fullscreen listening">&#9673;</button>
             </div>
-        </div>
 
-        <!-- Now playing title with nav (visible in focus mode, outside panel to avoid circle clip) -->
-        <div class="tx-now-playing" id="now-playing">
-            <span class="tx-now-playing-title" id="now-playing-title">Lab Orientation Statement</span>
-            <div class="tx-now-playing-controls">
-                <button class="tx-now-playing-nav" id="focus-prev">&#9666;</button>
-                <button class="tx-now-playing-nav" id="focus-next">&#9656;</button>
+            <!-- Now playing title with nav (visible in focus mode) -->
+            <div class="tx-now-playing" id="now-playing">
+                <span class="tx-now-playing-title" id="now-playing-title">Lab Orientation Statement</span>
+                <div class="tx-now-playing-controls">
+                    <button class="tx-now-playing-nav" id="focus-prev">&#9666;</button>
+                    <button class="tx-now-playing-nav" id="focus-next">&#9656;</button>
+                </div>
             </div>
         </div>
 
