@@ -46,11 +46,15 @@
     var glowCanvas = document.createElement('canvas');
     glowCanvas.className = 'ambient-glow';
     glowCanvas.style.cssText = ''
-        + 'position:fixed;top:0;left:0;width:100%;height:100%;'
+        + 'position:fixed;top:0;left:0;width:100vw;height:100vh;'
         + 'pointer-events:none;z-index:2;'
         + 'opacity:0;';
     document.body.appendChild(glowCanvas);
     var gCtx = glowCanvas.getContext('2d');
+
+    // Mobile detection for performance optimization
+    var isMobileGlow = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    var glowScale = isMobileGlow ? 0.5 : 1; // half resolution on mobile
 
     // --- Create darkness overlay ---
     var darknessOverlay = document.createElement('div');
@@ -64,8 +68,10 @@
     // --- Resize canvas ---
     var gW = 0, gH = 0;
     function resizeGlow() {
-        gW = window.innerWidth;
-        gH = window.innerHeight;
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        gW = Math.round(w * glowScale);
+        gH = Math.round(h * glowScale);
         glowCanvas.width = gW;
         glowCanvas.height = gH;
     }
@@ -83,7 +89,7 @@
     }
 
     // --- Solar flare system ---
-    var NUM_FLARES = 8;
+    var NUM_FLARES = isMobileGlow ? 5 : 8;
     var flares = [];
     for (var i = 0; i < NUM_FLARES; i++) {
         flares.push({
