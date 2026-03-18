@@ -212,12 +212,10 @@
             var cue = activeCues[newIdx];
             cueFrom = cloneState(cueState);
             cueTo = cloneState(accumulatedState);
-            cueTransitionStart = cue.t;
 
             // Capture previous pattern for position blending
             prevPattern = cueFrom.pattern || 'scatter';
             prevParams = cueFrom.params ? JSON.parse(JSON.stringify(cueFrom.params)) : {};
-            positionBlend = 0; // start from the cue's timestamp, not audioTime
             
             // Transition duration — clamp to gap before next cue
             var requestedDur = cue.transition || 0;
@@ -226,10 +224,25 @@
                 if (requestedDur > gap) requestedDur = gap;
             }
             cueTransitionDur = requestedDur;
+
+            // Start transition from current audioTime, not cue.t
+            // This avoids issues when the score loads late
+            cueTransitionStart = audioTime;
+            
+            // If we're already past the cue by more than the transition duration,
+            // just snap (e.g. score loaded late and we're way past this cue)
+            var timePastCue = audioTime - cue.t;
+            if (cueTransitionDur > 0 && timePastCue < cueTransitionDur) {
+                positionBlend = 0;
+            } else {
+                positionBlend = 1;
+            }
+
             currentCueIdx = newIdx;
 
-            if (cueTransitionDur <= 0) {
+            if (cueTransitionDur <= 0 || positionBlend >= 1) {
                 cueState = cloneState(cueTo);
+                positionBlend = 1;
             }
         }
 
