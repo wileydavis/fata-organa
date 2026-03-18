@@ -89,6 +89,7 @@
         connectionDist: 0,
         connectionAlpha: 0,
         brightness: 1,
+        size: 1,
         hueShift: 0,
         satShift: 0,
         litShift: 0,
@@ -489,6 +490,7 @@
         var connDist = cueState.connectionDist || 0;
         var connAlpha = cueState.connectionAlpha || 0;
         var brightness = cueState.brightness || 1;
+        var sizeMult = cueState.size || 1;
         var hueShift = cueState.hueShift || 0;
         var satShift = cueState.satShift || 0;
         var litShift = cueState.litShift || 0;
@@ -631,7 +633,7 @@
             }
 
             if (pt.alpha > 0.01) {
-                var drawSize = pt.size * (1 + sig.smoothRms * 0.3);
+                var drawSize = pt.size * sizeMult * (1 + sig.smoothRms * 0.3);
                 var h = pt.hue + hueShift;
                 var s = Math.max(0, Math.min(100, pt.sat + satShift));
                 var l = Math.max(0, Math.min(100, pt.lit + litShift));
