@@ -549,12 +549,59 @@
     // Detect mobile for background playback compatibility
     var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+    // --- Pre-analyzed energy data for mobile ---
+    // Maps audio URLs to analysis JSON paths
+    var analysisMap = {
+        'https://media.fataorgana.fm/episodes/Teaser-Intro.mp3': '/data/analysis_intro.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2': '/data/analysis_ep01.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3': '/data/analysis_ep01.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2': '/data/analysis_ep01_score.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3': '/data/analysis_ep01_score.json'
+    };
+
+    var preAnalysis = null;  // current track's pre-analyzed data
+    var preAnalysisLoading = false;
+
+    function loadPreAnalysis(audioUrl) {
+        preAnalysis = null;
+        // Strip cache buster to match, then try with it
+        var jsonPath = analysisMap[audioUrl];
+        if (!jsonPath) {
+            var baseUrl = audioUrl.split('?')[0];
+            jsonPath = analysisMap[baseUrl];
+        }
+        if (!jsonPath) return;
+
+        preAnalysisLoading = true;
+        fetch(jsonPath)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                preAnalysis = data;
+                preAnalysisLoading = false;
+                console.log('Pre-analysis loaded:', data.duration + 's, ' + data.frames + ' frames');
+            })
+            .catch(function(e) {
+                console.error('Pre-analysis load error:', e);
+                preAnalysisLoading = false;
+            });
+    }
+
+    function getPreAnalysisFrame(timeSec) {
+        if (!preAnalysis) return null;
+        var frameIdx = Math.floor(timeSec * preAnalysis.fps);
+        frameIdx = Math.max(0, Math.min(frameIdx, preAnalysis.frames - 1));
+        return {
+            voice: preAnalysis.voice[frameIdx] / 255,
+            bass: preAnalysis.bass[frameIdx] / 255,
+            high: preAnalysis.high[frameIdx] / 255
+        };
+    }
+
     function initAnalyser() {
         if (audioCtx) return;
-        // On mobile, skip AudioContext — createMediaElementSource hijacks audio output
-        // and iOS suspends it in background, killing playback. Use simulation instead.
         if (isMobile) {
             analyserConnected = false;
+            if (audioSrc) loadPreAnalysis(audioSrc);
             return;
         }
         try {
@@ -706,6 +753,9 @@
             isLoading = false;
             progressBar.style.width = '0%';
 
+            // Load pre-analyzed energy data on mobile
+            if (isMobile) loadPreAnalysis(src);
+
             if (audio) {
                 audio.src = src;
                 if (autoplay) {
@@ -810,21 +860,69 @@
             window.vuSignal.smoothRms += (rmsLevel - window.vuSignal.smoothRms) * 0.03;
             window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
         } else if (isPlaying && !analyserConnected) {
-            // Fallback: gentle simulated movement if analyser failed to connect
-            var t = time * 0.016;
-            var fakeLevel = 0.4 + Math.sin(t * 0.7) * 0.15 + Math.sin(t * 1.3) * 0.1 + Math.random() * 0.02;
-            fakeLevel = Math.max(0.15, Math.min(0.85, fakeLevel));
-            targetAngle = dbToAngle(-20 + fakeLevel * 23);
-            glowIntensity += (1 - glowIntensity) * 0.05;
+            // Mobile: use pre-analyzed energy data for accurate needle tracking
+            var frame = audio ? getPreAnalysisFrame(audio.currentTime) : null;
 
-            window.vuSignal.rms = fakeLevel;
-            window.vuSignal.low = fakeLevel * 0.6;
-            window.vuSignal.high = fakeLevel * 0.3;
-            window.vuSignal.peak = Math.max(fakeLevel, window.vuSignal.peak * 0.98);
-            window.vuSignal.isPlaying = true;
-            window.vuSignal.hasStarted = true;
-            window.vuSignal.smoothRms += (fakeLevel - window.vuSignal.smoothRms) * 0.03;
-            window.vuSignal.smoothLow += (fakeLevel * 0.6 - window.vuSignal.smoothLow) * 0.02;
+            if (frame) {
+                var voiceLevel = frame.voice;
+                var subLevel = frame.bass;
+                var highLevel = frame.high;
+                var rmsLevel = voiceLevel * 0.5 + subLevel * 0.3 + highLevel * 0.2;
+
+                var needleLevel;
+                var isScore = window.currentBand === 'score';
+                if (isScore) {
+                    needleLevel = subLevel * 0.7 + voiceLevel * 0.2 + highLevel * 0.1;
+                } else {
+                    needleLevel = voiceLevel * 0.65 + subLevel * 0.15 + highLevel * 0.2;
+                }
+
+                var delta = needleLevel - prevLevel;
+                if (delta > 0.02) transientBoost = Math.min(delta * 3, 0.25);
+                transientBoost *= 0.85;
+                prevLevel = needleLevel;
+                needleLevel += transientBoost;
+
+                if (needleLevel > smoothedLevel) {
+                    smoothedLevel += (needleLevel - smoothedLevel) * 0.25;
+                } else {
+                    smoothedLevel += (needleLevel - smoothedLevel) * 0.06;
+                }
+
+                smoothedLow += (subLevel - smoothedLow) * 0.08;
+                smoothedMid += (voiceLevel - smoothedMid) * 0.1;
+                smoothedHigh += (highLevel - smoothedHigh) * 0.1;
+
+                var scaledLevel = Math.pow(smoothedLevel, 0.5) * 0.75;
+                scaledLevel = Math.min(scaledLevel, 1.0);
+                targetAngle = dbToAngle(-20 + scaledLevel * 20);
+                glowIntensity += (1 - glowIntensity) * 0.05;
+
+                window.vuSignal.rms = rmsLevel;
+                window.vuSignal.low = smoothedLow;
+                window.vuSignal.high = smoothedHigh;
+                window.vuSignal.peak = Math.max(scaledLevel, window.vuSignal.peak * 0.98);
+                window.vuSignal.isPlaying = true;
+                window.vuSignal.hasStarted = true;
+                window.vuSignal.smoothRms += (rmsLevel - window.vuSignal.smoothRms) * 0.03;
+                window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
+            } else {
+                // Fallback: gentle simulated movement while data loads
+                var t = time * 0.016;
+                var fakeLevel = 0.4 + Math.sin(t * 0.7) * 0.15 + Math.sin(t * 1.3) * 0.1 + Math.random() * 0.02;
+                fakeLevel = Math.max(0.15, Math.min(0.85, fakeLevel));
+                targetAngle = dbToAngle(-20 + fakeLevel * 23);
+                glowIntensity += (1 - glowIntensity) * 0.05;
+
+                window.vuSignal.rms = fakeLevel;
+                window.vuSignal.low = fakeLevel * 0.6;
+                window.vuSignal.high = fakeLevel * 0.3;
+                window.vuSignal.peak = Math.max(fakeLevel, window.vuSignal.peak * 0.98);
+                window.vuSignal.isPlaying = true;
+                window.vuSignal.hasStarted = true;
+                window.vuSignal.smoothRms += (fakeLevel - window.vuSignal.smoothRms) * 0.03;
+                window.vuSignal.smoothLow += (fakeLevel * 0.6 - window.vuSignal.smoothLow) * 0.02;
+            }
         } else {
             targetAngle = minAngle;
             glowIntensity *= 0.95;
