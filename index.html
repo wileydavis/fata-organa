@@ -74,14 +74,15 @@
     @media (max-width: 520px) {
         .transmitter-page .site-nav {
             padding: 0.5rem var(--gutter);
+            flex-wrap: nowrap;
         }
 
         .nav-hamburger {
             display: flex;
         }
 
-        .nav-links {
-            display: none;
+        .site-nav .nav-links {
+            display: none !important;
             position: absolute;
             top: 100%;
             left: 0;
@@ -94,8 +95,8 @@
             gap: 0;
         }
 
-        .nav-links.open {
-            display: flex;
+        .site-nav .nav-links.open {
+            display: flex !important;
         }
 
         .nav-links a {
@@ -1242,10 +1243,16 @@
     
     <nav class="site-nav">
         <a href="/" class="nav-logo" aria-label="Home">
-            <svg class="nav-octopus" viewBox="0 0 32 32" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 4C12 4 9 7 9 11c0 2.5 1 4 2 5.5-.5 1-2 3-4 5.5-.5.6 0 1.2.6 1 2-1 3.5-2.5 4.5-3.5.3 1 .5 2.5-.5 5-.3.6.3 1.1.8.7 1.5-1.2 2.2-3 2.6-4.2.6.2 1.3.3 2 .3s1.4-.1 2-.3c.4 1.2 1.1 3 2.6 4.2.5.4 1.1-.1.8-.7-1-2.5-.8-4-.5-5 1 1 2.5 2.5 4.5 3.5.6.2 1.1-.4.6-1-2-2.5-3.5-4.5-4-5.5 1-1.5 2-3 2-5.5 0-4-3-7-7-7z" fill="currentColor"/>
-                <circle cx="13.5" cy="10" r="1.2" fill="rgba(8,8,10,0.8)"/>
-                <circle cx="18.5" cy="10" r="1.2" fill="rgba(8,8,10,0.8)"/>
+            <svg class="nav-octopus" viewBox="0 0 40 28" width="36" height="25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Octopus body — simplified, mysterious silhouette -->
+                <path d="M14 6c-3.5 0-6 2.8-6 6.2 0 2 .8 3.5 1.8 4.8-.4.8-1.5 2.2-3 4.2-.3.4.1.8.5.6 1.5-.8 2.8-2 3.5-2.8.2.8.3 2-.4 3.8-.2.5.3.8.6.5 1.2-1 1.8-2.4 2.1-3.4.5.2 1.1.2 1.7.2.5 0 1-.1 1.4-.2.3 1 .9 2.4 2.1 3.4.3.3.8 0 .6-.5-.7-1.8-.6-3-.4-3.8.7.8 2 2 3.5 2.8.4.2.8-.2.5-.6-1.5-2-2.6-3.4-3-4.2 1-1.3 1.8-2.8 1.8-4.8 0-3.4-2.5-6.2-6-6.2z" fill="currentColor" opacity="0.9"/>
+                <!-- Eyes — hollow, watching -->
+                <circle cx="12" cy="11" r="1" fill="rgba(8,8,10,0.9)"/>
+                <circle cx="16" cy="11" r="1" fill="rgba(8,8,10,0.9)"/>
+                <!-- Transmission waves emanating rightward -->
+                <path d="M23 9.5c1.5-1.5 1.5-4 0-5.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.5" fill="none"/>
+                <path d="M26 11c2.5-2.5 2.5-6.5 0-9" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.35" fill="none"/>
+                <path d="M29 12.5c3.5-3.5 3.5-9 0-12.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.2" fill="none"/>
             </svg>
         </a>
         <div class="nav-links">
