@@ -37,6 +37,46 @@
         "frequency": 3,
         "amplitude": 120
       }
+    },
+    {
+      "t": 153,
+      "pattern": "concentric",
+      "speed": 3.3,
+      "attraction": 0.1,
+      "wander": 0,
+      "damping": 0.88,
+      "rotation": 0.00085,
+      "brightness": 1.6,
+      "transition": 15,
+      "connectionDist": 200,
+      "connectionAlpha": 0.195,
+      "hueShift": 4,
+      "satShift": 24,
+      "litShift": -21,
+      "params": {
+        "rings": 5
+      }
+    },
+    {
+      "t": 198.5,
+      "pattern": "converge",
+      "speed": 3.3,
+      "attraction": 0.1,
+      "wander": 0,
+      "damping": 0.88,
+      "rotation": 0.00085,
+      "brightness": 1.6,
+      "transition": 15,
+      "connectionDist": 200,
+      "connectionAlpha": 0.195,
+      "hueShift": 4,
+      "satShift": 24,
+      "litShift": -21,
+      "params": {
+        "x": 0.5,
+        "y": 0.5,
+        "radius": 4
+      }
     }
   ]
 }
