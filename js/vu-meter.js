@@ -811,9 +811,12 @@
             window.vuSignal.smoothRms += (rmsLevel - window.vuSignal.smoothRms) * 0.03;
             window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
         } else if (isPlaying && !analyserConnected) {
-            time += 0.016;
-            var fakeLevel = 0.35 + Math.sin(time * 1.7) * 0.08 + Math.sin(time * 3.1) * 0.05 + Math.random() * 0.03;
-            targetAngle = dbToAngle(-20 + fakeLevel * 26);
+            // Mobile: simulate natural needle movement without AudioContext
+            // Use frame-based time for smooth sine movement
+            var t = time * 0.016; // convert frame count to seconds-ish
+            var fakeLevel = 0.4 + Math.sin(t * 0.7) * 0.15 + Math.sin(t * 1.3) * 0.1 + Math.sin(t * 2.7) * 0.05 + Math.random() * 0.02;
+            fakeLevel = Math.max(0.15, Math.min(0.85, fakeLevel));
+            targetAngle = dbToAngle(-20 + fakeLevel * 23);
             glowIntensity += (1 - glowIntensity) * 0.05;
 
             window.vuSignal.rms = fakeLevel;
@@ -821,6 +824,7 @@
             window.vuSignal.high = fakeLevel * 0.3;
             window.vuSignal.peak = Math.max(fakeLevel, window.vuSignal.peak * 0.98);
             window.vuSignal.isPlaying = true;
+            window.vuSignal.hasStarted = true;
             window.vuSignal.smoothRms += (fakeLevel - window.vuSignal.smoothRms) * 0.03;
             window.vuSignal.smoothLow += (fakeLevel * 0.6 - window.vuSignal.smoothLow) * 0.02;
         } else {
