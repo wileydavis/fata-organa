@@ -104,7 +104,7 @@
 
         var cx = gW * 0.5;
         var cy = gH * 0.45;
-        var baseRadius = Math.min(gW, gH) * (0.25 + energy * 0.15) * 1.35;
+        var baseRadius = Math.min(gW, gH) * (0.35 + energy * 0.2) * 1.35;
 
         // Core glow — radial gradient
         var coreGrad = gCtx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius);
