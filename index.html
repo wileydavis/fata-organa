@@ -676,6 +676,105 @@
         margin-top: clamp(1.25rem, 3vh, 2.5rem);
     }
 
+    /* === EMAIL SIGNUP === */
+    .tx-signup {
+        flex-shrink: 0;
+        text-align: center;
+        padding: 0 1rem;
+        margin-top: auto;
+        margin-bottom: 0.5rem;
+    }
+
+    .tx-signup-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tx-signup-label {
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: rgba(196, 163, 90, 0.35);
+    }
+
+    .tx-signup-form {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        border: 1px solid rgba(196, 163, 90, 0.15);
+        border-radius: 3px;
+        overflow: hidden;
+        background: rgba(8, 8, 10, 0.6);
+    }
+
+    .tx-signup-input {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.05em;
+        color: rgba(196, 163, 90, 0.8);
+        background: transparent;
+        border: none;
+        outline: none;
+        padding: 0.4rem 0.6rem;
+        width: 180px;
+    }
+
+    .tx-signup-input::placeholder {
+        color: rgba(196, 163, 90, 0.2);
+    }
+
+    .tx-signup-input:focus {
+        background: rgba(196, 163, 90, 0.03);
+    }
+
+    .tx-signup-btn {
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(196, 163, 90, 0.6);
+        background: rgba(196, 163, 90, 0.06);
+        border: none;
+        border-left: 1px solid rgba(196, 163, 90, 0.15);
+        padding: 0.4rem 0.7rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tx-signup-btn:hover {
+        color: rgba(196, 163, 90, 0.9);
+        background: rgba(196, 163, 90, 0.1);
+    }
+
+    .tx-signup-status {
+        font-family: var(--mono);
+        font-size: 0.5rem;
+        letter-spacing: 0.1em;
+        color: rgba(196, 163, 90, 0.5);
+        min-height: 1em;
+    }
+
+    .tx-signup-status.success {
+        color: rgba(90, 180, 90, 0.7);
+    }
+
+    .tx-signup-status.error {
+        color: rgba(180, 60, 50, 0.7);
+    }
+
+    /* Hide in focus mode */
+    .focus-mode .tx-signup {
+        opacity: 0 !important;
+        pointer-events: none;
+        height: 0;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+    }
+
     /* === FOOTER (minimal, inline) === */
     .tx-footer {
         flex-shrink: 0;
@@ -1574,6 +1673,18 @@
         </div>
     </div>
 
+    <!-- Email signup -->
+    <div class="tx-signup" id="tx-signup">
+        <div class="tx-signup-inner">
+            <span class="tx-signup-label">Receive Future Transmissions</span>
+            <div class="tx-signup-form" id="signup-form">
+                <input type="email" class="tx-signup-input" id="signup-email" placeholder="frequency@example.com" autocomplete="email" />
+                <button class="tx-signup-btn" id="signup-btn">Subscribe</button>
+            </div>
+            <span class="tx-signup-status" id="signup-status"></span>
+        </div>
+    </div>
+
     <div class="tx-footer"></div>
     </div>
 
@@ -1979,6 +2090,76 @@
 
     </script>
     <script src="/js/doc-viewer.js"></script>
+    <script>
+    // Klaviyo email signup
+    (function() {
+        var form = document.getElementById('signup-form');
+        var input = document.getElementById('signup-email');
+        var btn = document.getElementById('signup-btn');
+        var status = document.getElementById('signup-status');
+        if (!form || !input || !btn) return;
+
+        function subscribe() {
+            var email = input.value.trim();
+            if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                status.textContent = 'INVALID FREQUENCY';
+                status.className = 'tx-signup-status error';
+                return;
+            }
+
+            btn.textContent = 'TUNING...';
+            btn.disabled = true;
+            status.textContent = '';
+
+            fetch('https://a.klaviyo.com/client/subscriptions/?company_id=WaV2xM', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'revision': '2023-02-22' },
+                body: JSON.stringify({
+                    data: {
+                        type: 'subscription',
+                        attributes: {
+                            profile: {
+                                data: {
+                                    type: 'profile',
+                                    attributes: { email: email }
+                                }
+                            },
+                            custom_source: 'Fata Organa Website'
+                        },
+                        relationships: {
+                            list: {
+                                data: { type: 'list', id: 'WeCHmw' }
+                            }
+                        }
+                    }
+                })
+            })
+            .then(function(res) {
+                if (res.ok || res.status === 202) {
+                    status.textContent = 'SIGNAL LOCKED — TRANSMISSIONS INCOMING';
+                    status.className = 'tx-signup-status success';
+                    input.value = '';
+                    form.style.display = 'none';
+                } else {
+                    throw new Error('Status ' + res.status);
+                }
+            })
+            .catch(function() {
+                status.textContent = 'SIGNAL LOST — TRY AGAIN';
+                status.className = 'tx-signup-status error';
+            })
+            .finally(function() {
+                btn.textContent = 'SUBSCRIBE';
+                btn.disabled = false;
+            });
+        }
+
+        btn.addEventListener('click', subscribe);
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') subscribe();
+        });
+    })();
+    </script>
     <script>
     // Hamburger nav toggle
     (function() {
