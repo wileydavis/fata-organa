@@ -221,7 +221,7 @@
         }
     }
 
-    // Track changes
+    // Track changes — check frequently and also load on first detection
     var lastSrc = '';
     function checkTrackChange() {
         var src = '';
@@ -237,6 +237,10 @@
             loadScore(src);
         }
     }
+
+    // Also check immediately and on short interval for initial load
+    checkTrackChange();
+    setInterval(checkTrackChange, 1000);
 
     // =========================================
     // PATTERN LIBRARY
@@ -458,8 +462,6 @@
         time++;
         var sig = getSignal();
 
-        if (time % 60 === 0) checkTrackChange();
-
         var targetReactivity = sig.isPlaying ? 1 : 0;
         reactivity += (targetReactivity - reactivity) * 0.005;
 
@@ -579,14 +581,18 @@
             targetX += Math.sin(dispAngle) * audioDisp * 15;
             targetY += Math.cos(dispAngle * 0.7) * audioDisp * 10;
 
-            // Movement
+            // Movement — always attract to pattern, stronger when playing
+            var activeAttraction = attraction * speed;
             if (reactivity < 0.1) {
+                // Idle: gentle attraction + stronger wander
+                pt.vx += (targetX - pt.x) * activeAttraction * 0.3;
+                pt.vy += (targetY - pt.y) * activeAttraction * 0.3;
                 pt.wanderAngle += (Math.random() - 0.5) * 0.02;
                 pt.vx += Math.cos(pt.wanderAngle) * wander;
                 pt.vy += Math.sin(pt.wanderAngle) * wander;
             } else {
-                pt.vx += (targetX - pt.x) * attraction * speed;
-                pt.vy += (targetY - pt.y) * attraction * speed;
+                pt.vx += (targetX - pt.x) * activeAttraction;
+                pt.vy += (targetY - pt.y) * activeAttraction;
                 pt.wanderAngle += (Math.random() - 0.5) * 0.01;
                 pt.vx += Math.cos(pt.wanderAngle) * wander * 0.3 * speed;
                 pt.vy += Math.sin(pt.wanderAngle) * wander * 0.3 * speed;
