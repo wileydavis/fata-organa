@@ -132,10 +132,10 @@
 
     /* Position screws at 45° along the 24px radius arc
        offset from corner = radius - radius * cos(45°) ≈ 24 - 17 = 7px */
-    .tx-screw-tl { top: 15px; left: 15px; }
-    .tx-screw-tr { top: 15px; right: 15px; }
-    .tx-screw-bl { bottom: 15px; left: 15px; }
-    .tx-screw-br { bottom: 15px; right: 15px; }
+    .tx-screw-tl { top: 75px; left: 75px; transform: translate(-50%, -50%); }
+    .tx-screw-tr { top: 75px; right: 75px; transform: translate(50%, -50%); }
+    .tx-screw-bl { bottom: 75px; left: 75px; transform: translate(-50%, 50%); }
+    .tx-screw-br { bottom: 75px; right: 75px; transform: translate(50%, 50%); }
 
     /* Faceplate — inset border matching outer radius */
     .tx-faceplate {
