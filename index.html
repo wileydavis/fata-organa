@@ -415,11 +415,20 @@
     /* Band selector */
     /* === INDICATOR LIGHTS === */
     .tx-indicator-lights {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        gap: calc(6rem + 120px);
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        width: 100%;
         padding: calc(0.75rem + 20px) 1rem 0.75rem;
+    }
+
+    .tx-indicator:first-child {
+        grid-column: 1;
+        justify-self: center;
+    }
+
+    .tx-indicator:last-child {
+        grid-column: 3;
+        justify-self: center;
     }
 
     .tx-indicator {
