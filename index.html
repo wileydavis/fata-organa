@@ -1410,10 +1410,14 @@
             });
         }
 
-        // Escape key exits focus mode with fade
+        // Escape key pauses playback and exits focus mode with fade
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && inFocus) {
                 e.preventDefault();
+                // Pause playback (same as clicking the meter)
+                if (window.vuPlayer && window.vuPlayer.isPlaying()) {
+                    window.vuPlayer.pause();
+                }
                 exitFocus();
             }
         });
