@@ -95,18 +95,108 @@
         width: 100%;
         max-width: 580px;
         flex-shrink: 0;
-        background: rgba(8, 8, 10, 1.0);
+        background: rgba(8, 8, 10, 0.7);
         border: 1px solid rgba(196, 163, 90, 0.06);
-        border-radius: 50%;
+        border-radius: 4px;
         padding: 0.5rem 0;
         aspect-ratio: 1 / 1;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
-        -webkit-mask-image: radial-gradient(circle at center, black 65%, transparent 73%);
-        mask-image: radial-gradient(circle at center, black 65%, transparent 73%);
+        position: relative;
+    }
+
+    /* === TRANSMITTER HARDWARE === */
+    /* Corner screws */
+    .tx-screw {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, #3a3530 0%, #1e1c18 60%, #151310 100%);
+        border: 0.5px solid rgba(196, 163, 90, 0.08);
+        z-index: 2;
+    }
+
+    .tx-screw::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(35deg);
+        width: 6px;
+        height: 0.5px;
+        background: rgba(196, 163, 90, 0.12);
+    }
+
+    .tx-screw-tl { top: 10px; left: 10px; }
+    .tx-screw-tr { top: 10px; right: 10px; }
+    .tx-screw-bl { bottom: 10px; left: 10px; }
+    .tx-screw-br { bottom: 10px; right: 10px; }
+
+    /* Faceplate — inset border */
+    .tx-faceplate {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        right: 6px;
+        bottom: 6px;
+        border: 1px solid rgba(196, 163, 90, 0.04);
+        border-radius: 2px;
+        pointer-events: none;
+    }
+
+    /* Model plate — bottom left */
+    .tx-model-plate {
+        position: absolute;
+        bottom: 16px;
+        left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        z-index: 2;
+    }
+
+    .tx-model-id {
+        font-family: var(--mono);
+        font-size: 0.45rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: rgba(196, 163, 90, 0.2);
+    }
+
+    .tx-model-serial {
+        font-family: var(--mono);
+        font-size: 0.4rem;
+        letter-spacing: 0.15em;
+        color: rgba(196, 163, 90, 0.12);
+    }
+
+    /* Ventilation slots — bottom right */
+    .tx-vents {
+        position: absolute;
+        bottom: 16px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        z-index: 2;
+    }
+
+    .tx-vent {
+        width: 24px;
+        height: 1.5px;
+        background: rgba(196, 163, 90, 0.06);
+        border-radius: 1px;
+    }
+
+    /* Hide hardware elements in focus mode */
+    .focus-mode .tx-screw,
+    .focus-mode .tx-faceplate,
+    .focus-mode .tx-model-plate,
+    .focus-mode .tx-vents {
+        display: none;
     }
 
     /* Frequency / episode selector bar */
@@ -1081,6 +1171,30 @@
         </div>
 
         <div class="tx-panel">
+            <!-- Hardware: corner screws -->
+            <div class="tx-screw tx-screw-tl"></div>
+            <div class="tx-screw tx-screw-tr"></div>
+            <div class="tx-screw tx-screw-bl"></div>
+            <div class="tx-screw tx-screw-br"></div>
+
+            <!-- Hardware: faceplate border -->
+            <div class="tx-faceplate"></div>
+
+            <!-- Hardware: model plate -->
+            <div class="tx-model-plate">
+                <span class="tx-model-id">RX-146 RECEIVER</span>
+                <span class="tx-model-serial">S/N 00-7283-FO</span>
+            </div>
+
+            <!-- Hardware: ventilation slots -->
+            <div class="tx-vents">
+                <div class="tx-vent"></div>
+                <div class="tx-vent"></div>
+                <div class="tx-vent"></div>
+                <div class="tx-vent"></div>
+                <div class="tx-vent"></div>
+            </div>
+
             <!-- Frequency bar / episode selector -->
             <div class="tx-frequency-bar">
                 <span class="tx-freq-label">146.520 MHz</span>
