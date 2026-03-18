@@ -390,17 +390,16 @@
         }
 
         // === COUNTDOWN TIMER ===
-        // Show remaining time below the sconce, counting down to 0:00
         if (audio && audio.duration && hasStarted) {
             var remaining = Math.max(0, audio.duration - audio.currentTime);
             var mins = Math.floor(remaining / 60);
             var secs = Math.floor(remaining % 60);
             var timeStr = '-' + mins + ':' + (secs < 10 ? '0' : '') + secs;
 
-            ctx.font = '400 10px "JetBrains Mono", monospace';
+            ctx.font = '400 13px "JetBrains Mono", monospace';
             ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(196, 163, 90, 0.3)';
-            ctx.fillText(timeStr, cx, cy + 28);
+            ctx.fillStyle = 'rgba(196, 163, 90, 0.35)';
+            ctx.fillText(timeStr, cx, cy + 42);
         }
     }
 
