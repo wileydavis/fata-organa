@@ -377,8 +377,38 @@
                     <span class="fm-sidebar-meta">Chronological Development Record</span>
                 </a>
             </div>
+
+            <!-- Email signup -->
+            <div class="fm-sidebar-signup">
+                <div class="fm-signup-inner">
+                    <span class="fm-signup-label">Receive Future Transmissions</span>
+                    <div class="fm-signup-form" id="signup-form">
+                        <input type="email" id="signup-email" placeholder="frequency@example.com" autocomplete="email" class="fm-signup-input" />
+                        <button id="signup-btn" class="fm-signup-btn">Subscribe</button>
+                    </div>
+                    <span id="signup-status" class="fm-signup-status"></span>
+                </div>
+            </div>
         </div>
     </div>
+
+    <style>
+    .fm-sidebar-signup {
+        padding: 1.5rem 1.25rem;
+        border-top: 1px solid rgba(42, 42, 47, 0.4);
+        margin-top: auto;
+    }
+    .fm-signup-inner { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .fm-signup-label { font-family: var(--mono); font-size: 0.45rem; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(196, 163, 90, 0.35); }
+    .fm-signup-form { display: flex; align-items: center; border: 1px solid rgba(196, 163, 90, 0.15); border-radius: 3px; overflow: hidden; background: rgba(8, 8, 10, 0.6); }
+    .fm-signup-input { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.05em; color: rgba(196, 163, 90, 0.8); background: transparent; border: none; outline: none; padding: 0.35rem 0.5rem; width: 140px; }
+    .fm-signup-input::placeholder { color: rgba(196, 163, 90, 0.2); }
+    .fm-signup-btn { font-family: var(--mono); font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(196, 163, 90, 0.6); background: rgba(196, 163, 90, 0.06); border: none; border-left: 1px solid rgba(196, 163, 90, 0.15); padding: 0.35rem 0.5rem; cursor: pointer; }
+    .fm-signup-btn:hover { color: rgba(196, 163, 90, 0.9); background: rgba(196, 163, 90, 0.1); }
+    .fm-signup-status { font-family: var(--mono); font-size: 0.45rem; letter-spacing: 0.1em; color: rgba(196, 163, 90, 0.5); min-height: 1em; }
+    .fm-signup-status.success { color: rgba(90, 180, 90, 0.7); }
+    .fm-signup-status.error { color: rgba(180, 60, 50, 0.7); }
+    </style>
 
     <script src="/js/spoiler.js"></script>
     <script>
@@ -545,6 +575,29 @@
         if (!btn || !links) return;
         btn.addEventListener('click', function() { btn.classList.toggle('open'); links.classList.toggle('open'); });
         links.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', function() { btn.classList.remove('open'); links.classList.remove('open'); }); });
+    })();
+    </script>
+    <script>
+    // Klaviyo signup
+    (function() {
+        var input = document.getElementById('signup-email');
+        var btn = document.getElementById('signup-btn');
+        var status = document.getElementById('signup-status');
+        var form = document.getElementById('signup-form');
+        if (!input || !btn) return;
+        function subscribe() {
+            var email = input.value.trim();
+            if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { status.textContent = 'INVALID FREQUENCY'; status.className = 'fm-signup-status error'; return; }
+            btn.textContent = 'TUNING...'; btn.disabled = true; status.textContent = '';
+            fetch('https://a.klaviyo.com/client/subscriptions/?company_id=WaV2xM', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'revision': '2023-02-22' },
+                body: JSON.stringify({ data: { type: 'subscription', attributes: { profile: { data: { type: 'profile', attributes: { email: email } } }, custom_source: 'Fata Organa Website' }, relationships: { list: { data: { type: 'list', id: 'WeCHmw' } } } } })
+            }).then(function(res) { if (res.ok || res.status === 202) { status.textContent = 'SIGNAL LOCKED'; status.className = 'fm-signup-status success'; input.value = ''; form.style.display = 'none'; } else { throw new Error(); }
+            }).catch(function() { status.textContent = 'SIGNAL LOST — TRY AGAIN'; status.className = 'fm-signup-status error';
+            }).finally(function() { btn.textContent = 'SUBSCRIBE'; btn.disabled = false; });
+        }
+        btn.addEventListener('click', subscribe);
+        input.addEventListener('keydown', function(e) { if (e.key === 'Enter') subscribe(); });
     })();
     </script>
 </body>
