@@ -6,9 +6,7 @@
     <title>Particle Designer — FATA ORGANA</title>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
         --bg: #0a0a0c;
         --amber: rgba(196, 163, 90, 1);
@@ -17,328 +15,193 @@
         --red: rgba(180, 60, 50, 0.7);
         --mono: 'JetBrains Mono', monospace;
     }
+    html, body { background: var(--bg); color: var(--amber-dim); font-family: var(--mono); font-size: 12px; overflow: hidden; height: 100%; }
 
-    html, body {
-        background: var(--bg);
-        color: var(--amber-dim);
-        font-family: var(--mono);
-        font-size: 12px;
-        overflow: hidden;
-        height: 100%;
-    }
+    #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
 
-    /* Particle canvas — full screen behind everything */
-    #particle-canvas {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        z-index: 0;
-    }
-
-    /* Transmitter circle overlay — shows where the panel blocks the view */
     #transmitter-ghost {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        width: 440px; height: 440px;
-        border-radius: 50%;
-        border: 1px dashed rgba(196, 163, 90, 0.12);
-        pointer-events: none;
-        z-index: 1;
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 440px; height: 440px; border-radius: 50%;
+        border: 1px dashed rgba(196, 163, 90, 0.1);
+        pointer-events: none; z-index: 1;
     }
 
-    #transmitter-ghost::after {
-        content: '';
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        width: 70%; height: 70%;
-        border-radius: 50%;
-        border: 1px dashed rgba(196, 163, 90, 0.06);
+    /* === NAV === */
+    .designer-nav {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 8px 16px; background: rgba(10, 10, 12, 0.85);
+        backdrop-filter: blur(8px); border-bottom: 1px solid rgba(196, 163, 90, 0.06);
     }
+    .designer-nav a, .designer-nav span {
+        color: rgba(196, 163, 90, 0.4); text-decoration: none;
+        font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; cursor: pointer;
+    }
+    .designer-nav a:hover, .designer-nav span:hover { color: var(--amber); }
 
-    /* Control panel — centered circle matching transmitter */
+    /* === CONTROL PANEL — right side === */
     #controls {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        width: 400px; height: 400px;
-        border-radius: 50%;
-        background: radial-gradient(circle at 50% 50%, rgba(8, 8, 10, 0.95) 60%, rgba(8, 8, 10, 0.85) 100%);
-        border: 1px solid rgba(196, 163, 90, 0.1);
-        z-index: 10;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 60px 50px;
-        overflow: hidden;
-        backdrop-filter: blur(12px);
+        position: fixed; top: 36px; right: 0; bottom: 0; width: 260px;
+        background: rgba(8, 8, 10, 0.92); backdrop-filter: blur(12px);
+        border-left: 1px solid rgba(196, 163, 90, 0.06);
+        z-index: 50; overflow-y: auto; padding: 12px 14px;
+        scrollbar-width: thin; scrollbar-color: rgba(196,163,90,0.1) transparent;
     }
-
-    #controls.collapsed {
-        width: 50px; height: 50px;
-        padding: 0;
-        cursor: pointer;
-        opacity: 0.4;
-        transition: opacity 0.2s;
-    }
-
-    #controls.collapsed:hover { opacity: 0.8; }
-    #controls.collapsed .ctrl-inner { display: none; }
-    #controls.collapsed .ctrl-toggle { display: flex; }
-
-    .ctrl-toggle {
-        display: none;
-        align-items: center;
-        justify-content: center;
-        width: 100%; height: 100%;
-        font-size: 18px;
-        color: var(--amber-dim);
-    }
-
-    .ctrl-inner {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        max-height: 280px;
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(196,163,90,0.15) transparent;
-    }
-
-    .ctrl-inner::-webkit-scrollbar { width: 3px; }
-    .ctrl-inner::-webkit-scrollbar-track { background: transparent; }
-    .ctrl-inner::-webkit-scrollbar-thumb { background: rgba(196,163,90,0.15); border-radius: 2px; }
-
-    /* Pattern selector */
-    .ctrl-section {
-        margin-bottom: 4px;
-    }
+    #controls::-webkit-scrollbar { width: 3px; }
+    #controls::-webkit-scrollbar-thumb { background: rgba(196,163,90,0.12); border-radius: 2px; }
 
     .ctrl-label {
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: rgba(196, 163, 90, 0.35);
-        margin-bottom: 3px;
+        font-size: 8px; text-transform: uppercase; letter-spacing: 0.18em;
+        color: rgba(196, 163, 90, 0.3); margin: 8px 0 4px; border-bottom: 1px solid rgba(196,163,90,0.06); padding-bottom: 3px;
     }
+    .ctrl-label:first-child { margin-top: 0; }
 
     .ctrl-select {
-        width: 100%;
-        background: rgba(196, 163, 90, 0.04);
-        border: 1px solid rgba(196, 163, 90, 0.15);
-        color: var(--amber);
-        font-family: var(--mono);
-        font-size: 10px;
-        padding: 4px 6px;
-        border-radius: 2px;
-        outline: none;
-        cursor: pointer;
+        width: 100%; background: rgba(196, 163, 90, 0.04);
+        border: 1px solid rgba(196, 163, 90, 0.12); color: var(--amber);
+        font-family: var(--mono); font-size: 10px; padding: 4px 6px;
+        border-radius: 2px; outline: none; cursor: pointer;
     }
+    .ctrl-select option { background: #0a0a0c; color: var(--amber); }
 
-    .ctrl-select option {
-        background: #0a0a0c;
-        color: var(--amber);
-    }
-
-    /* Slider row */
     .ctrl-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+        display: flex; align-items: center; gap: 4px; padding: 2px 0;
     }
-
+    .ctrl-row[title] { cursor: help; }
+    .ctrl-row[title]:hover label { color: rgba(196, 163, 90, 0.7); }
     .ctrl-row label {
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: rgba(196, 163, 90, 0.4);
-        width: 75px;
-        flex-shrink: 0;
-        text-align: right;
+        font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em;
+        color: rgba(196, 163, 90, 0.35); width: 62px; flex-shrink: 0; text-align: right;
     }
-
     .ctrl-row input[type="range"] {
-        flex: 1;
-        -webkit-appearance: none;
-        appearance: none;
-        height: 2px;
-        background: rgba(196, 163, 90, 0.12);
-        border-radius: 1px;
-        outline: none;
+        flex: 1; -webkit-appearance: none; appearance: none;
+        height: 2px; background: rgba(196, 163, 90, 0.1); border-radius: 1px; outline: none;
     }
-
     .ctrl-row input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 10px; height: 10px;
-        border-radius: 50%;
-        background: var(--amber);
-        cursor: pointer;
+        -webkit-appearance: none; width: 8px; height: 8px; border-radius: 50%;
+        background: var(--amber); cursor: pointer;
     }
-
     .ctrl-row .ctrl-val {
-        font-size: 9px;
-        color: rgba(196, 163, 90, 0.6);
-        width: 45px;
-        text-align: left;
+        font-size: 8px; color: rgba(196, 163, 90, 0.5); width: 38px; text-align: left;
     }
 
-    .ctrl-row[title] {
-        cursor: help;
+    #params-container { margin-top: 2px; }
+
+    /* === AUDIO / TRANSPORT — bottom floating bar === */
+    #transport {
+        position: fixed; bottom: 0; left: 0; right: 260px; z-index: 80;
+        background: rgba(8, 8, 10, 0.92); backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(196, 163, 90, 0.08);
+        padding: 10px 16px;
     }
 
-    .ctrl-row[title]:hover label {
-        color: rgba(196, 163, 90, 0.7);
+    .transport-top {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
     }
 
-    /* Buttons */
-    .ctrl-buttons {
-        display: flex;
-        gap: 6px;
-        margin-top: 6px;
-        flex-wrap: wrap;
-        justify-content: center;
+    .transport-select {
+        background: rgba(196, 163, 90, 0.04); border: 1px solid rgba(196, 163, 90, 0.12);
+        color: var(--amber); font-family: var(--mono); font-size: 10px;
+        padding: 4px 8px; border-radius: 2px; outline: none; cursor: pointer; flex-shrink: 0;
+    }
+    .transport-select option { background: #0a0a0c; }
+
+    .transport-btn {
+        font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+        letter-spacing: 0.08em; padding: 4px 10px;
+        border: 1px solid rgba(196, 163, 90, 0.2); background: transparent;
+        color: rgba(196, 163, 90, 0.6); cursor: pointer; border-radius: 2px;
+        transition: all 0.15s; flex-shrink: 0;
+    }
+    .transport-btn:hover { color: var(--amber); border-color: rgba(196, 163, 90, 0.4); background: rgba(196, 163, 90, 0.06); }
+    .transport-btn.commit { border-color: rgba(90, 180, 90, 0.4); color: rgba(90, 180, 90, 0.7); }
+    .transport-btn.commit:hover { background: rgba(90, 180, 90, 0.08); color: rgba(90, 180, 90, 1); }
+    .transport-btn.danger { border-color: rgba(180, 60, 50, 0.3); color: rgba(180, 60, 50, 0.6); }
+    .transport-btn.danger:hover { background: rgba(180, 60, 50, 0.08); color: rgba(180, 60, 50, 1); }
+
+    .transport-time {
+        font-family: var(--mono); font-size: 14px; color: var(--amber);
+        letter-spacing: 0.1em; min-width: 55px; text-align: center; flex-shrink: 0;
     }
 
-    .ctrl-btn {
-        font-family: var(--mono);
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        padding: 5px 10px;
-        border: 1px solid rgba(196, 163, 90, 0.2);
-        background: transparent;
-        color: rgba(196, 163, 90, 0.6);
-        cursor: pointer;
-        border-radius: 2px;
-        transition: all 0.2s;
+    .transport-duration {
+        font-size: 10px; color: rgba(196, 163, 90, 0.3); flex-shrink: 0;
     }
 
-    .ctrl-btn:hover {
-        color: var(--amber);
-        border-color: rgba(196, 163, 90, 0.4);
-        background: rgba(196, 163, 90, 0.06);
+    /* Scrubber */
+    .transport-scrub-wrap {
+        position: relative; height: 24px; cursor: pointer; flex: 1;
     }
 
-    .ctrl-btn.active {
-        color: var(--amber);
-        border-color: rgba(196, 163, 90, 0.5);
-        background: rgba(196, 163, 90, 0.1);
+    .transport-scrub-track {
+        position: absolute; top: 11px; left: 0; right: 0; height: 2px;
+        background: rgba(196, 163, 90, 0.1); border-radius: 1px;
     }
 
-    /* JSON output */
-    #json-output {
-        position: fixed;
-        bottom: 20px; left: 50%;
-        transform: translateX(-50%);
-        max-width: 600px; width: 90%;
-        z-index: 20;
-        display: none;
+    .transport-scrub-progress {
+        position: absolute; top: 11px; left: 0; height: 2px;
+        background: rgba(196, 163, 90, 0.4); border-radius: 1px; width: 0;
     }
 
-    #json-output.visible { display: block; }
-
-    #json-output pre {
-        background: rgba(8, 8, 10, 0.95);
-        border: 1px solid rgba(196, 163, 90, 0.2);
-        border-radius: 4px;
-        padding: 12px 16px;
-        font-family: var(--mono);
-        font-size: 10px;
-        color: rgba(196, 163, 90, 0.8);
-        overflow-x: auto;
-        white-space: pre;
-        backdrop-filter: blur(8px);
+    .transport-scrub-head {
+        position: absolute; top: 6px; width: 10px; height: 10px;
+        border-radius: 50%; background: var(--amber);
+        transform: translateX(-5px); left: 0;
     }
 
-    #json-output .close-json {
-        position: absolute;
-        top: 6px; right: 10px;
-        background: none; border: none;
-        color: rgba(196, 163, 90, 0.4);
-        font-size: 14px;
-        cursor: pointer;
+    /* Cue markers on scrubber */
+    .cue-marker {
+        position: absolute; top: 4px; width: 2px; height: 16px;
+        background: rgba(90, 180, 90, 0.5); border-radius: 1px;
+        transform: translateX(-1px); pointer-events: none;
     }
 
+    /* === TIMELINE / CUE LIST === */
+    .transport-cues {
+        display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; max-height: 60px; overflow-y: auto;
+    }
+
+    .cue-chip {
+        display: flex; align-items: center; gap: 4px;
+        font-size: 8px; padding: 3px 6px; border-radius: 2px;
+        background: rgba(196, 163, 90, 0.06); border: 1px solid rgba(196, 163, 90, 0.1);
+        color: rgba(196, 163, 90, 0.6); cursor: pointer;
+    }
+    .cue-chip:hover { border-color: rgba(196, 163, 90, 0.3); color: var(--amber); }
+    .cue-chip .cue-time { color: rgba(90, 180, 90, 0.7); }
+    .cue-chip .cue-pattern { color: rgba(196, 163, 90, 0.5); }
+    .cue-chip .cue-delete {
+        color: rgba(180, 60, 50, 0.4); cursor: pointer; font-size: 10px; margin-left: 2px;
+    }
+    .cue-chip .cue-delete:hover { color: rgba(180, 60, 50, 0.9); }
+
+    /* Toast */
     #copy-toast {
-        position: fixed;
-        bottom: 80px; left: 50%;
-        transform: translateX(-50%);
-        background: rgba(196, 163, 90, 0.15);
-        border: 1px solid rgba(196, 163, 90, 0.3);
-        color: var(--amber);
-        font-family: var(--mono);
-        font-size: 10px;
-        padding: 6px 14px;
-        border-radius: 3px;
-        z-index: 30;
-        opacity: 0;
-        transition: opacity 0.3s;
-        pointer-events: none;
+        position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+        background: rgba(196, 163, 90, 0.12); border: 1px solid rgba(196, 163, 90, 0.25);
+        color: var(--amber); font-family: var(--mono); font-size: 10px;
+        padding: 6px 14px; border-radius: 3px; z-index: 200;
+        opacity: 0; transition: opacity 0.3s; pointer-events: none;
     }
-
     #copy-toast.show { opacity: 1; }
 
-    /* Nav */
-    .designer-nav {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        z-index: 100;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 16px;
-        background: rgba(10, 10, 12, 0.8);
-        backdrop-filter: blur(8px);
-        border-bottom: 1px solid rgba(196, 163, 90, 0.06);
+    /* JSON modal */
+    #json-modal {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7); z-index: 150; display: none;
+        align-items: center; justify-content: center;
     }
-
-    .designer-nav a {
-        color: rgba(196, 163, 90, 0.5);
-        text-decoration: none;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        transition: color 0.2s;
+    #json-modal.visible { display: flex; }
+    #json-modal-inner {
+        background: rgba(8, 8, 10, 0.97); border: 1px solid rgba(196, 163, 90, 0.15);
+        border-radius: 4px; padding: 16px; max-width: 600px; width: 90%;
+        max-height: 70vh; overflow-y: auto;
     }
-
-    .designer-nav a:hover { color: var(--amber); }
-
-    .designer-nav .nav-title {
-        color: rgba(196, 163, 90, 0.3);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
+    #json-modal pre {
+        font-family: var(--mono); font-size: 10px; color: rgba(196, 163, 90, 0.75);
+        white-space: pre; overflow-x: auto;
     }
-
-    /* Time input */
-    .ctrl-time {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .ctrl-time input {
-        width: 50px;
-        background: rgba(196, 163, 90, 0.04);
-        border: 1px solid rgba(196, 163, 90, 0.15);
-        color: var(--amber);
-        font-family: var(--mono);
-        font-size: 10px;
-        padding: 3px 5px;
-        border-radius: 2px;
-        outline: none;
-        text-align: center;
-    }
-
-    .ctrl-time label {
-        font-size: 9px;
-        color: rgba(196, 163, 90, 0.4);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-    }
+    #json-modal .modal-btns { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
     </style>
 </head>
 <body>
@@ -346,71 +209,89 @@
     <div id="transmitter-ghost"></div>
 
     <nav class="designer-nav">
-        <a href="/">← Back to Transmitter</a>
-        <span class="nav-title">Particle Designer</span>
-        <a href="#" id="toggle-controls">Hide Controls</a>
+        <a href="/">← Back</a>
+        <span style="color: rgba(196,163,90,0.25);">Particle Score Designer</span>
+        <span id="toggle-controls">Hide Panel</span>
     </nav>
 
+    <!-- RIGHT PANEL — particle controls -->
     <div id="controls">
-        <span class="ctrl-toggle">⚙</span>
-        <div class="ctrl-inner">
-            <div class="ctrl-section">
-                <div class="ctrl-label">Pattern</div>
-                <select class="ctrl-select" id="sel-pattern">
-                    <option value="scatter">scatter</option>
-                    <option value="grid">grid</option>
-                    <option value="concentric">concentric</option>
-                    <option value="spiral">spiral</option>
-                    <option value="lattice">lattice</option>
-                    <option value="fibonacci">fibonacci</option>
-                    <option value="waveform">waveform</option>
-                    <option value="helix">helix</option>
-                    <option value="lissajous">lissajous</option>
-                    <option value="ring">ring</option>
-                    <option value="column">column</option>
-                    <option value="horizon">horizon</option>
-                    <option value="converge">converge</option>
-                    <option value="explode">explode</option>
-                </select>
+        <div class="ctrl-label">Pattern</div>
+        <select class="ctrl-select" id="sel-pattern">
+            <option value="scatter">scatter</option>
+            <option value="grid">grid</option>
+            <option value="concentric">concentric</option>
+            <option value="spiral">spiral</option>
+            <option value="lattice">lattice</option>
+            <option value="fibonacci">fibonacci</option>
+            <option value="waveform">waveform</option>
+            <option value="helix">helix</option>
+            <option value="lissajous">lissajous</option>
+            <option value="ring">ring</option>
+            <option value="column">column</option>
+            <option value="horizon">horizon</option>
+            <option value="converge">converge</option>
+            <option value="explode">explode</option>
+        </select>
+
+        <div class="ctrl-label">Movement</div>
+        <div class="ctrl-row" title="Velocity multiplier. Higher = snappier formation."><label>Speed</label><input type="range" id="sl-speed" min="0.1" max="8" step="0.1" value="3"><span class="ctrl-val" id="v-speed">3</span></div>
+        <div class="ctrl-row" title="Pull toward pattern. Low = drift. High = lock into place."><label>Attract</label><input type="range" id="sl-attraction" min="0.001" max="0.1" step="0.001" value="0.04"><span class="ctrl-val" id="v-attraction">0.04</span></div>
+        <div class="ctrl-row" title="Random drift. High = chaotic. Low = particles hold position."><label>Wander</label><input type="range" id="sl-wander" min="0" max="0.02" step="0.0001" value="0.0005"><span class="ctrl-val" id="v-wander">0.0005</span></div>
+        <div class="ctrl-row" title="Friction. Low = crisp brake. High = floaty overshoot."><label>Damping</label><input type="range" id="sl-damping" min="0.8" max="0.99" step="0.01" value="0.88"><span class="ctrl-val" id="v-damping">0.88</span></div>
+        <div class="ctrl-row" title="Global spin speed. 0 = static."><label>Rotation</label><input type="range" id="sl-rotation" min="0" max="0.003" step="0.00005" value="0.0003"><span class="ctrl-val" id="v-rotation">0.0003</span></div>
+
+        <div class="ctrl-label">Appearance</div>
+        <div class="ctrl-row" title="Opacity multiplier. Below 1 = dim. Above 1 = vivid."><label>Bright</label><input type="range" id="sl-brightness" min="0.1" max="2" step="0.05" value="0.9"><span class="ctrl-val" id="v-brightness">0.9</span></div>
+        <div class="ctrl-row" title="Max distance for connection lines. 0 = off."><label>Conn Dist</label><input type="range" id="sl-connectionDist" min="0" max="200" step="5" value="0"><span class="ctrl-val" id="v-connectionDist">0</span></div>
+        <div class="ctrl-row" title="Connection line opacity."><label>Conn Alpha</label><input type="range" id="sl-connectionAlpha" min="0" max="0.2" step="0.005" value="0"><span class="ctrl-val" id="v-connectionAlpha">0</span></div>
+
+        <div class="ctrl-label">Color</div>
+        <div class="ctrl-row" title="Hue rotation. 0 = amber. +120 = blue. -60 = red."><label>Hue</label><input type="range" id="sl-hueShift" min="-180" max="180" step="1" value="0"><span class="ctrl-val" id="v-hueShift">0</span></div>
+        <div class="ctrl-row" title="Saturation offset. + = vivid. - = grey."><label>Sat</label><input type="range" id="sl-satShift" min="-40" max="40" step="1" value="0"><span class="ctrl-val" id="v-satShift">0</span></div>
+        <div class="ctrl-row" title="Lightness offset. + = bright. - = dark."><label>Lit</label><input type="range" id="sl-litShift" min="-30" max="30" step="1" value="0"><span class="ctrl-val" id="v-litShift">0</span></div>
+
+        <div id="params-container"></div>
+
+        <div class="ctrl-label">Transition</div>
+        <div class="ctrl-row" title="Seconds to ease into this cue from the previous state."><label>Duration</label><input type="range" id="sl-transition" min="0" max="15" step="0.1" value="3"><span class="ctrl-val" id="v-transition">3</span></div>
+    </div>
+
+    <!-- BOTTOM BAR — audio transport + timeline -->
+    <div id="transport">
+        <div class="transport-top">
+            <select class="transport-select" id="track-select">
+                <option value="https://media.fataorgana.fm/episodes/Teaser-Intro.mp3">Lab Orientation (3:31)</option>
+                <option value="https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2">EP 01 — Calibration (30:08)</option>
+                <option value="https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2">EP 01 Score — Attrition (7:54)</option>
+            </select>
+            <button class="transport-btn" id="btn-play">Play</button>
+            <span class="transport-time" id="time-display">0:00</span>
+            <div class="transport-scrub-wrap" id="scrub-wrap">
+                <div class="transport-scrub-track"></div>
+                <div class="transport-scrub-progress" id="scrub-progress"></div>
+                <div class="transport-scrub-head" id="scrub-head"></div>
+                <div id="cue-markers"></div>
             </div>
-
-            <div class="ctrl-row" title="Velocity multiplier — how fast particles move toward targets. Higher = snappier formation."><label>Speed</label><input type="range" id="sl-speed" min="0.1" max="8" step="0.1" value="3"><span class="ctrl-val" id="v-speed">3</span></div>
-            <div class="ctrl-row" title="Pull strength toward pattern positions. Low (0.003) = loose drift. High (0.06) = particles lock into place."><label>Attraction</label><input type="range" id="sl-attraction" min="0.001" max="0.1" step="0.001" value="0.04"><span class="ctrl-val" id="v-attraction">0.04</span></div>
-            <div class="ctrl-row" title="Random drift per frame. High = chaotic, organic movement. Low = particles hold their positions tightly."><label>Wander</label><input type="range" id="sl-wander" min="0" max="0.02" step="0.0001" value="0.0005"><span class="ctrl-val" id="v-wander">0.0005</span></div>
-            <div class="ctrl-row" title="Velocity friction. Low (0.84) = particles brake hard, crisp formations. High (0.96) = momentum, floaty overshoot."><label>Damping</label><input type="range" id="sl-damping" min="0.8" max="0.99" step="0.01" value="0.88"><span class="ctrl-val" id="v-damping">0.88</span></div>
-            <div class="ctrl-row" title="Global rotation speed of the entire pattern around center. 0 = static. Higher = spinning."><label>Rotation</label><input type="range" id="sl-rotation" min="0" max="0.003" step="0.00005" value="0.0003"><span class="ctrl-val" id="v-rotation">0.0003</span></div>
-            <div class="ctrl-row" title="Particle opacity multiplier. Below 1 = dim, ghostly. Above 1 = bright, vivid."><label>Brightness</label><input type="range" id="sl-brightness" min="0.1" max="2" step="0.05" value="0.9"><span class="ctrl-val" id="v-brightness">0.9</span></div>
-            <div class="ctrl-row" title="Max distance for drawing lines between nearby particles. 0 = no connections. Higher = denser web."><label>Conn Dist</label><input type="range" id="sl-connectionDist" min="0" max="200" step="5" value="0"><span class="ctrl-val" id="v-connectionDist">0</span></div>
-            <div class="ctrl-row" title="Opacity of connection lines. Higher = more visible network between particles."><label>Conn Alpha</label><input type="range" id="sl-connectionAlpha" min="0" max="0.2" step="0.005" value="0"><span class="ctrl-val" id="v-connectionAlpha">0</span></div>
-
-            <div class="ctrl-label" style="margin-top: 4px;">Color</div>
-            <div class="ctrl-row" title="Hue offset from base amber (38°). 0 = default amber. Positive = warmer/red. Negative = cooler/green. ±180 = full spectrum shift."><label>Hue Shift</label><input type="range" id="sl-hueShift" min="-180" max="180" step="1" value="0"><span class="ctrl-val" id="v-hueShift">0</span></div>
-            <div class="ctrl-row" title="Saturation offset. Positive = more vivid color. Negative = desaturated, grey."><label>Sat Shift</label><input type="range" id="sl-satShift" min="-40" max="40" step="1" value="0"><span class="ctrl-val" id="v-satShift">0</span></div>
-            <div class="ctrl-row" title="Lightness offset. Positive = brighter particles. Negative = darker."><label>Lit Shift</label><input type="range" id="sl-litShift" min="-30" max="30" step="1" value="0"><span class="ctrl-val" id="v-litShift">0</span></div>
-
-            <!-- Pattern-specific params -->
-            <div id="params-container"></div>
-
-            <div class="ctrl-section" style="margin-top: 4px;">
-                <div class="ctrl-time">
-                    <label>Time (s)</label>
-                    <input type="number" id="inp-time" value="0" min="0" max="9999">
-                    <label>Trans (s)</label>
-                    <input type="number" id="inp-transition" value="3" min="0" max="30" step="0.1">
-                </div>
-            </div>
-
-            <div class="ctrl-buttons">
-                <button class="ctrl-btn" id="btn-generate">Generate JSON</button>
-                <button class="ctrl-btn" id="btn-copy">Copy Cue</button>
-                <button class="ctrl-btn" id="btn-reset">Reset</button>
-            </div>
+            <span class="transport-duration" id="duration-display">--:--</span>
+            <button class="transport-btn commit" id="btn-commit">● Commit Cue</button>
+        </div>
+        <div class="transport-cues" id="cue-list"></div>
+        <div style="display:flex; gap:6px; margin-top:6px; justify-content:flex-end;">
+            <button class="transport-btn" id="btn-export">Export JSON</button>
+            <button class="transport-btn" id="btn-copy-all">Copy JSON</button>
+            <button class="transport-btn danger" id="btn-clear">Clear All</button>
         </div>
     </div>
 
-    <div id="json-output">
-        <button class="close-json" id="btn-close-json">×</button>
-        <pre id="json-pre"></pre>
+    <div id="json-modal">
+        <div id="json-modal-inner">
+            <pre id="json-pre"></pre>
+            <div class="modal-btns">
+                <button class="transport-btn" id="modal-copy">Copy</button>
+                <button class="transport-btn" id="modal-close">Close</button>
+            </div>
+        </div>
     </div>
 
     <div id="copy-toast">Copied to clipboard</div>
@@ -419,449 +300,339 @@
 (function() {
     'use strict';
 
-    // --- Seeded PRNG ---
     function seedRandom(seed) {
-        return function() {
-            seed = (seed * 16807 + 0) % 2147483647;
-            return (seed - 1) / 2147483646;
-        };
+        return function() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
     }
 
-    // --- Canvas setup ---
     var canvas = document.getElementById('particle-canvas');
     var ctx = canvas.getContext('2d');
     var width = 0, height = 0, time = 0;
 
-    function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-    }
+    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
     window.addEventListener('resize', resize);
     resize();
 
     function clampX(x) { return Math.max(30, Math.min(width - 30, x)); }
     function clampY(y) { return Math.max(30, Math.min(height - 30, y)); }
 
-    // --- Pattern library (same as atmosphere.js) ---
+    // === PATTERN LIBRARY ===
     function patternPosition(name, idx, count, params) {
-        var cx = width / 2, cy = height / 2;
-        var t = idx / count;
-        var margin = 30;
+        var cx = width / 2, cy = height / 2, t = idx / count, margin = 30;
         var deadR = Math.min(width, height) * 0.18;
-
         switch (name) {
-        case 'scatter': {
-            var rng = seedRandom(idx * 7919);
-            return { x: margin + rng() * (width - margin * 2), y: margin + rng() * (height - margin * 2) };
-        }
-        case 'grid': {
-            var cols = Math.ceil(Math.sqrt(count * (width / height)));
-            var rows = Math.ceil(count / cols);
-            var col = idx % cols, row = Math.floor(idx / cols);
-            var gx = margin + (col + 0.5) * ((width - margin * 2) / cols);
-            var gy = margin + (row + 0.5) * ((height - margin * 2) / rows);
-            var gdx = gx - cx, gdy = gy - cy;
-            var gDist = Math.sqrt(gdx * gdx + gdy * gdy) || 1;
-            if (gDist < deadR) { gx = cx + (gdx / gDist) * (deadR + 20); gy = cy + (gdy / gDist) * (deadR + 20); }
-            return { x: gx, y: gy };
-        }
-        case 'spiral': {
-            var arms = (params && params.arms) || 3;
-            var tightness = (params && params.tightness) || 0.8;
-            var arm = idx % arms;
-            var armT = Math.floor(idx / arms) / Math.ceil(count / arms);
-            var sa = armT * Math.PI * 6 * tightness + (arm * Math.PI * 2 / arms);
-            var sr = deadR + 30 + armT * (Math.max(width, height) * 0.42);
-            return { x: clampX(cx + Math.cos(sa) * sr), y: clampY(cy + Math.sin(sa) * sr) };
-        }
-        case 'concentric': {
-            var numRings = (params && params.rings) || 5;
-            var ring = Math.floor(t * numRings), ringT = (t * numRings) % 1;
-            var ringR = deadR + 40 + ring * ((Math.min(width, height) * 0.42) / numRings);
-            var ringA = ringT * Math.PI * 2 + ring * 0.4;
-            return { x: clampX(cx + Math.cos(ringA) * ringR), y: clampY(cy + Math.sin(ringA) * ringR) };
-        }
-        case 'lattice': {
-            var spacing = (params && params.spacing) || 40;
-            var side = Math.ceil(Math.pow(count, 1/3));
-            var xi = idx % side, yi = Math.floor(idx / side) % side, zi = Math.floor(idx / (side * side));
-            var ox = (xi - side/2) * spacing, oy = (yi - side/2) * spacing, oz = (zi - side/2) * spacing * 0.6;
-            var scale = 400 / (400 + oz);
-            return { x: cx + ox * scale, y: cy + oy * scale };
-        }
-        case 'waveform': {
-            var freq = (params && params.frequency) || 2, amp = (params && params.amplitude) || 80;
-            return { x: margin + t * (width - margin * 2), y: cy + Math.sin(t * Math.PI * 2 * freq) * amp };
-        }
-        case 'helix': {
-            var strand = idx % 2, helixT = Math.floor(idx / 2) / Math.ceil(count / 2);
-            var hFreq = (params && params.frequency) || 3, hAmp = (params && params.amplitude) || 60;
-            return { x: margin + helixT * (width - margin * 2), y: cy + Math.sin(helixT * Math.PI * 2 * hFreq + strand * Math.PI) * hAmp };
-        }
-        case 'fibonacci': {
-            var golden = (1 + Math.sqrt(5)) / 2;
-            var fAngle = idx * golden * Math.PI * 2;
-            var fR = deadR + Math.sqrt(idx / count) * (Math.min(width, height) * 0.42);
-            return { x: clampX(cx + Math.cos(fAngle) * fR), y: clampY(cy + Math.sin(fAngle) * fR) };
-        }
-        case 'lissajous': {
-            var la = (params && params.a) || 3, lb = (params && params.b) || 2, ld = (params && params.delta) || Math.PI / 2;
-            var lScale = Math.min(width, height) * 0.35;
-            return { x: cx + Math.sin(la * t * Math.PI * 2 + ld) * lScale, y: cy + Math.sin(lb * t * Math.PI * 2) * lScale };
-        }
-        case 'converge': {
-            var tx = (params && params.x !== undefined) ? params.x * width : cx;
-            var ty = (params && params.y !== undefined) ? params.y * height : cy;
-            var cR = (params && params.radius) || 3;
-            var cAngle = (idx / count) * Math.PI * 2;
-            return { x: tx + Math.cos(cAngle) * cR, y: ty + Math.sin(cAngle) * cR };
-        }
-        case 'explode': {
-            var eAngle = seedRandom(idx * 3571)() * Math.PI * 2;
-            var eR = Math.max(width, height) * 0.6 + seedRandom(idx * 9137)() * 100;
-            return { x: clampX(cx + Math.cos(eAngle) * eR), y: clampY(cy + Math.sin(eAngle) * eR) };
-        }
-        case 'ring': {
-            var ringRadius = (params && params.radius) || Math.min(width, height) * 0.3;
-            var rAngle = t * Math.PI * 2;
-            return { x: cx + Math.cos(rAngle) * ringRadius, y: cy + Math.sin(rAngle) * ringRadius };
-        }
-        case 'column': {
-            var colW = (params && params.width) || 60;
-            var rng2 = seedRandom(idx * 4513);
-            return { x: cx + (rng2() - 0.5) * colW, y: margin + t * (height - margin * 2) };
-        }
-        case 'horizon': {
-            var hY = (params && params.y !== undefined) ? params.y * height : cy;
-            var spread = (params && params.spread) || 8;
-            var rng3 = seedRandom(idx * 2741);
-            return { x: margin + t * (width - margin * 2), y: hY + (rng3() - 0.5) * spread };
-        }
+        case 'scatter': { var r = seedRandom(idx * 7919); return { x: margin + r() * (width - margin * 2), y: margin + r() * (height - margin * 2) }; }
+        case 'grid': { var cols = Math.ceil(Math.sqrt(count * (width / height))), rows = Math.ceil(count / cols); var col = idx % cols, row = Math.floor(idx / cols); var gx = margin + (col + 0.5) * ((width - margin * 2) / cols), gy = margin + (row + 0.5) * ((height - margin * 2) / rows); var gdx = gx - cx, gdy = gy - cy, gD = Math.sqrt(gdx * gdx + gdy * gdy) || 1; if (gD < deadR) { gx = cx + (gdx / gD) * (deadR + 20); gy = cy + (gdy / gD) * (deadR + 20); } return { x: gx, y: gy }; }
+        case 'spiral': { var arms = (params && params.arms) || 3, tight = (params && params.tightness) || 0.8; var arm = idx % arms, armT = Math.floor(idx / arms) / Math.ceil(count / arms); var sa = armT * Math.PI * 6 * tight + (arm * Math.PI * 2 / arms), sr = deadR + 30 + armT * (Math.max(width, height) * 0.42); return { x: clampX(cx + Math.cos(sa) * sr), y: clampY(cy + Math.sin(sa) * sr) }; }
+        case 'concentric': { var nr = (params && params.rings) || 5, ring = Math.floor(t * nr), rT = (t * nr) % 1; var rR = deadR + 40 + ring * ((Math.min(width, height) * 0.42) / nr), rA = rT * Math.PI * 2 + ring * 0.4; return { x: clampX(cx + Math.cos(rA) * rR), y: clampY(cy + Math.sin(rA) * rR) }; }
+        case 'lattice': { var sp = (params && params.spacing) || 40, side = Math.ceil(Math.pow(count, 1/3)); var xi = idx % side, yi = Math.floor(idx / side) % side, zi = Math.floor(idx / (side * side)); var ox = (xi - side/2) * sp, oy = (yi - side/2) * sp, oz = (zi - side/2) * sp * 0.6; var sc = 400 / (400 + oz); return { x: cx + ox * sc, y: cy + oy * sc }; }
+        case 'waveform': { var f = (params && params.frequency) || 2, a = (params && params.amplitude) || 80; return { x: margin + t * (width - margin * 2), y: cy + Math.sin(t * Math.PI * 2 * f) * a }; }
+        case 'helix': { var st = idx % 2, hT = Math.floor(idx / 2) / Math.ceil(count / 2); var hF = (params && params.frequency) || 3, hA = (params && params.amplitude) || 60; return { x: margin + hT * (width - margin * 2), y: cy + Math.sin(hT * Math.PI * 2 * hF + st * Math.PI) * hA }; }
+        case 'fibonacci': { var g = (1 + Math.sqrt(5)) / 2, fA = idx * g * Math.PI * 2, fR = deadR + Math.sqrt(idx / count) * (Math.min(width, height) * 0.42); return { x: clampX(cx + Math.cos(fA) * fR), y: clampY(cy + Math.sin(fA) * fR) }; }
+        case 'lissajous': { var la = (params && params.a) || 3, lb = (params && params.b) || 2, ld = (params && params.delta) || Math.PI / 2; var lS = Math.min(width, height) * 0.35; return { x: cx + Math.sin(la * t * Math.PI * 2 + ld) * lS, y: cy + Math.sin(lb * t * Math.PI * 2) * lS }; }
+        case 'converge': { var tx2 = (params && params.x !== undefined) ? params.x * width : cx, ty2 = (params && params.y !== undefined) ? params.y * height : cy; var cR = (params && params.radius) || 3, cA = (idx / count) * Math.PI * 2; return { x: tx2 + Math.cos(cA) * cR, y: ty2 + Math.sin(cA) * cR }; }
+        case 'explode': { var eA = seedRandom(idx * 3571)() * Math.PI * 2, eR = Math.max(width, height) * 0.6 + seedRandom(idx * 9137)() * 100; return { x: clampX(cx + Math.cos(eA) * eR), y: clampY(cy + Math.sin(eA) * eR) }; }
+        case 'ring': { var rRad = (params && params.radius) || Math.min(width, height) * 0.3; return { x: cx + Math.cos(t * Math.PI * 2) * rRad, y: cy + Math.sin(t * Math.PI * 2) * rRad }; }
+        case 'column': { var cW = (params && params.width) || 60, r2 = seedRandom(idx * 4513); return { x: cx + (r2() - 0.5) * cW, y: margin + t * (height - margin * 2) }; }
+        case 'horizon': { var hY = (params && params.y !== undefined) ? params.y * height : cy, spr = (params && params.spread) || 8, r3 = seedRandom(idx * 2741); return { x: margin + t * (width - margin * 2), y: hY + (r3() - 0.5) * spr }; }
         default: return patternPosition('scatter', idx, count, params);
         }
     }
 
-    // --- Particles ---
+    // === PARTICLES ===
     var PARTICLE_COUNT = Math.min(Math.floor(width * height / 4000), 300);
     var particles = [];
-
     for (var i = 0; i < PARTICLE_COUNT; i++) {
         var rng = seedRandom(i * 7919);
-        particles.push({
-            x: rng() * width, y: rng() * height,
-            size: rng() * 1.8 + 0.5,
-            baseAlpha: rng() * 0.4 + 0.15,
-            alpha: 0, vx: 0, vy: 0,
-            phase: rng() * Math.PI * 2,
-            freq: rng() * 0.008 + 0.002,
-            hue: 38 + rng() * 15,
-            sat: 30 + rng() * 30,
-            lit: 55 + rng() * 25,
-            idx: i,
-            wanderAngle: rng() * Math.PI * 2
-        });
+        particles.push({ x: rng() * width, y: rng() * height, size: rng() * 1.8 + 0.5, baseAlpha: rng() * 0.4 + 0.15, alpha: 0, vx: 0, vy: 0, phase: rng() * Math.PI * 2, freq: rng() * 0.008 + 0.002, hue: 38 + rng() * 15, sat: 30 + rng() * 30, lit: 55 + rng() * 25, idx: i, wanderAngle: rng() * Math.PI * 2 });
     }
 
-    // --- Live state (driven by controls) ---
+    // === STATE ===
     var state = {
-        pattern: 'scatter',
-        speed: 3,
-        attraction: 0.04,
-        wander: 0.0005,
-        damping: 0.88,
-        rotation: 0.0003,
-        brightness: 0.9,
-        connectionDist: 0,
-        connectionAlpha: 0,
-        hueShift: 0,
-        satShift: 0,
-        litShift: 0,
-        params: {}
+        pattern: 'scatter', speed: 3, attraction: 0.04, wander: 0.0005, damping: 0.88,
+        rotation: 0.0003, brightness: 0.9, connectionDist: 0, connectionAlpha: 0,
+        hueShift: 0, satShift: 0, litShift: 0, params: {}
     };
 
-    // --- Pattern transition ---
-    var transitionFrom = 'scatter';
-    var transitionFromParams = {};
-    var transitionBlend = 1; // 1 = fully arrived at current pattern
-    var transitionSpeed = 0; // per-frame increment
+    var transFrom = 'scatter', transFromParams = {}, transBlend = 1, transSpeed = 0;
 
-    // --- Pattern param definitions ---
-    var patternParams = {
-        spiral: [
-            { key: 'arms', label: 'Arms', min: 1, max: 8, step: 1, def: 3 },
-            { key: 'tightness', label: 'Tightness', min: 0.2, max: 2, step: 0.1, def: 0.8 }
-        ],
-        concentric: [
-            { key: 'rings', label: 'Rings', min: 2, max: 10, step: 1, def: 5 }
-        ],
-        lattice: [
-            { key: 'spacing', label: 'Spacing', min: 20, max: 120, step: 5, def: 55 }
-        ],
-        waveform: [
-            { key: 'frequency', label: 'Frequency', min: 1, max: 8, step: 0.5, def: 3 },
-            { key: 'amplitude', label: 'Amplitude', min: 20, max: 200, step: 10, def: 120 }
-        ],
-        helix: [
-            { key: 'frequency', label: 'Frequency', min: 1, max: 8, step: 0.5, def: 4 },
-            { key: 'amplitude', label: 'Amplitude', min: 20, max: 200, step: 10, def: 100 }
-        ],
-        lissajous: [
-            { key: 'a', label: 'A', min: 1, max: 7, step: 1, def: 3 },
-            { key: 'b', label: 'B', min: 1, max: 7, step: 1, def: 2 },
-            { key: 'delta', label: 'Delta', min: 0, max: 6.28, step: 0.1, def: 1.57 }
-        ],
-        ring: [
-            { key: 'radius', label: 'Radius', min: 50, max: 400, step: 10, def: 250 }
-        ],
-        column: [
-            { key: 'width', label: 'Width', min: 10, max: 200, step: 5, def: 60 }
-        ],
-        horizon: [
-            { key: 'y', label: 'Y Pos', min: 0.05, max: 0.95, step: 0.05, def: 0.15 },
-            { key: 'spread', label: 'Spread', min: 2, max: 40, step: 1, def: 6 }
-        ],
-        converge: [
-            { key: 'x', label: 'X Pos', min: 0, max: 1, step: 0.05, def: 0.5 },
-            { key: 'y', label: 'Y Pos', min: 0, max: 1, step: 0.05, def: 0.5 },
-            { key: 'radius', label: 'Radius', min: 1, max: 30, step: 1, def: 4 }
-        ]
+    // === PARAM DEFS ===
+    var paramDefs = {
+        spiral: [{ key: 'arms', label: 'Arms', min: 1, max: 8, step: 1, def: 3 }, { key: 'tightness', label: 'Tight', min: 0.2, max: 2, step: 0.1, def: 0.8 }],
+        concentric: [{ key: 'rings', label: 'Rings', min: 2, max: 10, step: 1, def: 5 }],
+        lattice: [{ key: 'spacing', label: 'Space', min: 20, max: 120, step: 5, def: 55 }],
+        waveform: [{ key: 'frequency', label: 'Freq', min: 1, max: 8, step: 0.5, def: 3 }, { key: 'amplitude', label: 'Amp', min: 20, max: 200, step: 10, def: 120 }],
+        helix: [{ key: 'frequency', label: 'Freq', min: 1, max: 8, step: 0.5, def: 4 }, { key: 'amplitude', label: 'Amp', min: 20, max: 200, step: 10, def: 100 }],
+        lissajous: [{ key: 'a', label: 'A', min: 1, max: 7, step: 1, def: 3 }, { key: 'b', label: 'B', min: 1, max: 7, step: 1, def: 2 }, { key: 'delta', label: 'Delta', min: 0, max: 6.28, step: 0.1, def: 1.57 }],
+        ring: [{ key: 'radius', label: 'Radius', min: 50, max: 400, step: 10, def: 250 }],
+        column: [{ key: 'width', label: 'Width', min: 10, max: 200, step: 5, def: 60 }],
+        horizon: [{ key: 'y', label: 'Y Pos', min: 0.05, max: 0.95, step: 0.05, def: 0.15 }, { key: 'spread', label: 'Spread', min: 2, max: 40, step: 1, def: 6 }],
+        converge: [{ key: 'x', label: 'X', min: 0, max: 1, step: 0.05, def: 0.5 }, { key: 'y', label: 'Y', min: 0, max: 1, step: 0.05, def: 0.5 }, { key: 'radius', label: 'R', min: 1, max: 30, step: 1, def: 4 }]
     };
 
-    // --- UI binding ---
-    var sliders = ['speed', 'attraction', 'wander', 'damping', 'rotation', 'brightness', 'connectionDist', 'connectionAlpha', 'hueShift', 'satShift', 'litShift'];
-    var selPattern = document.getElementById('sel-pattern');
-    var paramsContainer = document.getElementById('params-container');
-
-    sliders.forEach(function(key) {
+    // === UI BINDING ===
+    var sliderKeys = ['speed','attraction','wander','damping','rotation','brightness','connectionDist','connectionAlpha','hueShift','satShift','litShift','transition'];
+    sliderKeys.forEach(function(key) {
         var sl = document.getElementById('sl-' + key);
         var val = document.getElementById('v-' + key);
+        if (!sl) return;
         sl.addEventListener('input', function() {
-            state[key] = parseFloat(sl.value);
+            var v = parseFloat(sl.value);
+            if (key !== 'transition') state[key] = v;
             val.textContent = sl.value;
         });
     });
 
+    var selPattern = document.getElementById('sel-pattern');
+    var paramsContainer = document.getElementById('params-container');
+
     function buildParamSliders() {
         paramsContainer.innerHTML = '';
-        var defs = patternParams[state.pattern];
+        var defs = paramDefs[state.pattern];
         if (!defs) return;
-
+        var lbl = document.createElement('div'); lbl.className = 'ctrl-label'; lbl.textContent = 'Pattern Params'; paramsContainer.appendChild(lbl);
         defs.forEach(function(p) {
-            var row = document.createElement('div');
-            row.className = 'ctrl-row';
-            var currentVal = (state.params && state.params[p.key] !== undefined) ? state.params[p.key] : p.def;
-            state.params[p.key] = currentVal;
-            row.innerHTML = '<label>' + p.label + '</label>' +
-                '<input type="range" id="sp-' + p.key + '" min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + currentVal + '">' +
-                '<span class="ctrl-val" id="spv-' + p.key + '">' + currentVal + '</span>';
+            var cur = (state.params[p.key] !== undefined) ? state.params[p.key] : p.def;
+            state.params[p.key] = cur;
+            var row = document.createElement('div'); row.className = 'ctrl-row';
+            row.innerHTML = '<label>' + p.label + '</label><input type="range" min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + cur + '"><span class="ctrl-val">' + cur + '</span>';
             paramsContainer.appendChild(row);
-
-            document.getElementById('sp-' + p.key).addEventListener('input', function() {
-                var v = parseFloat(this.value);
-                state.params[p.key] = v;
-                document.getElementById('spv-' + p.key).textContent = v;
-            });
+            var inp = row.querySelector('input');
+            var v = row.querySelector('.ctrl-val');
+            inp.addEventListener('input', function() { state.params[p.key] = parseFloat(inp.value); v.textContent = inp.value; });
         });
     }
 
     selPattern.addEventListener('change', function() {
-        var newPattern = selPattern.value;
-        if (newPattern !== state.pattern) {
-            transitionFrom = state.pattern;
-            transitionFromParams = JSON.parse(JSON.stringify(state.params));
-            var transSec = parseFloat(document.getElementById('inp-transition').value) || 0;
-            if (transSec > 0) {
-                transitionBlend = 0;
-                transitionSpeed = 1 / (transSec * 60); // assuming ~60fps
-            } else {
-                transitionBlend = 1;
-            }
+        var np = selPattern.value;
+        if (np !== state.pattern) {
+            transFrom = state.pattern; transFromParams = JSON.parse(JSON.stringify(state.params));
+            var dur = parseFloat(document.getElementById('sl-transition').value) || 0;
+            transBlend = dur > 0 ? 0 : 1; transSpeed = dur > 0 ? 1 / (dur * 60) : 0;
         }
-        state.pattern = newPattern;
-        state.params = {};
-        buildParamSliders();
+        state.pattern = np; state.params = {}; buildParamSliders();
     });
-
     buildParamSliders();
 
-    // Toggle controls
+    // Toggle panel
     var controls = document.getElementById('controls');
-    var toggleLink = document.getElementById('toggle-controls');
-    controls.addEventListener('click', function(e) {
-        if (controls.classList.contains('collapsed')) {
-            controls.classList.remove('collapsed');
-            toggleLink.textContent = 'Hide Controls';
-        }
-    });
-    toggleLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (controls.classList.contains('collapsed')) {
-            controls.classList.remove('collapsed');
-            toggleLink.textContent = 'Hide Controls';
-        } else {
-            controls.classList.add('collapsed');
-            toggleLink.textContent = 'Show Controls';
-        }
+    document.getElementById('toggle-controls').addEventListener('click', function() {
+        controls.style.display = controls.style.display === 'none' ? '' : 'none';
+        this.textContent = controls.style.display === 'none' ? 'Show Panel' : 'Hide Panel';
     });
 
-    // JSON generation
-    function generateCue() {
-        var cue = { t: parseInt(document.getElementById('inp-time').value) || 0 };
-        cue.pattern = state.pattern;
-        cue.speed = state.speed;
-        cue.attraction = state.attraction;
-        cue.wander = state.wander;
-        cue.damping = state.damping;
-        cue.rotation = state.rotation;
-        cue.brightness = state.brightness;
+    // === AUDIO ===
+    var audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    var isPlaying = false;
+
+    document.getElementById('track-select').addEventListener('change', function() {
+        audio.src = this.value; audio.load(); isPlaying = false;
+        document.getElementById('btn-play').textContent = 'Play';
+    });
+
+    document.getElementById('btn-play').addEventListener('click', function() {
+        if (!audio.src) { audio.src = document.getElementById('track-select').value; audio.load(); }
+        if (isPlaying) { audio.pause(); isPlaying = false; this.textContent = 'Play'; }
+        else { audio.play(); isPlaying = true; this.textContent = 'Pause'; }
+    });
+
+    // Scrubber
+    var scrubWrap = document.getElementById('scrub-wrap');
+    var scrubProgress = document.getElementById('scrub-progress');
+    var scrubHead = document.getElementById('scrub-head');
+
+    function scrubTo(e) {
+        if (!audio.duration) return;
+        var rect = scrubWrap.getBoundingClientRect();
+        var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        audio.currentTime = pct * audio.duration;
+    }
+
+    var scrubbing = false;
+    scrubWrap.addEventListener('mousedown', function(e) { scrubbing = true; scrubTo(e); });
+    window.addEventListener('mousemove', function(e) { if (scrubbing) scrubTo(e); });
+    window.addEventListener('mouseup', function() { scrubbing = false; });
+
+    function formatTime(s) {
+        var m = Math.floor(s / 60), sec = Math.floor(s % 60);
+        return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    // === CUE TIMELINE ===
+    var cues = [];
+
+    function currentCueSnapshot() {
+        var cue = {
+            t: Math.round(audio.currentTime * 10) / 10,
+            pattern: state.pattern, speed: state.speed, attraction: state.attraction,
+            wander: state.wander, damping: state.damping, rotation: state.rotation,
+            brightness: state.brightness,
+            transition: parseFloat(document.getElementById('sl-transition').value) || 0
+        };
         if (state.connectionDist > 0) cue.connectionDist = state.connectionDist;
         if (state.connectionAlpha > 0) cue.connectionAlpha = state.connectionAlpha;
         if (state.hueShift !== 0) cue.hueShift = state.hueShift;
         if (state.satShift !== 0) cue.satShift = state.satShift;
         if (state.litShift !== 0) cue.litShift = state.litShift;
-        cue.transition = parseFloat(document.getElementById('inp-transition').value) || 0;
-        var defs = patternParams[state.pattern];
+        var defs = paramDefs[state.pattern];
         if (defs && Object.keys(state.params).length > 0) cue.params = JSON.parse(JSON.stringify(state.params));
         return cue;
     }
 
-    document.getElementById('btn-generate').addEventListener('click', function() {
-        var cue = generateCue();
-        var json = JSON.stringify(cue, null, 2);
-        document.getElementById('json-pre').textContent = json;
-        document.getElementById('json-output').classList.add('visible');
-    });
+    function renderCueList() {
+        var list = document.getElementById('cue-list');
+        var markers = document.getElementById('cue-markers');
+        list.innerHTML = ''; markers.innerHTML = '';
+        cues.sort(function(a, b) { return a.t - b.t; });
+        cues.forEach(function(cue, idx) {
+            // Chip
+            var chip = document.createElement('div'); chip.className = 'cue-chip';
+            chip.innerHTML = '<span class="cue-time">' + formatTime(cue.t) + '</span> <span class="cue-pattern">' + cue.pattern + '</span> <span class="cue-delete" data-idx="' + idx + '">×</span>';
+            chip.querySelector('.cue-delete').addEventListener('click', function(e) {
+                e.stopPropagation();
+                cues.splice(idx, 1); renderCueList();
+            });
+            chip.addEventListener('click', function() {
+                // Jump to cue time and load its settings
+                if (audio.duration) audio.currentTime = cue.t;
+                loadCueIntoUI(cue);
+            });
+            list.appendChild(chip);
 
-    document.getElementById('btn-copy').addEventListener('click', function() {
-        var cue = generateCue();
-        var json = JSON.stringify(cue, null, 2);
-        navigator.clipboard.writeText(json).then(function() {
-            var toast = document.getElementById('copy-toast');
-            toast.classList.add('show');
-            setTimeout(function() { toast.classList.remove('show'); }, 1500);
+            // Scrubber marker
+            if (audio.duration > 0) {
+                var marker = document.createElement('div'); marker.className = 'cue-marker';
+                marker.style.left = ((cue.t / audio.duration) * 100) + '%';
+                markers.appendChild(marker);
+            }
         });
-    });
+    }
 
-    document.getElementById('btn-close-json').addEventListener('click', function() {
-        document.getElementById('json-output').classList.remove('visible');
-    });
-
-    document.getElementById('btn-reset').addEventListener('click', function() {
-        state.speed = 3; state.attraction = 0.04; state.wander = 0.0005;
-        state.damping = 0.88; state.rotation = 0.0003; state.brightness = 0.9;
-        state.connectionDist = 0; state.connectionAlpha = 0;
-        state.hueShift = 0; state.satShift = 0; state.litShift = 0;
-        sliders.forEach(function(key) {
-            document.getElementById('sl-' + key).value = state[key];
-            document.getElementById('v-' + key).textContent = state[key];
+    function loadCueIntoUI(cue) {
+        state.pattern = cue.pattern; selPattern.value = cue.pattern;
+        var fields = ['speed','attraction','wander','damping','rotation','brightness','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
+        fields.forEach(function(k) {
+            if (cue[k] !== undefined) state[k] = cue[k];
+            else if (k === 'connectionDist' || k === 'connectionAlpha' || k === 'hueShift' || k === 'satShift' || k === 'litShift') state[k] = 0;
+            var sl = document.getElementById('sl-' + k);
+            var v = document.getElementById('v-' + k);
+            if (sl) { sl.value = state[k]; v.textContent = state[k]; }
         });
+        if (cue.transition !== undefined) {
+            document.getElementById('sl-transition').value = cue.transition;
+            document.getElementById('v-transition').textContent = cue.transition;
+        }
+        state.params = cue.params ? JSON.parse(JSON.stringify(cue.params)) : {};
+        buildParamSliders();
+    }
+
+    // Commit
+    document.getElementById('btn-commit').addEventListener('click', function() {
+        cues.push(currentCueSnapshot());
+        renderCueList();
+        toast('Cue committed at ' + formatTime(audio.currentTime));
     });
 
-    // --- Render loop ---
+    // Export
+    function buildFullJSON() {
+        var sorted = cues.slice().sort(function(a, b) { return a.t - b.t; });
+        return JSON.stringify({ track: document.getElementById('track-select').selectedOptions[0].text, duration: Math.round(audio.duration || 0), cues: sorted }, null, 2);
+    }
+
+    document.getElementById('btn-export').addEventListener('click', function() {
+        document.getElementById('json-pre').textContent = buildFullJSON();
+        document.getElementById('json-modal').classList.add('visible');
+    });
+
+    document.getElementById('btn-copy-all').addEventListener('click', function() {
+        navigator.clipboard.writeText(buildFullJSON()).then(function() { toast('Full score copied'); });
+    });
+
+    document.getElementById('modal-copy').addEventListener('click', function() {
+        navigator.clipboard.writeText(document.getElementById('json-pre').textContent).then(function() { toast('Copied'); });
+    });
+
+    document.getElementById('modal-close').addEventListener('click', function() {
+        document.getElementById('json-modal').classList.remove('visible');
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', function() {
+        if (cues.length === 0) return;
+        if (confirm('Clear all cues?')) { cues = []; renderCueList(); }
+    });
+
+    function toast(msg) {
+        var t = document.getElementById('copy-toast'); t.textContent = msg; t.classList.add('show');
+        setTimeout(function() { t.classList.remove('show'); }, 1500);
+    }
+
+    // === RENDER ===
     function render() {
         time++;
         ctx.clearRect(0, 0, width, height);
 
-        // Advance transition
-        if (transitionBlend < 1) {
-            transitionBlend = Math.min(1, transitionBlend + transitionSpeed);
+        // Transport update
+        if (audio.duration > 0) {
+            var pct = audio.currentTime / audio.duration;
+            scrubProgress.style.width = (pct * 100) + '%';
+            scrubHead.style.left = (pct * 100) + '%';
+            document.getElementById('time-display').textContent = formatTime(audio.currentTime);
+            document.getElementById('duration-display').textContent = formatTime(audio.duration);
         }
-        // Smoothstep the blend
-        var blend = transitionBlend;
-        blend = blend * blend * (3 - 2 * blend);
 
-        var cx = width / 2, cy = height / 2;
-        var deadR = Math.min(width, height) * 0.18;
-        var rot = time * state.rotation;
-        var cosR = Math.cos(rot), sinR = Math.sin(rot);
+        // Transition blend
+        if (transBlend < 1) transBlend = Math.min(1, transBlend + transSpeed);
+        var blend = transBlend * transBlend * (3 - 2 * transBlend);
+
+        var cx = width / 2, cy = height / 2, deadR = Math.min(width, height) * 0.18;
+        var rot = time * state.rotation, cosR = Math.cos(rot), sinR = Math.sin(rot);
 
         for (var pi = 0; pi < particles.length; pi++) {
             var pt = particles[pi];
-
             var tx, ty;
             if (blend >= 1) {
-                var target = patternPosition(state.pattern, pt.idx, particles.length, state.params);
-                tx = target.x; ty = target.y;
+                var tgt = patternPosition(state.pattern, pt.idx, particles.length, state.params);
+                tx = tgt.x; ty = tgt.y;
             } else {
-                var from = patternPosition(transitionFrom, pt.idx, particles.length, transitionFromParams);
+                var from = patternPosition(transFrom, pt.idx, particles.length, transFromParams);
                 var to = patternPosition(state.pattern, pt.idx, particles.length, state.params);
-                tx = from.x + (to.x - from.x) * blend;
-                ty = from.y + (to.y - from.y) * blend;
+                tx = from.x + (to.x - from.x) * blend; ty = from.y + (to.y - from.y) * blend;
             }
 
-            // Rotation
             var rtx = tx - cx, rty = ty - cy;
-            tx = cx + rtx * cosR - rty * sinR;
-            ty = cy + rtx * sinR + rty * cosR;
+            tx = cx + rtx * cosR - rty * sinR; ty = cy + rtx * sinR + rty * cosR;
 
-            // Attract
             pt.vx += (tx - pt.x) * state.attraction * state.speed;
             pt.vy += (ty - pt.y) * state.attraction * state.speed;
-
-            // Wander
             pt.wanderAngle += (Math.random() - 0.5) * 0.01;
             pt.vx += Math.cos(pt.wanderAngle) * state.wander * state.speed;
             pt.vy += Math.sin(pt.wanderAngle) * state.wander * state.speed;
 
-            // Center repulsion
-            var cdx = pt.x - cx, cdy = pt.y - cy;
-            var cDist = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
-            if (cDist < deadR) {
-                var repel = (1 - cDist / deadR) * 0.08;
-                pt.vx += (cdx / cDist) * repel;
-                pt.vy += (cdy / cDist) * repel;
-            }
+            var cdx = pt.x - cx, cdy = pt.y - cy, cD = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
+            if (cD < deadR) { pt.vx += (cdx / cD) * (1 - cD / deadR) * 0.08; pt.vy += (cdy / cD) * (1 - cD / deadR) * 0.08; }
 
-            pt.vx *= state.damping;
-            pt.vy *= state.damping;
-            pt.x += pt.vx;
-            pt.y += pt.vy;
+            pt.vx *= state.damping; pt.vy *= state.damping;
+            pt.x += pt.vx; pt.y += pt.vy;
+            if (pt.x < 10) { pt.x = 10; pt.vx *= -0.5; } if (pt.x > width - 10) { pt.x = width - 10; pt.vx *= -0.5; }
+            if (pt.y < 10) { pt.y = 10; pt.vy *= -0.5; } if (pt.y > height - 10) { pt.y = height - 10; pt.vy *= -0.5; }
 
-            if (pt.x < 10) { pt.x = 10; pt.vx *= -0.5; }
-            if (pt.x > width - 10) { pt.x = width - 10; pt.vx *= -0.5; }
-            if (pt.y < 10) { pt.y = 10; pt.vy *= -0.5; }
-            if (pt.y > height - 10) { pt.y = height - 10; pt.vy *= -0.5; }
-
-            var breathe = Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7;
-            pt.alpha = pt.baseAlpha * breathe * state.brightness;
+            pt.alpha = pt.baseAlpha * (Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7) * state.brightness;
 
             if (pt.alpha > 0.01) {
-                var drawSize = pt.size * 1;
-                var h = pt.hue + state.hueShift;
-                var s = Math.max(0, Math.min(100, pt.sat + state.satShift));
-                var l = Math.max(0, Math.min(100, pt.lit + state.litShift));
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, drawSize, 0, Math.PI * 2);
-                ctx.fillStyle = 'hsla(' + h + ', ' + s + '%, ' + l + '%, ' + pt.alpha + ')';
-                ctx.fill();
+                var h = pt.hue + state.hueShift, s = Math.max(0, Math.min(100, pt.sat + state.satShift)), l = Math.max(0, Math.min(100, pt.lit + state.litShift));
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'hsla(' + h + ',' + s + '%,' + l + '%,' + pt.alpha + ')'; ctx.fill();
             }
         }
 
-        // Connection lines
         if (state.connectionAlpha > 0.002 && state.connectionDist > 0) {
-            var connDistSq = state.connectionDist * state.connectionDist;
-            var maxConns = Math.min(particles.length, 200);
+            var cDSq = state.connectionDist * state.connectionDist, mc = Math.min(particles.length, 200);
             ctx.lineWidth = 0.4;
-            for (var ci = 0; ci < maxConns; ci++) {
-                var pa = particles[ci];
-                if (pa.alpha < 0.03) continue;
-                for (var cj = ci + 1; cj < maxConns; cj++) {
-                    var pb = particles[cj];
-                    if (pb.alpha < 0.03) continue;
-                    var ldx = pa.x - pb.x, ldy = pa.y - pb.y;
-                    var ldSq = ldx * ldx + ldy * ldy;
-                    if (ldSq < connDistSq) {
-                        var proximity = 1 - ldSq / connDistSq;
-                        var lineAlpha = state.connectionAlpha * proximity * Math.min(pa.alpha, pb.alpha) * 1.5;
-                        if (lineAlpha > 0.002) {
-                            ctx.beginPath();
-                            ctx.moveTo(pa.x, pa.y);
-                            ctx.lineTo(pb.x, pb.y);
-                            ctx.strokeStyle = 'hsla(40, 25%, 65%, ' + lineAlpha + ')';
-                            ctx.stroke();
-                        }
+            for (var ci = 0; ci < mc; ci++) { var pa = particles[ci]; if (pa.alpha < 0.03) continue;
+                for (var cj = ci + 1; cj < mc; cj++) { var pb = particles[cj]; if (pb.alpha < 0.03) continue;
+                    var dx = pa.x - pb.x, dy = pa.y - pb.y, dSq = dx * dx + dy * dy;
+                    if (dSq < cDSq) { var prox = 1 - dSq / cDSq, la = state.connectionAlpha * prox * Math.min(pa.alpha, pb.alpha) * 1.5;
+                        if (la > 0.002) { ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.strokeStyle = 'hsla(40,25%,65%,' + la + ')'; ctx.stroke(); }
                     }
                 }
             }
@@ -869,7 +640,6 @@
 
         requestAnimationFrame(render);
     }
-
     render();
 })();
 </script>
