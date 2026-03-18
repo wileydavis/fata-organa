@@ -681,7 +681,6 @@
         flex-shrink: 0;
         text-align: center;
         padding: 0 1rem;
-        margin-top: 1.5rem;
     }
 
     .tx-signup-inner {
@@ -777,6 +776,10 @@
     /* === FOOTER (minimal, inline) === */
     .tx-footer {
         flex-shrink: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: 1rem;
     }
 
     /* === SLIDE-OUT DRAWERS === */
@@ -1672,19 +1675,19 @@
         </div>
     </div>
 
-    <!-- Email signup -->
-    <div class="tx-signup" id="tx-signup">
-        <div class="tx-signup-inner">
-            <span class="tx-signup-label">Receive Future Transmissions</span>
-            <div class="tx-signup-form" id="signup-form">
-                <input type="email" class="tx-signup-input" id="signup-email" placeholder="frequency@example.com" autocomplete="email" />
-                <button class="tx-signup-btn" id="signup-btn">Subscribe</button>
+    <div class="tx-footer">
+        <!-- Email signup -->
+        <div class="tx-signup" id="tx-signup">
+            <div class="tx-signup-inner">
+                <span class="tx-signup-label">Receive Future Transmissions</span>
+                <div class="tx-signup-form" id="signup-form">
+                    <input type="email" class="tx-signup-input" id="signup-email" placeholder="frequency@example.com" autocomplete="email" />
+                    <button class="tx-signup-btn" id="signup-btn">Subscribe</button>
+                </div>
+                <span class="tx-signup-status" id="signup-status"></span>
             </div>
-            <span class="tx-signup-status" id="signup-status"></span>
         </div>
     </div>
-
-    <div class="tx-footer"></div>
     </div>
 
     <script src="/js/atmosphere.js"></script>
@@ -2112,7 +2115,7 @@
 
             fetch('https://a.klaviyo.com/client/subscriptions/?company_id=WaV2xM', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'revision': '2023-02-22' },
+                headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
                 body: JSON.stringify({
                     data: {
                         type: 'subscription',
