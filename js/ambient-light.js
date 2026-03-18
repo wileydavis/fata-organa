@@ -47,7 +47,7 @@
     glowCanvas.className = 'ambient-glow';
     glowCanvas.style.cssText = ''
         + 'position:fixed;top:0;left:0;width:100vw;height:100vh;'
-        + 'pointer-events:none;z-index:2;'
+        + 'pointer-events:none;'
         + 'opacity:0;';
     document.body.appendChild(glowCanvas);
     var gCtx = glowCanvas.getContext('2d');
