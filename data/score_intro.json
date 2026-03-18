@@ -4,25 +4,156 @@
   "cues": [
     {
       "t": 0,
-      "pattern": "spiral",
+      "pattern": "scatter",
       "speed": 1,
-      "rotation": 0.0003,
       "attraction": 0.006,
-      "wander": 0.004,
+      "wander": 0.006,
       "damping": 0.95,
-      "brightness": 0.8,
+      "rotation": 0.0002,
+      "brightness": 0.7,
       "connectionDist": 0,
       "connectionAlpha": 0,
-      "transition": 0,
+      "transition": 0
+    },
+    {
+      "t": 15,
+      "pattern": "grid",
+      "speed": 1.2,
+      "attraction": 0.008,
+      "transition": 3
+    },
+    {
+      "t": 30,
+      "pattern": "concentric",
+      "speed": 1.2,
+      "rotation": 0.0004,
+      "transition": 3,
+      "params": { "rings": 5 }
+    },
+    {
+      "t": 45,
+      "pattern": "spiral",
+      "speed": 1.5,
+      "rotation": 0.0005,
+      "transition": 3,
       "params": { "arms": 3, "tightness": 0.8 }
     },
     {
       "t": 60,
       "pattern": "lattice",
       "speed": 1.2,
-      "attraction": 0.008,
+      "attraction": 0.01,
+      "rotation": 0.0003,
+      "transition": 3,
+      "params": { "spacing": 60 }
+    },
+    {
+      "t": 75,
+      "pattern": "fibonacci",
+      "speed": 1.5,
+      "rotation": 0.0004,
+      "connectionDist": 80,
+      "connectionAlpha": 0.05,
+      "transition": 3
+    },
+    {
+      "t": 90,
+      "pattern": "waveform",
+      "speed": 1.2,
+      "rotation": 0,
+      "connectionDist": 60,
+      "connectionAlpha": 0.04,
+      "transition": 3,
+      "params": { "frequency": 3, "amplitude": 120 }
+    },
+    {
+      "t": 105,
+      "pattern": "helix",
+      "speed": 1.5,
+      "transition": 3,
+      "params": { "frequency": 4, "amplitude": 100 }
+    },
+    {
+      "t": 120,
+      "pattern": "lissajous",
+      "speed": 1.5,
+      "rotation": 0.0002,
+      "connectionDist": 100,
+      "connectionAlpha": 0.06,
+      "transition": 3,
+      "params": { "a": 3, "b": 2, "delta": 1.57 }
+    },
+    {
+      "t": 135,
+      "pattern": "ring",
+      "speed": 2,
+      "rotation": 0.0006,
+      "connectionDist": 50,
+      "connectionAlpha": 0.08,
+      "brightness": 1.0,
+      "transition": 3,
+      "params": { "radius": 250 }
+    },
+    {
+      "t": 148,
+      "pattern": "column",
+      "speed": 1.5,
+      "rotation": 0,
+      "connectionDist": 40,
+      "connectionAlpha": 0.04,
       "transition": 2,
-      "params": { "spacing": 75 }
+      "params": { "width": 80 }
+    },
+    {
+      "t": 158,
+      "pattern": "horizon",
+      "speed": 1.5,
+      "rotation": 0,
+      "connectionDist": 30,
+      "transition": 2,
+      "params": { "y": 0.2, "spread": 10 }
+    },
+    {
+      "t": 170,
+      "pattern": "converge",
+      "speed": 3,
+      "attraction": 0.02,
+      "wander": 0.001,
+      "connectionDist": 30,
+      "connectionAlpha": 0.12,
+      "brightness": 1.2,
+      "transition": 3,
+      "params": { "radius": 6 }
+    },
+    {
+      "t": 182,
+      "pattern": "explode",
+      "speed": 4,
+      "attraction": 0.015,
+      "wander": 0.01,
+      "damping": 0.93,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "brightness": 1.5,
+      "rotation": 0.001,
+      "transition": 0.3
+    },
+    {
+      "t": 192,
+      "pattern": "scatter",
+      "speed": 0.8,
+      "attraction": 0.004,
+      "wander": 0.006,
+      "damping": 0.95,
+      "brightness": 0.5,
+      "rotation": 0.0001,
+      "transition": 8
+    },
+    {
+      "t": 205,
+      "brightness": 0.2,
+      "speed": 0.3,
+      "transition": 6
     }
   ]
 }
