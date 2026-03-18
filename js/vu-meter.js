@@ -562,11 +562,17 @@
         fetch(url)
             .then(function(res) { return res.arrayBuffer(); })
             .then(function(arrayBuf) {
-                var tempCtx = new (window.AudioContext || window.webkitAudioContext)();
-                return tempCtx.decodeAudioData(arrayBuf).then(function(decoded) {
-                    tempCtx.close();
-                    return decoded;
-                });
+                // On iOS, AudioContext must be created from a user gesture
+                // Use a shared decode context, created lazily
+                if (!window._decodeCtx) {
+                    window._decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                var ctx = window._decodeCtx;
+                // Resume if suspended (iOS suspends contexts not from gestures)
+                if (ctx.state === 'suspended') {
+                    ctx.resume().catch(function() {});
+                }
+                return ctx.decodeAudioData(arrayBuf);
             })
             .then(function(decoded) {
                 offlineBuffer = decoded;
@@ -661,7 +667,14 @@
     function initAnalyser() {
         if (audioCtx) return;
         if (isMobile) {
-            // On mobile, use offline buffer analysis instead of MediaElementSource
+            // Create the decode AudioContext during user gesture (required on iOS)
+            if (!window._decodeCtx) {
+                window._decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Resume it (iOS may have suspended it)
+            if (window._decodeCtx.state === 'suspended') {
+                window._decodeCtx.resume().catch(function() {});
+            }
             analyserConnected = false;
             if (audioSrc) loadOfflineBuffer(audioSrc);
             return;
