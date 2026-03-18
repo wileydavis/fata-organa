@@ -549,136 +549,8 @@
     // Detect mobile for background playback compatibility
     var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    // --- Offline audio analysis for mobile ---
-    // Fetches the audio file, decodes to PCM, and reads frequency data
-    // at the current playback position without using MediaElementSource
-    var offlineBuffer = null;  // decoded AudioBuffer
-    var offlineSampleRate = 44100;
-    var offlineCtx = null;     // OfflineAudioContext for decoding only
-    var offlineFreqData = new Uint8Array(64); // simulated frequency bins
-
-    function loadOfflineBuffer(url) {
-        offlineBuffer = null;
-        fetch(url)
-            .then(function(res) { return res.arrayBuffer(); })
-            .then(function(arrayBuf) {
-                // On iOS, AudioContext must be created from a user gesture
-                // Use a shared decode context, created lazily
-                if (!window._decodeCtx) {
-                    window._decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                var ctx = window._decodeCtx;
-                // Resume if suspended (iOS suspends contexts not from gestures)
-                if (ctx.state === 'suspended') {
-                    ctx.resume().catch(function() {});
-                }
-                return ctx.decodeAudioData(arrayBuf);
-            })
-            .then(function(decoded) {
-                offlineBuffer = decoded;
-                offlineSampleRate = decoded.sampleRate;
-                console.log('Offline buffer loaded:', decoded.duration.toFixed(1) + 's');
-            })
-            .catch(function(e) {
-                console.error('Offline buffer load error:', e);
-            });
-    }
-
-    // Band-pass energy analysis using RMS of filtered sample windows
-    // Much faster than DFT and better suited for VU meter driving
-    var ANALYSIS_WINDOW = 2048; // ~46ms at 44100Hz — captures full voice cycles
-    var offlineFrameCount = 0;
-
-    function analyseOfflineAt(timeSec) {
-        if (!offlineBuffer || !audio) return false;
-
-        // Throttle to every 2nd frame
-        offlineFrameCount++;
-        if (offlineFrameCount % 2 !== 0) return true;
-
-        var channel = offlineBuffer.getChannelData(0);
-        var sampleIdx = Math.floor(timeSec * offlineSampleRate);
-
-        // Bounds check
-        if (sampleIdx < 0 || sampleIdx + ANALYSIS_WINDOW > channel.length) return false;
-
-        // Compute RMS energy in different frequency-correlated windows
-        // Short window (~3ms) captures high freq transients
-        // Medium window (~12ms) captures voice fundamentals  
-        // Long window (~46ms) captures bass/sub
-
-        var shortWin = 128;   // ~3ms — sibilance, consonants
-        var medWin = 512;     // ~12ms — voice fundamental
-        var longWin = 2048;   // ~46ms — bass, drone
-
-        // Short window RMS (high frequency indicator)
-        var shortSum = 0;
-        for (var i = 0; i < shortWin; i++) {
-            var s = channel[sampleIdx + i];
-            shortSum += s * s;
-        }
-        var shortRms = Math.sqrt(shortSum / shortWin);
-
-        // Medium window RMS (voice indicator)
-        var medSum = 0;
-        for (var i = 0; i < medWin; i++) {
-            var s = channel[sampleIdx + i];
-            medSum += s * s;
-        }
-        var medRms = Math.sqrt(medSum / medWin);
-
-        // Long window RMS (bass/overall indicator)
-        var longSum = 0;
-        for (var i = 0; i < longWin; i++) {
-            var s = channel[sampleIdx + i];
-            longSum += s * s;
-        }
-        var longRms = Math.sqrt(longSum / longWin);
-
-        // Estimate band energy from the window differences
-        // High energy = what short window has that medium doesn't
-        var highEnergy = Math.max(0, shortRms - medRms * 0.8);
-        // Voice energy = medium window content
-        var voiceEnergy = medRms;
-        // Bass energy = what long window has
-        var bassEnergy = longRms;
-
-        // Scale to 0-255 to match getByteFrequencyData format
-        // Voice/narration typically peaks around 0.1-0.3 RMS
-        offlineFreqData[0] = Math.min(255, Math.round(bassEnergy * 800));   // sub
-        offlineFreqData[1] = Math.min(255, Math.round(bassEnergy * 700));   // bass
-        offlineFreqData[2] = Math.min(255, Math.round(bassEnergy * 600));   // low
-
-        // Voice range bins (3-23)
-        var voiceVal = Math.min(255, Math.round(voiceEnergy * 900));
-        for (var k = 3; k < 23; k++) {
-            offlineFreqData[k] = voiceVal;
-        }
-
-        // High range bins (23-40)
-        var highVal = Math.min(255, Math.round(highEnergy * 1200));
-        for (var k = 23; k < 40; k++) {
-            offlineFreqData[k] = highVal;
-        }
-
-        return true;
-    }
-
     function initAnalyser() {
         if (audioCtx) return;
-        if (isMobile) {
-            // Create the decode AudioContext during user gesture (required on iOS)
-            if (!window._decodeCtx) {
-                window._decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            // Resume it (iOS may have suspended it)
-            if (window._decodeCtx.state === 'suspended') {
-                window._decodeCtx.resume().catch(function() {});
-            }
-            analyserConnected = false;
-            if (audioSrc) loadOfflineBuffer(audioSrc);
-            return;
-        }
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             connectAnalyser();
@@ -828,9 +700,6 @@
             isLoading = false;
             progressBar.style.width = '0%';
 
-            // Load offline analysis buffer on mobile
-            if (isMobile) loadOfflineBuffer(src);
-
             if (audio) {
                 audio.src = src;
                 if (autoplay) {
@@ -935,89 +804,21 @@
             window.vuSignal.smoothRms += (rmsLevel - window.vuSignal.smoothRms) * 0.03;
             window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
         } else if (isPlaying && !analyserConnected) {
-            // Mobile: offline PCM analysis — read decoded buffer at current playback position
-            // iOS reports currentTime ahead of actual audio output — subtract offset
-            var analysisTime = Math.max(0, audio.currentTime - 0.25);
-            var hasOfflineData = offlineBuffer && audio && analyseOfflineAt(analysisTime);
+            // Fallback: gentle simulated movement if analyser failed to connect
+            var t = time * 0.016;
+            var fakeLevel = 0.4 + Math.sin(t * 0.7) * 0.15 + Math.sin(t * 1.3) * 0.1 + Math.random() * 0.02;
+            fakeLevel = Math.max(0.15, Math.min(0.85, fakeLevel));
+            targetAngle = dbToAngle(-20 + fakeLevel * 23);
+            glowIntensity += (1 - glowIntensity) * 0.05;
 
-            if (hasOfflineData) {
-                // Use offlineFreqData (same format as getByteFrequencyData)
-                var dataArray = offlineFreqData;
-                var binCount = dataArray.length;
-
-                var subSum = 0;
-                for (var i = 0; i < 3 && i < binCount; i++) subSum += dataArray[i];
-                var subLevel = subSum / (3 * 255);
-
-                var voiceSum = 0;
-                var voiceBins = Math.min(23, binCount) - 2;
-                for (var i = 2; i < 23 && i < binCount; i++) voiceSum += dataArray[i];
-                var voiceLevel = voiceBins > 0 ? voiceSum / (voiceBins * 255) : 0;
-
-                var highSum = 0;
-                var highBins = Math.min(40, binCount) - 23;
-                for (var i = 23; i < 40 && i < binCount; i++) highSum += dataArray[i];
-                var highLevel = highBins > 0 ? highSum / (highBins * 255) : 0;
-
-                var totalSum = 0;
-                var totalCount = Math.min(binCount, 64);
-                for (var i = 0; i < totalCount; i++) totalSum += dataArray[i];
-                var rmsLevel = totalSum / (totalCount * 255);
-
-                var needleLevel;
-                var isScore = window.currentBand === 'score';
-                if (isScore) {
-                    needleLevel = subLevel * 0.7 + voiceLevel * 0.2 + highLevel * 0.1;
-                } else {
-                    needleLevel = voiceLevel * 0.65 + subLevel * 0.15 + highLevel * 0.2;
-                }
-
-                var delta = needleLevel - prevLevel;
-                if (delta > 0.02) transientBoost = Math.min(delta * 3, 0.25);
-                transientBoost *= 0.85;
-                prevLevel = needleLevel;
-                needleLevel += transientBoost;
-
-                if (needleLevel > smoothedLevel) {
-                    smoothedLevel += (needleLevel - smoothedLevel) * 0.25;
-                } else {
-                    smoothedLevel += (needleLevel - smoothedLevel) * 0.06;
-                }
-
-                smoothedLow += (subLevel - smoothedLow) * 0.08;
-                smoothedMid += (voiceLevel - smoothedMid) * 0.1;
-                smoothedHigh += (highLevel - smoothedHigh) * 0.1;
-
-                var scaledLevel = Math.pow(smoothedLevel, 0.5) * 0.75;
-                scaledLevel = Math.min(scaledLevel, 1.0);
-                targetAngle = dbToAngle(-20 + scaledLevel * 20);
-                glowIntensity += (1 - glowIntensity) * 0.05;
-
-                window.vuSignal.rms = rmsLevel;
-                window.vuSignal.low = smoothedLow;
-                window.vuSignal.high = smoothedHigh;
-                window.vuSignal.peak = Math.max(scaledLevel, window.vuSignal.peak * 0.98);
-                window.vuSignal.isPlaying = true;
-                window.vuSignal.hasStarted = true;
-                window.vuSignal.smoothRms += (rmsLevel - window.vuSignal.smoothRms) * 0.03;
-                window.vuSignal.smoothLow += (smoothedLow - window.vuSignal.smoothLow) * 0.02;
-            } else {
-                // Fallback: gentle simulated movement while buffer loads
-                var t = time * 0.016;
-                var fakeLevel = 0.4 + Math.sin(t * 0.7) * 0.15 + Math.sin(t * 1.3) * 0.1 + Math.random() * 0.02;
-                fakeLevel = Math.max(0.15, Math.min(0.85, fakeLevel));
-                targetAngle = dbToAngle(-20 + fakeLevel * 23);
-                glowIntensity += (1 - glowIntensity) * 0.05;
-
-                window.vuSignal.rms = fakeLevel;
-                window.vuSignal.low = fakeLevel * 0.6;
-                window.vuSignal.high = fakeLevel * 0.3;
-                window.vuSignal.peak = Math.max(fakeLevel, window.vuSignal.peak * 0.98);
-                window.vuSignal.isPlaying = true;
-                window.vuSignal.hasStarted = true;
-                window.vuSignal.smoothRms += (fakeLevel - window.vuSignal.smoothRms) * 0.03;
-                window.vuSignal.smoothLow += (fakeLevel * 0.6 - window.vuSignal.smoothLow) * 0.02;
-            }
+            window.vuSignal.rms = fakeLevel;
+            window.vuSignal.low = fakeLevel * 0.6;
+            window.vuSignal.high = fakeLevel * 0.3;
+            window.vuSignal.peak = Math.max(fakeLevel, window.vuSignal.peak * 0.98);
+            window.vuSignal.isPlaying = true;
+            window.vuSignal.hasStarted = true;
+            window.vuSignal.smoothRms += (fakeLevel - window.vuSignal.smoothRms) * 0.03;
+            window.vuSignal.smoothLow += (fakeLevel * 0.6 - window.vuSignal.smoothLow) * 0.02;
         } else {
             targetAngle = minAngle;
             glowIntensity *= 0.95;
