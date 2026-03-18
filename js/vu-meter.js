@@ -76,10 +76,11 @@
 
     function dbToAngle(db) {
         // Map -20 to +3 across the arc
-        // Use less compression so the red zone (+0 to +3) gets more space
+        // Use piecewise mapping: give the red zone (0 to +3) more angular space
         var normalized = (db + 20) / 23;
         normalized = Math.max(0, Math.min(1, normalized));
-        normalized = Math.pow(normalized, 0.55);
+        // Less compression in the upper range
+        normalized = Math.pow(normalized, 0.65);
         return minAngle + normalized * (maxAngle - minAngle);
     }
 
@@ -220,14 +221,14 @@
         ctx.fill();
 
         // === DB MARKINGS ===
-        ctx.font = '500 10px "JetBrains Mono", monospace';
+        ctx.font = '500 9px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         for (var i = 0; i < dbMarks.length; i++) {
             var db = dbMarks[i];
             var a = dbToAngle(db);
             var inner = tip(a, arcRadius - 6);
             var outer = tip(a, arcRadius + 5);
-            var text = tip(a, arcRadius + 18);
+            var text = tip(a, arcRadius + 20);
 
             ctx.beginPath();
             ctx.moveTo(inner.x, inner.y);
