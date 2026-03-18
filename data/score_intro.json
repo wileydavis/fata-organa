@@ -1,0 +1,138 @@
+{
+  "track": "intro",
+  "duration": 211,
+  "notes": "Visual score for Lab Orientation Statement. Particles begin scattered, slowly coalesce into structure as the narration grounds the listener, then dissolve outward at the end.",
+  "cues": [
+    {
+      "t": 0,
+      "pattern": "scatter",
+      "speed": 0.8,
+      "rotation": 0.0001,
+      "attraction": 0.003,
+      "wander": 0.008,
+      "damping": 0.94,
+      "brightness": 0.6,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "transition": 0
+    },
+    {
+      "t": 12,
+      "speed": 1.2,
+      "brightness": 0.8,
+      "transition": 4,
+      "notes": "Narration begins. Particles gently brighten, speed increases slightly."
+    },
+    {
+      "t": 30,
+      "pattern": "grid",
+      "speed": 1.0,
+      "attraction": 0.005,
+      "wander": 0.004,
+      "rotation": 0.00015,
+      "transition": 8,
+      "notes": "First structural moment — particles organize into a grid. Slow, deliberate. The lab is orderly."
+    },
+    {
+      "t": 55,
+      "connectionDist": 60,
+      "connectionAlpha": 0.04,
+      "brightness": 0.9,
+      "transition": 5,
+      "notes": "Connections appear. Particles are linked. The network becomes visible."
+    },
+    {
+      "t": 72,
+      "pattern": "lattice",
+      "speed": 1.5,
+      "attraction": 0.008,
+      "rotation": 0.0003,
+      "transition": 6,
+      "params": { "spacing": 45 },
+      "notes": "Grid deepens into 3D lattice. The measurement apparatus. Structure has depth."
+    },
+    {
+      "t": 95,
+      "pattern": "concentric",
+      "speed": 1.2,
+      "connectionDist": 80,
+      "connectionAlpha": 0.06,
+      "rotation": 0.0004,
+      "transition": 5,
+      "params": { "rings": 4 },
+      "notes": "Lattice dissolves into concentric rings. Signal emanation. Transmission pattern."
+    },
+    {
+      "t": 120,
+      "pattern": "fibonacci",
+      "speed": 2.0,
+      "attraction": 0.01,
+      "wander": 0.002,
+      "brightness": 1.0,
+      "connectionDist": 100,
+      "connectionAlpha": 0.08,
+      "rotation": 0.0005,
+      "transition": 8,
+      "notes": "Golden spiral. Nature's pattern. The moment of recognition — pattern within pattern."
+    },
+    {
+      "t": 150,
+      "pattern": "spiral",
+      "speed": 2.5,
+      "attraction": 0.012,
+      "rotation": 0.0006,
+      "connectionDist": 120,
+      "connectionAlpha": 0.06,
+      "transition": 6,
+      "params": { "arms": 3, "tightness": 0.7 },
+      "notes": "Tighter spiral. Acceleration. The signal is pulling inward."
+    },
+    {
+      "t": 175,
+      "pattern": "converge",
+      "speed": 3.0,
+      "attraction": 0.02,
+      "wander": 0.001,
+      "damping": 0.96,
+      "connectionDist": 40,
+      "connectionAlpha": 0.12,
+      "brightness": 1.2,
+      "transition": 4,
+      "params": { "radius": 8 },
+      "notes": "All particles converge to center. Singularity. The signal collapses to a point."
+    },
+    {
+      "t": 185,
+      "pattern": "explode",
+      "speed": 4.0,
+      "attraction": 0.015,
+      "wander": 0.01,
+      "damping": 0.93,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "brightness": 1.5,
+      "rotation": 0.001,
+      "transition": 0.5,
+      "notes": "Explosion outward. Sudden release. The signal breaks apart."
+    },
+    {
+      "t": 192,
+      "pattern": "scatter",
+      "speed": 1.0,
+      "attraction": 0.004,
+      "wander": 0.006,
+      "damping": 0.95,
+      "brightness": 0.7,
+      "rotation": 0.0002,
+      "transition": 8,
+      "notes": "Slow fade back to scatter. The particles drift. Calm returns. End of orientation."
+    },
+    {
+      "t": 205,
+      "brightness": 0.3,
+      "speed": 0.5,
+      "transition": 6,
+      "notes": "Final dim. Track ending."
+    }
+  ]
+}
