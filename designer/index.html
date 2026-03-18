@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Designer — FATA ORGANA</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+        --bg: #0a0a0c;
+        --amber: rgba(196, 163, 90, 1);
+        --amber-dim: rgba(196, 163, 90, 0.5);
+        --amber-faint: rgba(196, 163, 90, 0.15);
+        --red: rgba(180, 60, 50, 0.7);
+        --mono: 'JetBrains Mono', monospace;
+    }
+
+    html, body {
+        background: var(--bg);
+        color: var(--amber-dim);
+        font-family: var(--mono);
+        font-size: 12px;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    /* Particle canvas — full screen behind everything */
+    #particle-canvas {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 0;
+    }
+
+    /* Transmitter circle overlay — shows where the panel blocks the view */
+    #transmitter-ghost {
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 440px; height: 440px;
+        border-radius: 50%;
+        border: 1px dashed rgba(196, 163, 90, 0.12);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    #transmitter-ghost::after {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 70%; height: 70%;
+        border-radius: 50%;
+        border: 1px dashed rgba(196, 163, 90, 0.06);
+    }
+
+    /* Control panel — centered circle matching transmitter */
+    #controls {
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px; height: 400px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 50%, rgba(8, 8, 10, 0.95) 60%, rgba(8, 8, 10, 0.85) 100%);
+        border: 1px solid rgba(196, 163, 90, 0.1);
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 50px;
+        overflow: hidden;
+        backdrop-filter: blur(12px);
+    }
+
+    #controls.collapsed {
+        width: 50px; height: 50px;
+        padding: 0;
+        cursor: pointer;
+        opacity: 0.4;
+        transition: opacity 0.2s;
+    }
+
+    #controls.collapsed:hover { opacity: 0.8; }
+    #controls.collapsed .ctrl-inner { display: none; }
+    #controls.collapsed .ctrl-toggle { display: flex; }
+
+    .ctrl-toggle {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 100%; height: 100%;
+        font-size: 18px;
+        color: var(--amber-dim);
+    }
+
+    .ctrl-inner {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 280px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(196,163,90,0.15) transparent;
+    }
+
+    .ctrl-inner::-webkit-scrollbar { width: 3px; }
+    .ctrl-inner::-webkit-scrollbar-track { background: transparent; }
+    .ctrl-inner::-webkit-scrollbar-thumb { background: rgba(196,163,90,0.15); border-radius: 2px; }
+
+    /* Pattern selector */
+    .ctrl-section {
+        margin-bottom: 4px;
+    }
+
+    .ctrl-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: rgba(196, 163, 90, 0.35);
+        margin-bottom: 3px;
+    }
+
+    .ctrl-select {
+        width: 100%;
+        background: rgba(196, 163, 90, 0.04);
+        border: 1px solid rgba(196, 163, 90, 0.15);
+        color: var(--amber);
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 4px 6px;
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .ctrl-select option {
+        background: #0a0a0c;
+        color: var(--amber);
+    }
+
+    /* Slider row */
+    .ctrl-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .ctrl-row label {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(196, 163, 90, 0.4);
+        width: 75px;
+        flex-shrink: 0;
+        text-align: right;
+    }
+
+    .ctrl-row input[type="range"] {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 2px;
+        background: rgba(196, 163, 90, 0.12);
+        border-radius: 1px;
+        outline: none;
+    }
+
+    .ctrl-row input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        background: var(--amber);
+        cursor: pointer;
+    }
+
+    .ctrl-row .ctrl-val {
+        font-size: 9px;
+        color: rgba(196, 163, 90, 0.6);
+        width: 45px;
+        text-align: left;
+    }
+
+    /* Buttons */
+    .ctrl-buttons {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .ctrl-btn {
+        font-family: var(--mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 5px 10px;
+        border: 1px solid rgba(196, 163, 90, 0.2);
+        background: transparent;
+        color: rgba(196, 163, 90, 0.6);
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.2s;
+    }
+
+    .ctrl-btn:hover {
+        color: var(--amber);
+        border-color: rgba(196, 163, 90, 0.4);
+        background: rgba(196, 163, 90, 0.06);
+    }
+
+    .ctrl-btn.active {
+        color: var(--amber);
+        border-color: rgba(196, 163, 90, 0.5);
+        background: rgba(196, 163, 90, 0.1);
+    }
+
+    /* JSON output */
+    #json-output {
+        position: fixed;
+        bottom: 20px; left: 50%;
+        transform: translateX(-50%);
+        max-width: 600px; width: 90%;
+        z-index: 20;
+        display: none;
+    }
+
+    #json-output.visible { display: block; }
+
+    #json-output pre {
+        background: rgba(8, 8, 10, 0.95);
+        border: 1px solid rgba(196, 163, 90, 0.2);
+        border-radius: 4px;
+        padding: 12px 16px;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: rgba(196, 163, 90, 0.8);
+        overflow-x: auto;
+        white-space: pre;
+        backdrop-filter: blur(8px);
+    }
+
+    #json-output .close-json {
+        position: absolute;
+        top: 6px; right: 10px;
+        background: none; border: none;
+        color: rgba(196, 163, 90, 0.4);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    #copy-toast {
+        position: fixed;
+        bottom: 80px; left: 50%;
+        transform: translateX(-50%);
+        background: rgba(196, 163, 90, 0.15);
+        border: 1px solid rgba(196, 163, 90, 0.3);
+        color: var(--amber);
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 6px 14px;
+        border-radius: 3px;
+        z-index: 30;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+    }
+
+    #copy-toast.show { opacity: 1; }
+
+    /* Nav */
+    .designer-nav {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px;
+        background: rgba(10, 10, 12, 0.8);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(196, 163, 90, 0.06);
+    }
+
+    .designer-nav a {
+        color: rgba(196, 163, 90, 0.5);
+        text-decoration: none;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        transition: color 0.2s;
+    }
+
+    .designer-nav a:hover { color: var(--amber); }
+
+    .designer-nav .nav-title {
+        color: rgba(196, 163, 90, 0.3);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+    }
+
+    /* Time input */
+    .ctrl-time {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .ctrl-time input {
+        width: 50px;
+        background: rgba(196, 163, 90, 0.04);
+        border: 1px solid rgba(196, 163, 90, 0.15);
+        color: var(--amber);
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 3px 5px;
+        border-radius: 2px;
+        outline: none;
+        text-align: center;
+    }
+
+    .ctrl-time label {
+        font-size: 9px;
+        color: rgba(196, 163, 90, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div id="transmitter-ghost"></div>
+
+    <nav class="designer-nav">
+        <a href="/">← Back to Transmitter</a>
+        <span class="nav-title">Particle Designer</span>
+        <a href="#" id="toggle-controls">Hide Controls</a>
+    </nav>
+
+    <div id="controls">
+        <span class="ctrl-toggle">⚙</span>
+        <div class="ctrl-inner">
+            <div class="ctrl-section">
+                <div class="ctrl-label">Pattern</div>
+                <select class="ctrl-select" id="sel-pattern">
+                    <option value="scatter">scatter</option>
+                    <option value="grid">grid</option>
+                    <option value="concentric">concentric</option>
+                    <option value="spiral">spiral</option>
+                    <option value="lattice">lattice</option>
+                    <option value="fibonacci">fibonacci</option>
+                    <option value="waveform">waveform</option>
+                    <option value="helix">helix</option>
+                    <option value="lissajous">lissajous</option>
+                    <option value="ring">ring</option>
+                    <option value="column">column</option>
+                    <option value="horizon">horizon</option>
+                    <option value="converge">converge</option>
+                    <option value="explode">explode</option>
+                </select>
+            </div>
+
+            <div class="ctrl-row"><label>Speed</label><input type="range" id="sl-speed" min="0.1" max="8" step="0.1" value="3"><span class="ctrl-val" id="v-speed">3</span></div>
+            <div class="ctrl-row"><label>Attraction</label><input type="range" id="sl-attraction" min="0.001" max="0.1" step="0.001" value="0.04"><span class="ctrl-val" id="v-attraction">0.04</span></div>
+            <div class="ctrl-row"><label>Wander</label><input type="range" id="sl-wander" min="0" max="0.02" step="0.0001" value="0.0005"><span class="ctrl-val" id="v-wander">0.0005</span></div>
+            <div class="ctrl-row"><label>Damping</label><input type="range" id="sl-damping" min="0.8" max="0.99" step="0.01" value="0.88"><span class="ctrl-val" id="v-damping">0.88</span></div>
+            <div class="ctrl-row"><label>Rotation</label><input type="range" id="sl-rotation" min="0" max="0.003" step="0.00005" value="0.0003"><span class="ctrl-val" id="v-rotation">0.0003</span></div>
+            <div class="ctrl-row"><label>Brightness</label><input type="range" id="sl-brightness" min="0.1" max="2" step="0.05" value="0.9"><span class="ctrl-val" id="v-brightness">0.9</span></div>
+            <div class="ctrl-row"><label>Conn Dist</label><input type="range" id="sl-connectionDist" min="0" max="200" step="5" value="0"><span class="ctrl-val" id="v-connectionDist">0</span></div>
+            <div class="ctrl-row"><label>Conn Alpha</label><input type="range" id="sl-connectionAlpha" min="0" max="0.2" step="0.005" value="0"><span class="ctrl-val" id="v-connectionAlpha">0</span></div>
+
+            <!-- Pattern-specific params -->
+            <div id="params-container"></div>
+
+            <div class="ctrl-section" style="margin-top: 4px;">
+                <div class="ctrl-time">
+                    <label>Time (s)</label>
+                    <input type="number" id="inp-time" value="0" min="0" max="9999">
+                    <label>Trans (s)</label>
+                    <input type="number" id="inp-transition" value="3" min="0" max="30" step="0.1">
+                </div>
+            </div>
+
+            <div class="ctrl-buttons">
+                <button class="ctrl-btn" id="btn-generate">Generate JSON</button>
+                <button class="ctrl-btn" id="btn-copy">Copy Cue</button>
+                <button class="ctrl-btn" id="btn-reset">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="json-output">
+        <button class="close-json" id="btn-close-json">×</button>
+        <pre id="json-pre"></pre>
+    </div>
+
+    <div id="copy-toast">Copied to clipboard</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // --- Seeded PRNG ---
+    function seedRandom(seed) {
+        return function() {
+            seed = (seed * 16807 + 0) % 2147483647;
+            return (seed - 1) / 2147483646;
+        };
+    }
+
+    // --- Canvas setup ---
+    var canvas = document.getElementById('particle-canvas');
+    var ctx = canvas.getContext('2d');
+    var width = 0, height = 0, time = 0;
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function clampX(x) { return Math.max(30, Math.min(width - 30, x)); }
+    function clampY(y) { return Math.max(30, Math.min(height - 30, y)); }
+
+    // --- Pattern library (same as atmosphere.js) ---
+    function patternPosition(name, idx, count, params) {
+        var cx = width / 2, cy = height / 2;
+        var t = idx / count;
+        var margin = 30;
+        var deadR = Math.min(width, height) * 0.18;
+
+        switch (name) {
+        case 'scatter': {
+            var rng = seedRandom(idx * 7919);
+            return { x: margin + rng() * (width - margin * 2), y: margin + rng() * (height - margin * 2) };
+        }
+        case 'grid': {
+            var cols = Math.ceil(Math.sqrt(count * (width / height)));
+            var rows = Math.ceil(count / cols);
+            var col = idx % cols, row = Math.floor(idx / cols);
+            var gx = margin + (col + 0.5) * ((width - margin * 2) / cols);
+            var gy = margin + (row + 0.5) * ((height - margin * 2) / rows);
+            var gdx = gx - cx, gdy = gy - cy;
+            var gDist = Math.sqrt(gdx * gdx + gdy * gdy) || 1;
+            if (gDist < deadR) { gx = cx + (gdx / gDist) * (deadR + 20); gy = cy + (gdy / gDist) * (deadR + 20); }
+            return { x: gx, y: gy };
+        }
+        case 'spiral': {
+            var arms = (params && params.arms) || 3;
+            var tightness = (params && params.tightness) || 0.8;
+            var arm = idx % arms;
+            var armT = Math.floor(idx / arms) / Math.ceil(count / arms);
+            var sa = armT * Math.PI * 6 * tightness + (arm * Math.PI * 2 / arms);
+            var sr = deadR + 30 + armT * (Math.max(width, height) * 0.42);
+            return { x: clampX(cx + Math.cos(sa) * sr), y: clampY(cy + Math.sin(sa) * sr) };
+        }
+        case 'concentric': {
+            var numRings = (params && params.rings) || 5;
+            var ring = Math.floor(t * numRings), ringT = (t * numRings) % 1;
+            var ringR = deadR + 40 + ring * ((Math.min(width, height) * 0.42) / numRings);
+            var ringA = ringT * Math.PI * 2 + ring * 0.4;
+            return { x: clampX(cx + Math.cos(ringA) * ringR), y: clampY(cy + Math.sin(ringA) * ringR) };
+        }
+        case 'lattice': {
+            var spacing = (params && params.spacing) || 40;
+            var side = Math.ceil(Math.pow(count, 1/3));
+            var xi = idx % side, yi = Math.floor(idx / side) % side, zi = Math.floor(idx / (side * side));
+            var ox = (xi - side/2) * spacing, oy = (yi - side/2) * spacing, oz = (zi - side/2) * spacing * 0.6;
+            var scale = 400 / (400 + oz);
+            return { x: cx + ox * scale, y: cy + oy * scale };
+        }
+        case 'waveform': {
+            var freq = (params && params.frequency) || 2, amp = (params && params.amplitude) || 80;
+            return { x: margin + t * (width - margin * 2), y: cy + Math.sin(t * Math.PI * 2 * freq) * amp };
+        }
+        case 'helix': {
+            var strand = idx % 2, helixT = Math.floor(idx / 2) / Math.ceil(count / 2);
+            var hFreq = (params && params.frequency) || 3, hAmp = (params && params.amplitude) || 60;
+            return { x: margin + helixT * (width - margin * 2), y: cy + Math.sin(helixT * Math.PI * 2 * hFreq + strand * Math.PI) * hAmp };
+        }
+        case 'fibonacci': {
+            var golden = (1 + Math.sqrt(5)) / 2;
+            var fAngle = idx * golden * Math.PI * 2;
+            var fR = deadR + Math.sqrt(idx / count) * (Math.min(width, height) * 0.42);
+            return { x: clampX(cx + Math.cos(fAngle) * fR), y: clampY(cy + Math.sin(fAngle) * fR) };
+        }
+        case 'lissajous': {
+            var la = (params && params.a) || 3, lb = (params && params.b) || 2, ld = (params && params.delta) || Math.PI / 2;
+            var lScale = Math.min(width, height) * 0.35;
+            return { x: cx + Math.sin(la * t * Math.PI * 2 + ld) * lScale, y: cy + Math.sin(lb * t * Math.PI * 2) * lScale };
+        }
+        case 'converge': {
+            var tx = (params && params.x !== undefined) ? params.x * width : cx;
+            var ty = (params && params.y !== undefined) ? params.y * height : cy;
+            var cR = (params && params.radius) || 3;
+            var cAngle = (idx / count) * Math.PI * 2;
+            return { x: tx + Math.cos(cAngle) * cR, y: ty + Math.sin(cAngle) * cR };
+        }
+        case 'explode': {
+            var eAngle = seedRandom(idx * 3571)() * Math.PI * 2;
+            var eR = Math.max(width, height) * 0.6 + seedRandom(idx * 9137)() * 100;
+            return { x: clampX(cx + Math.cos(eAngle) * eR), y: clampY(cy + Math.sin(eAngle) * eR) };
+        }
+        case 'ring': {
+            var ringRadius = (params && params.radius) || Math.min(width, height) * 0.3;
+            var rAngle = t * Math.PI * 2;
+            return { x: cx + Math.cos(rAngle) * ringRadius, y: cy + Math.sin(rAngle) * ringRadius };
+        }
+        case 'column': {
+            var colW = (params && params.width) || 60;
+            var rng2 = seedRandom(idx * 4513);
+            return { x: cx + (rng2() - 0.5) * colW, y: margin + t * (height - margin * 2) };
+        }
+        case 'horizon': {
+            var hY = (params && params.y !== undefined) ? params.y * height : cy;
+            var spread = (params && params.spread) || 8;
+            var rng3 = seedRandom(idx * 2741);
+            return { x: margin + t * (width - margin * 2), y: hY + (rng3() - 0.5) * spread };
+        }
+        default: return patternPosition('scatter', idx, count, params);
+        }
+    }
+
+    // --- Particles ---
+    var PARTICLE_COUNT = Math.min(Math.floor(width * height / 4000), 300);
+    var particles = [];
+
+    for (var i = 0; i < PARTICLE_COUNT; i++) {
+        var rng = seedRandom(i * 7919);
+        particles.push({
+            x: rng() * width, y: rng() * height,
+            size: rng() * 1.8 + 0.5,
+            baseAlpha: rng() * 0.4 + 0.15,
+            alpha: 0, vx: 0, vy: 0,
+            phase: rng() * Math.PI * 2,
+            freq: rng() * 0.008 + 0.002,
+            hue: 38 + rng() * 15,
+            sat: 30 + rng() * 30,
+            lit: 55 + rng() * 25,
+            idx: i,
+            wanderAngle: rng() * Math.PI * 2
+        });
+    }
+
+    // --- Live state (driven by controls) ---
+    var state = {
+        pattern: 'scatter',
+        speed: 3,
+        attraction: 0.04,
+        wander: 0.0005,
+        damping: 0.88,
+        rotation: 0.0003,
+        brightness: 0.9,
+        connectionDist: 0,
+        connectionAlpha: 0,
+        params: {}
+    };
+
+    // --- Pattern param definitions ---
+    var patternParams = {
+        spiral: [
+            { key: 'arms', label: 'Arms', min: 1, max: 8, step: 1, def: 3 },
+            { key: 'tightness', label: 'Tightness', min: 0.2, max: 2, step: 0.1, def: 0.8 }
+        ],
+        concentric: [
+            { key: 'rings', label: 'Rings', min: 2, max: 10, step: 1, def: 5 }
+        ],
+        lattice: [
+            { key: 'spacing', label: 'Spacing', min: 20, max: 120, step: 5, def: 55 }
+        ],
+        waveform: [
+            { key: 'frequency', label: 'Frequency', min: 1, max: 8, step: 0.5, def: 3 },
+            { key: 'amplitude', label: 'Amplitude', min: 20, max: 200, step: 10, def: 120 }
+        ],
+        helix: [
+            { key: 'frequency', label: 'Frequency', min: 1, max: 8, step: 0.5, def: 4 },
+            { key: 'amplitude', label: 'Amplitude', min: 20, max: 200, step: 10, def: 100 }
+        ],
+        lissajous: [
+            { key: 'a', label: 'A', min: 1, max: 7, step: 1, def: 3 },
+            { key: 'b', label: 'B', min: 1, max: 7, step: 1, def: 2 },
+            { key: 'delta', label: 'Delta', min: 0, max: 6.28, step: 0.1, def: 1.57 }
+        ],
+        ring: [
+            { key: 'radius', label: 'Radius', min: 50, max: 400, step: 10, def: 250 }
+        ],
+        column: [
+            { key: 'width', label: 'Width', min: 10, max: 200, step: 5, def: 60 }
+        ],
+        horizon: [
+            { key: 'y', label: 'Y Pos', min: 0.05, max: 0.95, step: 0.05, def: 0.15 },
+            { key: 'spread', label: 'Spread', min: 2, max: 40, step: 1, def: 6 }
+        ],
+        converge: [
+            { key: 'x', label: 'X Pos', min: 0, max: 1, step: 0.05, def: 0.5 },
+            { key: 'y', label: 'Y Pos', min: 0, max: 1, step: 0.05, def: 0.5 },
+            { key: 'radius', label: 'Radius', min: 1, max: 30, step: 1, def: 4 }
+        ]
+    };
+
+    // --- UI binding ---
+    var sliders = ['speed', 'attraction', 'wander', 'damping', 'rotation', 'brightness', 'connectionDist', 'connectionAlpha'];
+    var selPattern = document.getElementById('sel-pattern');
+    var paramsContainer = document.getElementById('params-container');
+
+    sliders.forEach(function(key) {
+        var sl = document.getElementById('sl-' + key);
+        var val = document.getElementById('v-' + key);
+        sl.addEventListener('input', function() {
+            state[key] = parseFloat(sl.value);
+            val.textContent = sl.value;
+        });
+    });
+
+    function buildParamSliders() {
+        paramsContainer.innerHTML = '';
+        var defs = patternParams[state.pattern];
+        if (!defs) return;
+
+        defs.forEach(function(p) {
+            var row = document.createElement('div');
+            row.className = 'ctrl-row';
+            var currentVal = (state.params && state.params[p.key] !== undefined) ? state.params[p.key] : p.def;
+            state.params[p.key] = currentVal;
+            row.innerHTML = '<label>' + p.label + '</label>' +
+                '<input type="range" id="sp-' + p.key + '" min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + currentVal + '">' +
+                '<span class="ctrl-val" id="spv-' + p.key + '">' + currentVal + '</span>';
+            paramsContainer.appendChild(row);
+
+            document.getElementById('sp-' + p.key).addEventListener('input', function() {
+                var v = parseFloat(this.value);
+                state.params[p.key] = v;
+                document.getElementById('spv-' + p.key).textContent = v;
+            });
+        });
+    }
+
+    selPattern.addEventListener('change', function() {
+        state.pattern = selPattern.value;
+        state.params = {};
+        buildParamSliders();
+    });
+
+    buildParamSliders();
+
+    // Toggle controls
+    var controls = document.getElementById('controls');
+    var toggleLink = document.getElementById('toggle-controls');
+    controls.addEventListener('click', function(e) {
+        if (controls.classList.contains('collapsed')) {
+            controls.classList.remove('collapsed');
+            toggleLink.textContent = 'Hide Controls';
+        }
+    });
+    toggleLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (controls.classList.contains('collapsed')) {
+            controls.classList.remove('collapsed');
+            toggleLink.textContent = 'Hide Controls';
+        } else {
+            controls.classList.add('collapsed');
+            toggleLink.textContent = 'Show Controls';
+        }
+    });
+
+    // JSON generation
+    function generateCue() {
+        var cue = { t: parseInt(document.getElementById('inp-time').value) || 0 };
+        cue.pattern = state.pattern;
+        cue.speed = state.speed;
+        cue.attraction = state.attraction;
+        cue.wander = state.wander;
+        cue.damping = state.damping;
+        cue.rotation = state.rotation;
+        cue.brightness = state.brightness;
+        if (state.connectionDist > 0) cue.connectionDist = state.connectionDist;
+        if (state.connectionAlpha > 0) cue.connectionAlpha = state.connectionAlpha;
+        cue.transition = parseFloat(document.getElementById('inp-transition').value) || 0;
+        var defs = patternParams[state.pattern];
+        if (defs && Object.keys(state.params).length > 0) cue.params = JSON.parse(JSON.stringify(state.params));
+        return cue;
+    }
+
+    document.getElementById('btn-generate').addEventListener('click', function() {
+        var cue = generateCue();
+        var json = JSON.stringify(cue, null, 2);
+        document.getElementById('json-pre').textContent = json;
+        document.getElementById('json-output').classList.add('visible');
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', function() {
+        var cue = generateCue();
+        var json = JSON.stringify(cue, null, 2);
+        navigator.clipboard.writeText(json).then(function() {
+            var toast = document.getElementById('copy-toast');
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 1500);
+        });
+    });
+
+    document.getElementById('btn-close-json').addEventListener('click', function() {
+        document.getElementById('json-output').classList.remove('visible');
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', function() {
+        state.speed = 3; state.attraction = 0.04; state.wander = 0.0005;
+        state.damping = 0.88; state.rotation = 0.0003; state.brightness = 0.9;
+        state.connectionDist = 0; state.connectionAlpha = 0;
+        sliders.forEach(function(key) {
+            document.getElementById('sl-' + key).value = state[key];
+            document.getElementById('v-' + key).textContent = state[key];
+        });
+    });
+
+    // --- Render loop ---
+    function render() {
+        time++;
+        ctx.clearRect(0, 0, width, height);
+
+        var cx = width / 2, cy = height / 2;
+        var deadR = Math.min(width, height) * 0.18;
+        var rot = time * state.rotation;
+        var cosR = Math.cos(rot), sinR = Math.sin(rot);
+
+        for (var pi = 0; pi < particles.length; pi++) {
+            var pt = particles[pi];
+            var target = patternPosition(state.pattern, pt.idx, particles.length, state.params);
+            var tx = target.x, ty = target.y;
+
+            // Rotation
+            var rtx = tx - cx, rty = ty - cy;
+            tx = cx + rtx * cosR - rty * sinR;
+            ty = cy + rtx * sinR + rty * cosR;
+
+            // Attract
+            pt.vx += (tx - pt.x) * state.attraction * state.speed;
+            pt.vy += (ty - pt.y) * state.attraction * state.speed;
+
+            // Wander
+            pt.wanderAngle += (Math.random() - 0.5) * 0.01;
+            pt.vx += Math.cos(pt.wanderAngle) * state.wander * state.speed;
+            pt.vy += Math.sin(pt.wanderAngle) * state.wander * state.speed;
+
+            // Center repulsion
+            var cdx = pt.x - cx, cdy = pt.y - cy;
+            var cDist = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
+            if (cDist < deadR) {
+                var repel = (1 - cDist / deadR) * 0.08;
+                pt.vx += (cdx / cDist) * repel;
+                pt.vy += (cdy / cDist) * repel;
+            }
+
+            pt.vx *= state.damping;
+            pt.vy *= state.damping;
+            pt.x += pt.vx;
+            pt.y += pt.vy;
+
+            if (pt.x < 10) { pt.x = 10; pt.vx *= -0.5; }
+            if (pt.x > width - 10) { pt.x = width - 10; pt.vx *= -0.5; }
+            if (pt.y < 10) { pt.y = 10; pt.vy *= -0.5; }
+            if (pt.y > height - 10) { pt.y = height - 10; pt.vy *= -0.5; }
+
+            var breathe = Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7;
+            pt.alpha = pt.baseAlpha * breathe * state.brightness;
+
+            if (pt.alpha > 0.01) {
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'hsla(' + pt.hue + ', ' + pt.sat + '%, ' + pt.lit + '%, ' + pt.alpha + ')';
+                ctx.fill();
+            }
+        }
+
+        // Connection lines
+        if (state.connectionAlpha > 0.002 && state.connectionDist > 0) {
+            var connDistSq = state.connectionDist * state.connectionDist;
+            var maxConns = Math.min(particles.length, 200);
+            ctx.lineWidth = 0.4;
+            for (var ci = 0; ci < maxConns; ci++) {
+                var pa = particles[ci];
+                if (pa.alpha < 0.03) continue;
+                for (var cj = ci + 1; cj < maxConns; cj++) {
+                    var pb = particles[cj];
+                    if (pb.alpha < 0.03) continue;
+                    var ldx = pa.x - pb.x, ldy = pa.y - pb.y;
+                    var ldSq = ldx * ldx + ldy * ldy;
+                    if (ldSq < connDistSq) {
+                        var proximity = 1 - ldSq / connDistSq;
+                        var lineAlpha = state.connectionAlpha * proximity * Math.min(pa.alpha, pb.alpha) * 1.5;
+                        if (lineAlpha > 0.002) {
+                            ctx.beginPath();
+                            ctx.moveTo(pa.x, pa.y);
+                            ctx.lineTo(pb.x, pb.y);
+                            ctx.strokeStyle = 'hsla(40, 25%, 65%, ' + lineAlpha + ')';
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    render();
+})();
+</script>
+</body>
+</html>
