@@ -501,6 +501,15 @@
         margin-top: clamp(0.75rem, 1.5vh, 1.25rem);
     }
 
+    .tx-tagline-credit {
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        font-style: normal;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: rgba(180, 60, 50, 0.5);
+    }
+
     /* === FOOTER (minimal, inline) === */
     .tx-footer {
         position: fixed;
@@ -1162,12 +1171,8 @@
     <div class="transmitter">
 
         <div class="tx-header">
-            <div class="tx-signal">
-                <span class="signal-dot"></span>
-                <span>SIGNAL ACTIVE</span>
-            </div>
             <h1 class="tx-title" data-text="FATA ORGANA">FATA ORGANA</h1>
-            <p class="tx-subtitle">An audio drama in twelve transmissions</p>
+            <p class="tx-subtitle">They thought it was a weapon. But it's a gift.</p>
         </div>
 
         <div class="tx-panel">
@@ -1245,7 +1250,7 @@
             <a href="/archive/" class="tx-drawer-btn" id="btn-archive">Field Manuals</a>
         </div>
 
-        <p class="tx-tagline">They thought it was a weapon. But it's a gift.</p>
+        <p class="tx-tagline tx-tagline-credit">An ambient narrative by Wiley Davis</p>
     </div>
 
     <!-- Focus mode blackout -->
