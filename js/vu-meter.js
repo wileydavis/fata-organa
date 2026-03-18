@@ -510,19 +510,26 @@
         if (!('mediaSession' in navigator)) return;
 
         if (playing) {
-            // Get current track title
+            // Get current track title from now-playing element
             var title = 'Fata Organa';
             var nowPlaying = document.getElementById('now-playing-title');
-            if (nowPlaying && nowPlaying.textContent) {
-                title = nowPlaying.textContent;
+            if (nowPlaying && nowPlaying.textContent && nowPlaying.textContent.trim()) {
+                title = nowPlaying.textContent.trim();
             }
+
+            // Get episode display
             var epDisplay = document.getElementById('ep-display');
             var ep = epDisplay ? epDisplay.textContent.trim() : '';
 
+            // Determine band
+            var band = window.currentBand || 'transmission';
+            var albumName = band === 'score' ? 'Score' : 'Transmissions';
+            if (ep) albumName += ' — ' + ep;
+
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: title,
-                artist: 'Fata Organa',
-                album: ep ? 'Transmission ' + ep : 'Transmissions'
+                artist: 'Wiley Davis',
+                album: 'Fata Organa — ' + albumName
             });
 
             navigator.mediaSession.setActionHandler('play', function() {
@@ -761,6 +768,9 @@
                     statusEl.textContent = getTrackTitle() || 'RECEIVE TRANSMISSION';
                 }
             }
+
+            // Update lock screen metadata with new track info
+            if (isPlaying) updateMediaSession(true);
         },
         play: function() { startPlayback(); },
         pause: function() { if (audio && isPlaying) { audio.pause(); isPlaying = false; } },
