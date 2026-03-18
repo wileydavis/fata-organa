@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/spoiler.css">
     <link rel="stylesheet" href="/css/document.css">
+    <link rel="stylesheet" href="/css/layers.css">
     <style>
     /* Two-panel layout */
     .fm-layout {
@@ -524,6 +525,18 @@
 
                         // Re-init spoiler system on new content
                         if (window.spoilerSystem) window.spoilerSystem.init();
+
+                        // Re-init layers system for documents with artifice layers
+                        var layerContainer = contentArea.querySelector('[data-layers]');
+                        if (layerContainer) {
+                            // Remove any previously loaded layers script
+                            var oldScript = contentArea.querySelector('script[src="/js/layers.js"]');
+                            if (oldScript) oldScript.remove();
+                            // Load fresh
+                            var layerScript = document.createElement('script');
+                            layerScript.src = '/js/layers.js?t=' + Date.now();
+                            contentArea.appendChild(layerScript);
+                        }
 
                         // Handle internal links within the document
                         contentArea.querySelectorAll('a[href^="/archive/"]').forEach(function(link) {
