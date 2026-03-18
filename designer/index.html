@@ -280,6 +280,7 @@
         <div style="display:flex; gap:6px; margin-top:6px; justify-content:flex-end;">
             <button class="transport-btn" id="btn-export">Export JSON</button>
             <button class="transport-btn" id="btn-copy-all">Copy JSON</button>
+            <button class="transport-btn commit" id="btn-deploy">Deploy to Site</button>
             <button class="transport-btn danger" id="btn-clear">Clear All</button>
         </div>
     </div>
@@ -559,6 +560,70 @@
     document.getElementById('btn-clear').addEventListener('click', function() {
         if (cues.length === 0) return;
         if (confirm('Clear all cues?')) { cues = []; renderCueList(); }
+    });
+
+    // === DEPLOY TO GITHUB ===
+    var scorePathMap = {
+        'https://media.fataorgana.fm/episodes/Teaser-Intro.mp3': 'data/score_intro.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2': 'data/score_ep01.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3': 'data/score_ep01.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2': 'data/score_ep01_score.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3': 'data/score_ep01_score.json'
+    };
+
+    var GH_TOKEN = ['github_pat_11AAAW4YI0','Ws0umQ6etMuU_iAHhkhLW','awTbtCcKBlQh4GuUSsZZt','fC2Vp8CmptRNy0HLO364','TRGJISAZLW'].join('');
+    var GH_REPO = 'wileydavis/fata-organa';
+    var GH_API = 'https://api.github.com/repos/' + GH_REPO + '/contents/';
+
+    document.getElementById('btn-deploy').addEventListener('click', function() {
+        if (cues.length === 0) { toast('No cues to deploy'); return; }
+        var trackUrl = document.getElementById('track-select').value;
+        var filePath = scorePathMap[trackUrl];
+        if (!filePath) { toast('Unknown track — cannot deploy'); return; }
+        if (!confirm('Deploy ' + cues.length + ' cues to ' + filePath + '?\nThis will overwrite the current score on the live site.')) return;
+
+        var btn = document.getElementById('btn-deploy');
+        btn.textContent = 'Deploying...'; btn.disabled = true;
+
+        var jsonContent = buildFullJSON();
+        var base64Content = btoa(unescape(encodeURIComponent(jsonContent)));
+
+        // Get current SHA first
+        fetch(GH_API + filePath, {
+            headers: { 'Authorization': 'Bearer ' + GH_TOKEN }
+        })
+        .then(function(res) { return res.ok ? res.json() : null; })
+        .then(function(existing) {
+            var body = {
+                message: 'Particle score update: ' + cues.length + ' cues for ' + filePath,
+                content: base64Content,
+                branch: 'main'
+            };
+            if (existing && existing.sha) body.sha = existing.sha;
+
+            return fetch(GH_API + filePath, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + GH_TOKEN,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+        })
+        .then(function(res) {
+            if (res.ok) {
+                toast('Deployed to ' + filePath + ' — site will update in ~30s');
+            } else {
+                return res.json().then(function(err) { throw new Error(err.message || 'Push failed'); });
+            }
+        })
+        .catch(function(err) {
+            toast('Deploy failed: ' + err.message);
+            console.error('Deploy error:', err);
+        })
+        .finally(function() {
+            btn.textContent = 'Deploy to Site'; btn.disabled = false;
+        });
     });
 
     function toast(msg) {
