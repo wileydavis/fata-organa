@@ -210,7 +210,6 @@
                 cueState = cloneState(cueTo);
             }
         }
-        }
 
         // Interpolate during transition
         if (cueTransitionDur > 0) {
