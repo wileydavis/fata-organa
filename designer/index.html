@@ -292,6 +292,7 @@
         </div>
         <div class="transport-cues" id="cue-list"></div>
         <div style="display:flex; gap:6px; margin-top:6px; justify-content:flex-end;">
+            <button class="transport-btn" id="btn-autoscore">⚡ Auto Score</button>
             <button class="transport-btn" id="btn-export">Export JSON</button>
             <button class="transport-btn" id="btn-copy-all">Copy JSON</button>
             <button class="transport-btn commit" id="btn-deploy">Deploy to Site</button>
@@ -1029,6 +1030,230 @@
                 document.getElementById('btn-play').textContent = 'Pause';
             }
         }
+    });
+
+    // === AUTO SCORE ===
+    var autoScorePatterns = {
+        silent:   ['scatter', 'horizon', 'converge'],
+        quiet:    ['scatter', 'lattice', 'fibonacci', 'horizon'],
+        building: ['spiral', 'concentric', 'lattice', 'helix'],
+        loud:     ['waveform_reactive', 'grid_reactive', 'ring', 'explode'],
+        peak:     ['waveform_reactive', 'grid_reactive', 'explode', 'converge'],
+        falling:  ['fibonacci', 'spiral', 'scatter', 'ring'],
+        ending:   ['converge', 'scatter', 'horizon']
+    };
+
+    var autoScoreDefaults = {
+        scatter: { speed: 2, attraction: 0.02, wander: 0.003, damping: 0.92, brightness: 0.7, size: 1 },
+        grid: { speed: 3, attraction: 0.04, wander: 0.0005, damping: 0.88, brightness: 0.9, size: 1 },
+        concentric: { speed: 3, attraction: 0.04, wander: 0.001, damping: 0.9, brightness: 1, size: 1, params: { rings: 5 } },
+        spiral: { speed: 3, attraction: 0.035, wander: 0.001, damping: 0.9, brightness: 0.9, size: 1, params: { arms: 3, tightness: 0.8 } },
+        lattice: { speed: 2.5, attraction: 0.03, wander: 0.0008, damping: 0.9, brightness: 0.85, size: 1, params: { spacing: 50 } },
+        fibonacci: { speed: 2.5, attraction: 0.035, wander: 0.001, damping: 0.9, brightness: 0.9, size: 1 },
+        waveform_reactive: { speed: 4, attraction: 0.06, wander: 0.001, damping: 0.85, brightness: 1.2, size: 1.2, params: { frequency: 3, amplitude: 120, layers: 1 } },
+        helix: { speed: 3, attraction: 0.04, wander: 0.001, damping: 0.88, brightness: 0.9, size: 1, params: { frequency: 4, amplitude: 100 } },
+        lissajous: { speed: 2.5, attraction: 0.03, wander: 0.001, damping: 0.9, brightness: 0.85, size: 1, params: { a: 3, b: 2, delta: 1.57 } },
+        ring: { speed: 3, attraction: 0.04, wander: 0.0005, damping: 0.88, brightness: 1, size: 1, params: { radius: 250 } },
+        column: { speed: 3, attraction: 0.04, wander: 0.001, damping: 0.88, brightness: 0.8, size: 1, params: { width: 60 } },
+        horizon: { speed: 2, attraction: 0.03, wander: 0.002, damping: 0.92, brightness: 0.6, size: 0.8, params: { y: 0.5, spread: 8 } },
+        converge: { speed: 4, attraction: 0.06, wander: 0.0003, damping: 0.85, brightness: 0.7, size: 0.8, params: { x: 0.5, y: 0.5, radius: 3 } },
+        explode: { speed: 5, attraction: 0.05, wander: 0.004, damping: 0.88, brightness: 1.3, size: 1.5 },
+        grid_reactive: { speed: 3.5, attraction: 0.05, wander: 0.001, damping: 0.86, brightness: 1.1, size: 1.1, params: { cols: 16, rows: 10, amplitude: 150 } }
+    };
+
+    document.getElementById('btn-autoscore').addEventListener('click', function() {
+        if (!audio.src) { toast('Load a track first'); return; }
+        if (!audio.duration) { toast('Wait for track to load'); return; }
+
+        var btn = document.getElementById('btn-autoscore');
+        btn.textContent = 'Analyzing...'; btn.disabled = true;
+
+        // Fetch and decode the audio
+        var trackUrl = document.getElementById('track-select').value;
+        fetch(trackUrl)
+        .then(function(r) { return r.arrayBuffer(); })
+        .then(function(buf) {
+            var ac = new (window.AudioContext || window.webkitAudioContext)();
+            return ac.decodeAudioData(buf).then(function(decoded) {
+                ac.close();
+                return decoded;
+            });
+        })
+        .then(function(audioBuffer) {
+            var sampleRate = audioBuffer.sampleRate;
+            var channelData = audioBuffer.getChannelData(0);
+            var duration = audioBuffer.duration;
+
+            // Analyze in windows of 0.5 seconds
+            var windowSize = Math.floor(sampleRate * 0.5);
+            var numWindows = Math.floor(channelData.length / windowSize);
+            var energies = [];
+
+            for (var w = 0; w < numWindows; w++) {
+                var offset = w * windowSize;
+                var sum = 0, lowSum = 0, highSum = 0;
+                // Simple energy + rough band split
+                for (var s = 0; s < windowSize; s++) {
+                    var val = channelData[offset + s];
+                    sum += val * val;
+                }
+                var rms = Math.sqrt(sum / windowSize);
+
+                // Rough spectral tilt: count zero crossings (more = brighter)
+                var zeroCrossings = 0;
+                for (var z = 1; z < windowSize; z++) {
+                    if ((channelData[offset + z] > 0) !== (channelData[offset + z - 1] > 0)) zeroCrossings++;
+                }
+                var brightness = zeroCrossings / windowSize; // 0-1 ish
+
+                energies.push({
+                    t: w * 0.5,
+                    rms: rms,
+                    brightness: brightness
+                });
+            }
+
+            // Smooth the energy curve
+            var smoothed = [];
+            var smoothWindow = 6; // 3 seconds
+            for (var e = 0; e < energies.length; e++) {
+                var rmsSum = 0, brSum = 0, cnt = 0;
+                for (var sw = Math.max(0, e - smoothWindow); sw <= Math.min(energies.length - 1, e + smoothWindow); sw++) {
+                    rmsSum += energies[sw].rms;
+                    brSum += energies[sw].brightness;
+                    cnt++;
+                }
+                smoothed.push({
+                    t: energies[e].t,
+                    rms: rmsSum / cnt,
+                    brightness: brSum / cnt,
+                    rawRms: energies[e].rms
+                });
+            }
+
+            // Find the global energy range
+            var maxRms = 0, minRms = Infinity;
+            for (var m = 0; m < smoothed.length; m++) {
+                if (smoothed[m].rms > maxRms) maxRms = smoothed[m].rms;
+                if (smoothed[m].rms < minRms) minRms = smoothed[m].rms;
+            }
+            var rmsRange = maxRms - minRms || 0.01;
+
+            // Detect sections: find points where energy changes significantly
+            var sections = [];
+            var lastSectionTime = 0;
+            var minSectionLength = 15; // minimum 15 seconds between cues
+            var threshold = 0.15; // 15% change triggers new section
+
+            // Always start with a cue at t=0
+            sections.push({ t: 0, rms: smoothed[0].rms, brightness: smoothed[0].brightness, normRms: (smoothed[0].rms - minRms) / rmsRange });
+
+            var prevNorm = (smoothed[0].rms - minRms) / rmsRange;
+
+            for (var d = 1; d < smoothed.length; d++) {
+                var normRms = (smoothed[d].rms - minRms) / rmsRange;
+                var change = Math.abs(normRms - prevNorm);
+
+                if (change > threshold && (smoothed[d].t - lastSectionTime) >= minSectionLength) {
+                    sections.push({
+                        t: smoothed[d].t,
+                        rms: smoothed[d].rms,
+                        brightness: smoothed[d].brightness,
+                        normRms: normRms
+                    });
+                    lastSectionTime = smoothed[d].t;
+                    prevNorm = normRms;
+                } else {
+                    // Slow drift update
+                    prevNorm = prevNorm * 0.98 + normRms * 0.02;
+                }
+            }
+
+            // Classify each section and assign patterns
+            var lastPattern = '';
+            var generatedCues = [];
+
+            for (var sc = 0; sc < sections.length; sc++) {
+                var sec = sections[sc];
+                var nextSec = sections[sc + 1];
+                var trend = 'steady';
+                if (nextSec) {
+                    if (nextSec.normRms > sec.normRms + 0.15) trend = 'rising';
+                    else if (nextSec.normRms < sec.normRms - 0.15) trend = 'falling';
+                }
+
+                // Classify
+                var category;
+                if (sec.normRms < 0.1) category = 'silent';
+                else if (sec.normRms < 0.3) category = trend === 'rising' ? 'building' : 'quiet';
+                else if (sec.normRms < 0.6) category = trend === 'rising' ? 'building' : (trend === 'falling' ? 'falling' : 'building');
+                else if (sec.normRms < 0.85) category = 'loud';
+                else category = 'peak';
+
+                // Near the end, use ending patterns
+                if (sec.t > duration * 0.85 && sec.normRms < 0.4) category = 'ending';
+
+                // Pick a pattern, avoiding repeats
+                var pool = autoScorePatterns[category];
+                var pattern;
+                var attempts = 0;
+                do {
+                    pattern = pool[Math.floor(Math.random() * pool.length)];
+                    attempts++;
+                } while (pattern === lastPattern && attempts < 10 && pool.length > 1);
+                lastPattern = pattern;
+
+                // Build the cue
+                var defaults = autoScoreDefaults[pattern] || {};
+                var cue = {
+                    t: Math.round(sec.t * 10) / 10,
+                    pattern: pattern,
+                    speed: defaults.speed || 3,
+                    attraction: defaults.attraction || 0.04,
+                    wander: defaults.wander || 0.001,
+                    damping: defaults.damping || 0.88,
+                    rotation: 0.0003,
+                    brightness: defaults.brightness || 0.9,
+                    size: defaults.size || 1,
+                    transition: Math.min(nextSec ? (nextSec.t - sec.t) * 0.4 : 8, 30)
+                };
+
+                // Modulate params based on energy
+                cue.brightness = (defaults.brightness || 0.9) * (0.6 + sec.normRms * 0.6);
+                cue.size = (defaults.size || 1) * (0.7 + sec.normRms * 0.5);
+
+                if (defaults.params) cue.params = JSON.parse(JSON.stringify(defaults.params));
+
+                // Color shifts based on brightness (spectral tilt)
+                if (sec.brightness > 0.15) {
+                    cue.hueShift = Math.round((sec.brightness - 0.1) * 60);
+                }
+
+                generatedCues.push(cue);
+            }
+
+            // Replace current cues
+            if (cues.length > 0) {
+                if (!confirm('Replace existing ' + cues.length + ' cues with auto-generated score?')) {
+                    btn.textContent = '⚡ Auto Score'; btn.disabled = false;
+                    return;
+                }
+            }
+
+            cues = generatedCues;
+            renderCueList();
+            toast('Generated ' + cues.length + ' cues from audio analysis');
+
+            // Load first cue into UI
+            if (cues.length > 0) loadCueIntoUI(cues[0]);
+        })
+        .catch(function(err) {
+            toast('Analysis failed: ' + err.message);
+            console.error('Auto score error:', err);
+        })
+        .finally(function() {
+            btn.textContent = '⚡ Auto Score'; btn.disabled = false;
+        });
     });
 
     // === RENDER ===
