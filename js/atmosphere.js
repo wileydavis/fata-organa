@@ -428,12 +428,10 @@
         }
 
         case 'waveform_reactive': {
-            // Audio-reactive waveform — particles form a horizontal wave
-            // whose shape is driven by audio energy
             var wrAmp = (params && params.amplitude) || 120;
             var wrFreq = (params && params.frequency) || 3;
             var wrLayers = (params && params.layers) || 1;
-            var s = sig || { smoothRms: 0, low: 0, high: 0, rms: 0, smoothLow: 0 };
+            var s = sig || { smoothRms: 0, low: 0, high: 0, rms: 0, smoothLow: 0, isPlaying: false };
             
             var layer = idx % wrLayers;
             var layerT = Math.floor(idx / wrLayers) / Math.ceil(count / wrLayers);
@@ -441,30 +439,31 @@
             
             var xPos = margin + layerT * (width - margin * 2);
             
-            // Base wave
-            var baseWave = Math.sin(layerT * Math.PI * 2 * wrFreq);
+            // When not playing, particles sit flat on the horizon
+            if (!s.isPlaying || s.smoothRms < 0.01) {
+                return { x: xPos, y: cy + layerOffset };
+            }
             
-            // Audio modulation: bass drives big slow waves, high drives fast ripples
-            var bassAmp = s.smoothLow * wrAmp * 1.5;
-            var highAmp = s.high * wrAmp * 0.4;
-            var rmsAmp = s.smoothRms * wrAmp * 0.8;
+            // Voice energy = mid range (rms minus bass and treble)
+            var voice = Math.max(0, s.rms - s.smoothLow * 0.5 - s.high * 0.3);
+            var bassEnergy = s.smoothLow;
+            var highEnergy = s.high;
             
-            var bassWave = Math.sin(layerT * Math.PI * 2 * 1.5) * bassAmp;
-            var highWave = Math.sin(layerT * Math.PI * 2 * 8 + time * 0.02) * highAmp;
-            var rmsWave = baseWave * rmsAmp;
+            // Voice is the primary driver
+            var voiceWave = Math.sin(layerT * Math.PI * 2 * wrFreq) * voice * wrAmp * 2.5;
+            var bassWave = Math.sin(layerT * Math.PI * 2 * 1.5) * bassEnergy * wrAmp * 0.6;
+            var highWave = Math.sin(layerT * Math.PI * 2 * 8 + time * 0.02) * highEnergy * wrAmp * 0.3;
             
-            var yPos = cy + rmsWave + bassWave + highWave + layerOffset;
+            var yPos = cy + voiceWave + bassWave + highWave + layerOffset;
             
             return { x: xPos, y: clampY(yPos) };
         }
 
         case 'grid_reactive': {
-            // Audio-reactive grid — spectrum visualizer
-            // Each column responds to a frequency band
             var grCols = (params && params.cols) || 16;
             var grRows = (params && params.rows) || Math.ceil(count / grCols);
             var grAmp = (params && params.amplitude) || 150;
-            var s2 = sig || { smoothRms: 0, low: 0, high: 0, rms: 0, smoothLow: 0 };
+            var s2 = sig || { smoothRms: 0, low: 0, high: 0, rms: 0, smoothLow: 0, isPlaying: false };
             
             var col = idx % grCols;
             var row = Math.floor(idx / grCols);
@@ -473,26 +472,36 @@
             var gx = margin + (col + 0.5) * ((width - margin * 2) / grCols);
             var baseGy = margin + (row + 0.5) * ((height - margin * 2) / grRows);
             
-            // Map column position to frequency band (0=bass, 1=high)
-            var bandT = col / (grCols - 1);
-            
-            // Interpolate between bass/mid/high based on column
-            var bandEnergy;
-            if (bandT < 0.33) {
-                bandEnergy = s2.smoothLow * (1 - bandT * 3) + s2.rms * (bandT * 3);
-            } else if (bandT < 0.66) {
-                var mt = (bandT - 0.33) * 3;
-                bandEnergy = s2.rms * (1 - mt) + s2.high * mt;
-            } else {
-                bandEnergy = s2.high;
+            // When not playing, particles sit in a static grid
+            if (!s2.isPlaying || s2.smoothRms < 0.01) {
+                return { x: gx, y: baseGy };
             }
             
-            // Displace Y based on energy — rows near center get more displacement
+            // Voice energy dominates the mid columns
+            var voice2 = Math.max(0, s2.rms - s2.smoothLow * 0.5 - s2.high * 0.3);
+            
+            // Map columns: edges = bass/treble, center = voice
+            var bandT = col / (grCols - 1);
+            var bandEnergy;
+            if (bandT < 0.25) {
+                // Bass region
+                bandEnergy = s2.smoothLow * (1 - bandT * 4) + voice2 * (bandT * 4);
+            } else if (bandT < 0.75) {
+                // Voice region — dominant
+                var voiceT = (bandT - 0.25) / 0.5;
+                var voiceWeight = 1 - Math.abs(voiceT - 0.5) * 1.2;
+                bandEnergy = voice2 * (0.8 + voiceWeight * 0.5);
+            } else {
+                // High region
+                var ht = (bandT - 0.75) * 4;
+                bandEnergy = voice2 * (1 - ht) + s2.high * ht;
+            }
+            
+            // Rows near center get more displacement
             var rowCenter = (row + 0.5) / grRows;
             var centerWeight = 1 - Math.abs(rowCenter - 0.5) * 2;
             var displacement = bandEnergy * grAmp * centerWeight;
             
-            // Alternate direction based on row position relative to center
             if (rowCenter < 0.5) displacement = -displacement;
             
             return { x: gx, y: clampY(baseGy + displacement) };
