@@ -437,6 +437,9 @@
     // =========================================
 
     var PARTICLE_COUNT = Math.min(Math.floor(window.innerWidth * window.innerHeight / 4000), 300);
+    // Reduce on mobile for performance
+    var isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobileDevice) PARTICLE_COUNT = Math.min(PARTICLE_COUNT, 150);
     var particles = [];
 
     function createParticle(idx) {
@@ -497,7 +500,17 @@
     // RENDER
     // =========================================
 
-    function render() {
+    var lastFrameTime = 0;
+
+    function render(timestamp) {
+        // Delta time — normalize to 60fps (16.67ms)
+        var dt = 1;
+        if (lastFrameTime > 0 && timestamp) {
+            var rawDt = timestamp - lastFrameTime;
+            dt = Math.min(rawDt / 16.67, 3); // cap at 3x to prevent huge jumps
+        }
+        lastFrameTime = timestamp || 0;
+
         time++;
         var sig = getSignal();
 
@@ -629,20 +642,19 @@
             targetY += Math.cos(dispAngle * 0.7) * audioDisp * 10;
 
             // Movement — always attract to pattern, stronger when playing
-            var activeAttraction = attraction * speed;
+            var activeAttraction = attraction * speed * dt;
             if (reactivity < 0.1) {
-                // Idle: gentle attraction + stronger wander
                 pt.vx += (targetX - pt.x) * activeAttraction * 0.3;
                 pt.vy += (targetY - pt.y) * activeAttraction * 0.3;
-                pt.wanderAngle += (Math.random() - 0.5) * 0.02;
-                pt.vx += Math.cos(pt.wanderAngle) * wander;
-                pt.vy += Math.sin(pt.wanderAngle) * wander;
+                pt.wanderAngle += (Math.random() - 0.5) * 0.02 * dt;
+                pt.vx += Math.cos(pt.wanderAngle) * wander * dt;
+                pt.vy += Math.sin(pt.wanderAngle) * wander * dt;
             } else {
                 pt.vx += (targetX - pt.x) * activeAttraction;
                 pt.vy += (targetY - pt.y) * activeAttraction;
-                pt.wanderAngle += (Math.random() - 0.5) * 0.01;
-                pt.vx += Math.cos(pt.wanderAngle) * wander * 0.3 * speed;
-                pt.vy += Math.sin(pt.wanderAngle) * wander * 0.3 * speed;
+                pt.wanderAngle += (Math.random() - 0.5) * 0.01 * dt;
+                pt.vx += Math.cos(pt.wanderAngle) * wander * 0.3 * speed * dt;
+                pt.vy += Math.sin(pt.wanderAngle) * wander * 0.3 * speed * dt;
             }
 
             // Center repulsion
@@ -650,15 +662,17 @@
             var cdy = pt.y - cy;
             var cDist = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
             if (cDist < deadR) {
-                var repel = (1 - cDist / deadR) * 0.08;
+                var repel = (1 - cDist / deadR) * 0.08 * dt;
                 pt.vx += (cdx / cDist) * repel;
                 pt.vy += (cdy / cDist) * repel;
             }
 
-            pt.vx *= damping;
-            pt.vy *= damping;
-            pt.x += pt.vx;
-            pt.y += pt.vy;
+            // Frame-rate independent damping: damping^dt
+            var frameDamping = Math.pow(damping, dt);
+            pt.vx *= frameDamping;
+            pt.vy *= frameDamping;
+            pt.x += pt.vx * dt;
+            pt.y += pt.vy * dt;
 
             if (pt.x < 10) { pt.x = 10; pt.vx *= -0.5; }
             if (pt.x > width - 10) { pt.x = width - 10; pt.vx *= -0.5; }
