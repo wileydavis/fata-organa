@@ -136,10 +136,10 @@
         };
     }
 
-    // Project 3D points to 2D screen positions with rotation and perspective
-    // rotX, rotY, rotZ in radians, scale multiplier, perspective distance
-    function projectPoints(points, bounds, screenW, screenH, rotX, rotY, rotZ, scale, perspective) {
-        var cx = screenW / 2, cy = screenH / 2;
+    // Project 3D points to 2D screen positions with rotation, perspective, and offset
+    function projectPoints(points, bounds, screenW, screenH, rotX, rotY, rotZ, scale, perspective, offsetX, offsetY) {
+        var cx = screenW / 2 + (offsetX || 0) * screenW;
+        var cy = screenH / 2 + (offsetY || 0) * screenH;
         var fitScale = Math.min(screenW, screenH) * 0.35 * scale / bounds.size;
 
         var cosX = Math.cos(rotX), sinX = Math.sin(rotX);
@@ -226,10 +226,12 @@
         var rotZ = (params && params.rotateZ) || 0;
         var scale = (params && params.scale) || 1;
         var persp = (params && params.perspective) || 400;
+        var offX = (params && params.offsetX) || 0;
+        var offY = (params && params.offsetY) || 0;
 
-        var paramKey = rotX + ',' + rotY + ',' + rotZ + ',' + scale + ',' + persp + ',' + screenW + ',' + screenH;
+        var paramKey = rotX + ',' + rotY + ',' + rotZ + ',' + scale + ',' + persp + ',' + offX + ',' + offY + ',' + screenW + ',' + screenH;
         if (stlLastParams[key] !== paramKey) {
-            stlProjectedCache[key] = projectPoints(data.points, data.bounds, screenW, screenH, rotX, rotY, rotZ, scale, persp);
+            stlProjectedCache[key] = projectPoints(data.points, data.bounds, screenW, screenH, rotX, rotY, rotZ, scale, persp, offX, offY);
             stlLastParams[key] = paramKey;
         }
 
