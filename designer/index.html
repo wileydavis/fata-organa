@@ -1034,11 +1034,11 @@
 
     // === AUTO SCORE ===
     var autoScorePatterns = {
-        silent:   ['scatter', 'horizon', 'converge'],
+        silent:   ['scatter', 'horizon', 'fibonacci'],
         quiet:    ['scatter', 'lattice', 'fibonacci', 'horizon'],
         building: ['spiral', 'concentric', 'lattice', 'helix'],
         loud:     ['waveform_reactive', 'grid_reactive', 'ring', 'explode'],
-        peak:     ['waveform_reactive', 'grid_reactive', 'explode', 'converge'],
+        peak:     ['waveform_reactive', 'grid_reactive', 'explode', 'ring'],
         falling:  ['fibonacci', 'spiral', 'scatter', 'ring'],
         ending:   ['converge', 'scatter', 'horizon']
     };
@@ -1056,7 +1056,7 @@
         ring: { speed: 3, attraction: 0.04, wander: 0.0005, damping: 0.88, brightness: 1, size: 1, params: { radius: 250 } },
         column: { speed: 3, attraction: 0.04, wander: 0.001, damping: 0.88, brightness: 0.8, size: 1, params: { width: 60 } },
         horizon: { speed: 2, attraction: 0.03, wander: 0.002, damping: 0.92, brightness: 0.6, size: 0.8, params: { y: 0.5, spread: 8 } },
-        converge: { speed: 4, attraction: 0.06, wander: 0.0003, damping: 0.85, brightness: 0.7, size: 0.8, params: { x: 0.5, y: 0.5, radius: 3 } },
+        converge: { speed: 6, attraction: 0.08, wander: 0.0002, damping: 0.82, brightness: 0.8, size: 0.6, params: { x: 0.5, y: 0.5, radius: 3 } },
         explode: { speed: 5, attraction: 0.05, wander: 0.004, damping: 0.88, brightness: 1.3, size: 1.5 },
         grid_reactive: { speed: 3.5, attraction: 0.05, wander: 0.001, damping: 0.86, brightness: 1.1, size: 1.1, params: { cols: 16, rows: 10, amplitude: 150 } }
     };
@@ -1240,7 +1240,44 @@
                 }
             }
 
-            cues = generatedCues;
+            // Post-process: converge should be brief, followed by an expand
+            var finalCues = [];
+            for (var fc = 0; fc < generatedCues.length; fc++) {
+                var cue = generatedCues[fc];
+                finalCues.push(cue);
+                
+                if (cue.pattern === 'converge') {
+                    // Make converge fast with short transition
+                    cue.speed = 6;
+                    cue.attraction = 0.08;
+                    cue.damping = 0.82;
+                    cue.transition = Math.min(cue.transition, 3);
+                    
+                    // Insert an expand/scatter 3-5 seconds after converge
+                    var expandTime = cue.t + 4;
+                    var nextCueTime = (fc + 1 < generatedCues.length) ? generatedCues[fc + 1].t : duration;
+                    
+                    if (expandTime < nextCueTime - 5) {
+                        var expandPattern = ['explode', 'scatter', 'fibonacci'][Math.floor(Math.random() * 3)];
+                        var expDefaults = autoScoreDefaults[expandPattern] || {};
+                        finalCues.push({
+                            t: Math.round(expandTime * 10) / 10,
+                            pattern: expandPattern,
+                            speed: (expDefaults.speed || 4) * 1.3,
+                            attraction: expDefaults.attraction || 0.05,
+                            wander: expDefaults.wander || 0.002,
+                            damping: expDefaults.damping || 0.88,
+                            rotation: 0.0003,
+                            brightness: (expDefaults.brightness || 1) * 1.2,
+                            size: expDefaults.size || 1.2,
+                            transition: 2,
+                            params: expDefaults.params ? JSON.parse(JSON.stringify(expDefaults.params)) : undefined
+                        });
+                    }
+                }
+            }
+
+            cues = finalCues;
             renderCueList();
             toast('Generated ' + cues.length + ' cues from audio analysis');
 
