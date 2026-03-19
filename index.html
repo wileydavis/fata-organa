@@ -1362,6 +1362,11 @@
         gap: 0.6rem;
     }
 
+    /* Mobile focus nav — hidden everywhere by default */
+    .mobile-focus-nav {
+        display: none;
+    }
+
     .tx-now-playing-title {
         font-family: var(--mono);
         font-size: 0.7rem;
@@ -1447,17 +1452,16 @@
         }
 
         /* === MOBILE FOCUS MODE === */
-        /* Circle anchored at bottom, sized from viewport width */
+        /* Smaller circle anchored at bottom */
         .focus-mode .tx-panel {
             max-width: none;
-            width: 100vw;
-            height: 100vw;
+            width: 85vw;
+            height: 85vw;
             aspect-ratio: 1 / 1;
             border-radius: 50%;
             position: fixed;
-            bottom: calc(-50vw + 10px);
-            left: 0;
-            right: 0;
+            bottom: calc(-42.5vw + 10px);
+            left: 7.5vw;
             padding: 0;
             -webkit-mask-image: none;
             mask-image: none;
@@ -1466,17 +1470,17 @@
             overflow: hidden;
         }
 
-        /* VU meter centered in the visible top half of the circle */
+        /* VU meter tight to top of circle */
         .focus-mode .tx-meter {
-            margin-top: calc(8vw);
+            margin-top: calc(3vw);
             width: 100%;
             display: flex;
             justify-content: center;
         }
 
         .focus-mode .tx-meter canvas {
-            width: 85vw !important;
-            max-width: 85vw !important;
+            width: 72vw !important;
+            max-width: 72vw !important;
             height: auto !important;
         }
 
@@ -1511,7 +1515,7 @@
             display: none !important;
         }
 
-        /* Mobile focus nav arrows — positioned in the visible half */
+        /* Mobile focus nav arrows — inside the meter area */
         .mobile-focus-nav {
             display: none;
         }
@@ -1519,11 +1523,11 @@
         .focus-mode .mobile-focus-nav {
             display: flex;
             position: absolute;
-            top: calc(35vw);
+            top: calc(28vw);
             left: 0;
             right: 0;
             justify-content: space-between;
-            padding: 0 2rem;
+            padding: 0 6vw;
             z-index: 10;
             pointer-events: none;
         }
