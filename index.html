@@ -1445,6 +1445,108 @@
             padding: 0.6rem 1rem;
             padding-top: max(0.6rem, env(safe-area-inset-top));
         }
+
+        /* === MOBILE FOCUS MODE === */
+        /* Half-circle anchored at bottom */
+        .focus-mode .tx-panel {
+            border-radius: 100% 100% 0 0 / 140% 140% 0 0;
+            max-width: 100vw;
+            width: 100vw;
+            aspect-ratio: auto;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0;
+            -webkit-mask-image: none;
+            mask-image: none;
+            z-index: 8;
+            height: 45vh;
+            justify-content: flex-start;
+            overflow: hidden;
+        }
+
+        /* VU meter fills width in mobile focus */
+        .focus-mode .tx-meter {
+            margin-top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-top: 1rem;
+        }
+
+        .focus-mode .tx-meter canvas {
+            width: 100% !important;
+            max-width: 100vw !important;
+            height: auto !important;
+        }
+
+        /* Hide desktop now-playing on mobile focus */
+        .focus-mode .tx-now-playing {
+            display: none !important;
+        }
+
+        /* Hide header, footer, title in mobile focus */
+        .focus-mode .tx-header {
+            display: none !important;
+        }
+
+        .focus-mode .tx-footer {
+            display: none !important;
+        }
+
+        /* Transmitter fills viewport in mobile focus */
+        .focus-mode .transmitter {
+            padding: 0;
+        }
+
+        /* Focus exit hint at top on mobile */
+        .focus-mode .focus-exit-hint {
+            bottom: auto;
+            top: max(1rem, env(safe-area-inset-top));
+        }
+
+        /* Hide signup in focus */
+        .focus-mode .tx-signup {
+            display: none !important;
+        }
+
+        /* Mobile focus nav arrows — positioned over the meter */
+        .mobile-focus-nav {
+            display: none;
+        }
+
+        .focus-mode .mobile-focus-nav {
+            display: flex;
+            position: absolute;
+            bottom: 2rem;
+            left: 0;
+            right: 0;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .mobile-focus-btn {
+            background: none;
+            border: none;
+            color: rgba(196, 163, 90, 0.35);
+            font-size: 1.5rem;
+            padding: 1rem;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: color 0.2s;
+            font-family: var(--mono);
+        }
+
+        .mobile-focus-btn:active {
+            color: rgba(196, 163, 90, 0.8);
+        }
+
+        .mobile-focus-btn:disabled {
+            color: rgba(196, 163, 90, 0.1);
+        }
     }
     </style>
 </head>
@@ -1535,13 +1637,19 @@
 
             <!-- Status strip -->
 
-            <!-- Now playing title with nav (visible in focus mode) -->
+            <!-- Now playing title with nav (visible in focus mode desktop) -->
             <div class="tx-now-playing" id="now-playing">
                 <span class="tx-now-playing-title" id="now-playing-title">Lab Orientation Statement</span>
                 <div class="tx-now-playing-controls">
                     <button class="tx-now-playing-nav" id="focus-prev">&#9666;</button>
                     <button class="tx-now-playing-nav" id="focus-next">&#9656;</button>
                 </div>
+            </div>
+
+            <!-- Mobile focus transport — arrows over the meter -->
+            <div class="mobile-focus-nav" id="mobile-focus-nav">
+                <button class="mobile-focus-btn mobile-focus-prev" id="mobile-prev">&#9666;</button>
+                <button class="mobile-focus-btn mobile-focus-next" id="mobile-next">&#9656;</button>
             </div>
         </div>
 
@@ -2004,14 +2112,20 @@
         // Focus mode nav buttons
         var focusPrev = document.getElementById('focus-prev');
         var focusNextBtn = document.getElementById('focus-next');
+        var mobilePrev = document.getElementById('mobile-prev');
+        var mobileNext = document.getElementById('mobile-next');
 
         function updateNavButtons() {
             var sources = currentBand === 'score' ? scoreSources : transmissionSources;
             var keys = Object.keys(sources);
             var currentEp = epDisplay ? epDisplay.textContent.trim() : '';
             var currentIdx = keys.indexOf(currentEp);
-            if (focusPrev) focusPrev.disabled = currentIdx <= 0;
-            if (focusNextBtn) focusNextBtn.disabled = currentIdx < 0 || currentIdx >= keys.length - 1;
+            var atStart = currentIdx <= 0;
+            var atEnd = currentIdx < 0 || currentIdx >= keys.length - 1;
+            if (focusPrev) focusPrev.disabled = atStart;
+            if (focusNextBtn) focusNextBtn.disabled = atEnd;
+            if (mobilePrev) mobilePrev.disabled = atStart;
+            if (mobileNext) mobileNext.disabled = atEnd;
         }
 
         // Override loadTrack to also update nav state
@@ -2030,6 +2144,20 @@
 
         if (focusNextBtn) {
             focusNextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                playNext();
+            });
+        }
+
+        if (mobilePrev) {
+            mobilePrev.addEventListener('click', function(e) {
+                e.stopPropagation();
+                playPrev();
+            });
+        }
+
+        if (mobileNext) {
+            mobileNext.addEventListener('click', function(e) {
                 e.stopPropagation();
                 playNext();
             });
