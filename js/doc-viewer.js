@@ -460,9 +460,10 @@
         // Skip audio/file links
         if (href.match(/\.(mp3|pdf|xml|png|jpg|css|js)$/i)) return;
 
-        // Skip the field manuals and about pages — let them navigate normally
+        // Skip the field manuals, about, and designer pages — let them navigate normally
         if (href === '/archive/' || href === '/archive') return;
         if (href === '/about/' || href === '/about') return;
+        if (href === '/designer/' || href === '/designer') return;
 
         // Home link — just close viewer if open
         if (href === '/' || href === '') {
