@@ -407,12 +407,9 @@
         }
 
         case 'stl': {
-            // Load STL if not loaded yet
             var stlFile = params && params.file;
             if (stlFile && window.stlLoader) {
-                // Trigger load (async, cached)
                 window.stlLoader.loadSTLFromURL(stlFile, count, function() {});
-                // Apply time-based rotation on top of base rotation
                 var autoRotY = (params && params.rotateY) || 0;
                 var stlParams = {
                     file: stlFile,
@@ -420,12 +417,13 @@
                     rotateY: autoRotY + time * ((params && params.spinY) || 0),
                     rotateZ: (params && params.rotateZ) || 0,
                     scale: (params && params.scale) || 1,
-                    perspective: (params && params.perspective) || 400
+                    perspective: (params && params.perspective) || 400,
+                    offsetX: (params && params.offsetX) || 0,
+                    offsetY: (params && params.offsetY) || 0
                 };
                 var pos = window.stlLoader.getSTLPosition(idx, count, width, height, stlParams);
                 if (pos) return pos;
             }
-            // Fallback to scatter while loading
             return patternPosition('scatter', idx, count, params);
         }
 
