@@ -453,6 +453,8 @@
     }
 
     // File upload handler
+    var currentSTLBuffer = null; // raw ArrayBuffer for deploy
+
     document.getElementById('stl-upload').addEventListener('change', function(e) {
         var file = e.target.files[0];
         if (!file) return;
@@ -460,6 +462,7 @@
         document.getElementById('stl-filename').textContent = file.name;
         var reader = new FileReader();
         reader.onload = function(evt) {
+            currentSTLBuffer = evt.target.result;
             var tris = parseSTL(evt.target.result);
             var points = distributeSTLPoints(tris, PARTICLE_COUNT);
             var bounds = computeSTLBounds(points);
@@ -630,6 +633,7 @@
         if (state.pattern === 'stl' && stlData) {
             cue._stlData = { points: stlData.points, bounds: stlData.bounds };
             cue._stlName = currentSTLName;
+            cue._stlBuffer = currentSTLBuffer;
         }
         return cue;
     }
@@ -701,7 +705,21 @@
     // Export
     function buildFullJSON() {
         var sorted = cues.slice().sort(function(a, b) { return a.t - b.t; });
-        return JSON.stringify({ track: document.getElementById('track-select').selectedOptions[0].text, duration: Math.round(audio.duration || 0), cues: sorted }, null, 2);
+        // Clean cues for export — strip internal _stl* fields, add file refs
+        var cleanCues = sorted.map(function(c) {
+            var out = {};
+            for (var k in c) {
+                if (k.charAt(0) === '_') continue; // skip internal fields
+                out[k] = c[k];
+            }
+            // Add file reference for STL cues
+            if (c.pattern === 'stl' && c._stlName) {
+                if (!out.params) out.params = {};
+                out.params.file = '/models/' + c._stlName.replace(/\s+/g, '-').toLowerCase();
+            }
+            return out;
+        });
+        return JSON.stringify({ track: document.getElementById('track-select').selectedOptions[0].text, duration: Math.round(audio.duration || 0), cues: cleanCues }, null, 2);
     }
 
     document.getElementById('btn-export').addEventListener('click', function() {
@@ -763,45 +781,92 @@
         var btn = document.getElementById('btn-deploy');
         btn.textContent = 'Deploying...'; btn.disabled = true;
 
-        var jsonContent = buildFullJSON();
-        var base64Content = btoa(unescape(encodeURIComponent(jsonContent)));
-
-        // Get current SHA first
-        fetch(GH_API + filePath, {
-            headers: { 'Authorization': 'Bearer ' + GH_TOKEN }
-        })
-        .then(function(res) { return res.ok ? res.json() : null; })
-        .then(function(existing) {
-            var body = {
-                message: 'Particle score update: ' + cues.length + ' cues for ' + filePath,
-                content: base64Content,
-                branch: 'main'
-            };
-            if (existing && existing.sha) body.sha = existing.sha;
-
-            return fetch(GH_API + filePath, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + GH_TOKEN,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            });
-        })
-        .then(function(res) {
-            if (res.ok) {
-                toast('Deployed to ' + filePath + ' — site will update in ~30s');
-            } else {
-                return res.json().then(function(err) { throw new Error(err.message || 'Push failed'); });
+        // Collect STL files that need uploading
+        var stlUploads = [];
+        var sorted = cues.slice().sort(function(a, b) { return a.t - b.t; });
+        sorted.forEach(function(c) {
+            if (c.pattern === 'stl' && c._stlBuffer && c._stlName) {
+                var modelPath = 'models/' + c._stlName.replace(/\s+/g, '-').toLowerCase();
+                // Dedupe
+                if (!stlUploads.some(function(u) { return u.path === modelPath; })) {
+                    stlUploads.push({ path: modelPath, buffer: c._stlBuffer });
+                }
             }
-        })
-        .catch(function(err) {
-            toast('Deploy failed: ' + err.message);
-            console.error('Deploy error:', err);
-        })
-        .finally(function() {
-            btn.textContent = 'Deploy to Site'; btn.disabled = false;
         });
+
+        // Upload STLs first, then score JSON
+        function uploadSTLs(idx) {
+            if (idx >= stlUploads.length) {
+                // All STLs uploaded, now push the score JSON
+                pushScoreJSON();
+                return;
+            }
+            var stl = stlUploads[idx];
+            toast('Uploading model ' + (idx + 1) + '/' + stlUploads.length + '...');
+            var b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(stl.buffer)));
+            
+            fetch(GH_API + stl.path, { headers: { 'Authorization': 'Bearer ' + GH_TOKEN } })
+            .then(function(res) { return res.ok ? res.json() : null; })
+            .then(function(existing) {
+                var body = { message: 'Upload model: ' + stl.path, content: b64, branch: 'main' };
+                if (existing && existing.sha) body.sha = existing.sha;
+                return fetch(GH_API + stl.path, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + GH_TOKEN, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('STL upload failed');
+                uploadSTLs(idx + 1);
+            })
+            .catch(function(err) {
+                toast('STL upload failed: ' + err.message);
+                btn.textContent = 'Deploy to Site'; btn.disabled = false;
+            });
+        }
+
+        function pushScoreJSON() {
+            var jsonContent = buildFullJSON();
+            var base64Content = btoa(unescape(encodeURIComponent(jsonContent)));
+
+            fetch(GH_API + filePath, { headers: { 'Authorization': 'Bearer ' + GH_TOKEN } })
+            .then(function(res) { return res.ok ? res.json() : null; })
+            .then(function(existing) {
+                var body = {
+                    message: 'Particle score update: ' + cues.length + ' cues for ' + filePath,
+                    content: base64Content, branch: 'main'
+                };
+                if (existing && existing.sha) body.sha = existing.sha;
+                return fetch(GH_API + filePath, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + GH_TOKEN, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            })
+            .then(function(res) {
+                if (res.ok) {
+                    var stlCount = stlUploads.length;
+                    toast('Deployed' + (stlCount ? ' (' + stlCount + ' models + score)' : '') + ' — site updates in ~30s');
+                } else {
+                    return res.json().then(function(err) { throw new Error(err.message || 'Push failed'); });
+                }
+            })
+            .catch(function(err) {
+                toast('Deploy failed: ' + err.message);
+                console.error('Deploy error:', err);
+            })
+            .finally(function() {
+                btn.textContent = 'Deploy to Site'; btn.disabled = false;
+            });
+        }
+
+        // Start the upload chain
+        if (stlUploads.length > 0) {
+            uploadSTLs(0);
+        } else {
+            pushScoreJSON();
+        }
     });
 
     function toast(msg) {
