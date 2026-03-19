@@ -1470,9 +1470,9 @@
             overflow: hidden;
         }
 
-        /* VU meter fills circle with ~10px gap */
+        /* VU meter centered in visible half of circle */
         .focus-mode .tx-meter {
-            margin-top: calc(1vw);
+            margin-top: calc(-2vw);
             width: 100%;
             display: flex;
             justify-content: center;
@@ -1523,11 +1523,11 @@
         .focus-mode .mobile-focus-nav {
             display: flex;
             position: fixed;
-            bottom: max(1rem, env(safe-area-inset-bottom));
+            bottom: 0;
             left: 0;
             right: 0;
             justify-content: space-between;
-            padding: 0 1rem;
+            padding: 0;
             z-index: 20;
             pointer-events: none;
         }
@@ -1546,7 +1546,7 @@
             pointer-events: auto;
             transition: background 0.2s, opacity 0.2s;
             font-family: var(--mono);
-            border-radius: 4px;
+            border-radius: 0;
         }
 
         .mobile-focus-btn:active {
