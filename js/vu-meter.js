@@ -443,6 +443,15 @@
             }
         });
 
+        // iOS needs metadata set on the native 'playing' event
+        audio.addEventListener('playing', function() {
+            updateMediaSession(true);
+        });
+
+        audio.addEventListener('pause', function() {
+            if (!audio.ended) updateMediaSession(false);
+        });
+
         audio.addEventListener('timeupdate', function() {
             if (audio.duration) {
                 progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
@@ -534,8 +543,8 @@
                 artist: 'Wiley Davis',
                 album: 'Fata Organa — ' + albumName,
                 artwork: [
-                    { src: '/img/fata-organa-192.png', sizes: '192x192', type: 'image/png' },
-                    { src: '/img/fata-organa-512.png', sizes: '512x512', type: 'image/png' }
+                    { src: 'https://fata-organa.pages.dev/img/fata-organa-192.png', sizes: '192x192', type: 'image/png' },
+                    { src: 'https://fata-organa.pages.dev/img/fata-organa-512.png', sizes: '512x512', type: 'image/png' }
                 ]
             });
         } catch(e) {}
