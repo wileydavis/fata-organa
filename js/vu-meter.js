@@ -424,6 +424,9 @@
         // Mobile: allow background playback
         audio.setAttribute('playsinline', '');
         audio.setAttribute('webkit-playsinline', '');
+        // Append to DOM — required by iOS for Media Session API
+        audio.style.display = 'none';
+        document.body.appendChild(audio);
         // Expose for atmosphere particle system
         window._fataAudio = audio;
 
