@@ -264,7 +264,7 @@
     // PATTERN LIBRARY
     // =========================================
 
-    function patternPosition(name, idx, count, params) {
+    function patternPosition(name, idx, count, params, sig) {
         var cx = width / 2;
         var cy = height / 2;
         var t = idx / count;
@@ -424,11 +424,82 @@
                 var pos = window.stlLoader.getSTLPosition(idx, count, width, height, stlParams);
                 if (pos) return pos;
             }
-            return patternPosition('scatter', idx, count, params);
+            return patternPosition('scatter', idx, count, params, sig);
+        }
+
+        case 'waveform_reactive': {
+            // Audio-reactive waveform — particles form a horizontal wave
+            // whose shape is driven by audio energy
+            var wrAmp = (params && params.amplitude) || 120;
+            var wrFreq = (params && params.frequency) || 3;
+            var wrLayers = (params && params.layers) || 1;
+            var s = sig || { smoothRms: 0, low: 0, high: 0, rms: 0, smoothLow: 0 };
+            
+            var layer = idx % wrLayers;
+            var layerT = Math.floor(idx / wrLayers) / Math.ceil(count / wrLayers);
+            var layerOffset = (layer - (wrLayers - 1) / 2) * 25;
+            
+            var xPos = margin + layerT * (width - margin * 2);
+            
+            // Base wave
+            var baseWave = Math.sin(layerT * Math.PI * 2 * wrFreq);
+            
+            // Audio modulation: bass drives big slow waves, high drives fast ripples
+            var bassAmp = s.smoothLow * wrAmp * 1.5;
+            var highAmp = s.high * wrAmp * 0.4;
+            var rmsAmp = s.smoothRms * wrAmp * 0.8;
+            
+            var bassWave = Math.sin(layerT * Math.PI * 2 * 1.5) * bassAmp;
+            var highWave = Math.sin(layerT * Math.PI * 2 * 8 + time * 0.02) * highAmp;
+            var rmsWave = baseWave * rmsAmp;
+            
+            var yPos = cy + rmsWave + bassWave + highWave + layerOffset;
+            
+            return { x: xPos, y: clampY(yPos) };
+        }
+
+        case 'grid_reactive': {
+            // Audio-reactive grid — spectrum visualizer
+            // Each column responds to a frequency band
+            var grCols = (params && params.cols) || 16;
+            var grRows = (params && params.rows) || Math.ceil(count / grCols);
+            var grAmp = (params && params.amplitude) || 150;
+            var s2 = sig || { smoothRms: 0, low: 0, high: 0, rms: 0, smoothLow: 0 };
+            
+            var col = idx % grCols;
+            var row = Math.floor(idx / grCols);
+            if (row >= grRows) row = grRows - 1;
+            
+            var gx = margin + (col + 0.5) * ((width - margin * 2) / grCols);
+            var baseGy = margin + (row + 0.5) * ((height - margin * 2) / grRows);
+            
+            // Map column position to frequency band (0=bass, 1=high)
+            var bandT = col / (grCols - 1);
+            
+            // Interpolate between bass/mid/high based on column
+            var bandEnergy;
+            if (bandT < 0.33) {
+                bandEnergy = s2.smoothLow * (1 - bandT * 3) + s2.rms * (bandT * 3);
+            } else if (bandT < 0.66) {
+                var mt = (bandT - 0.33) * 3;
+                bandEnergy = s2.rms * (1 - mt) + s2.high * mt;
+            } else {
+                bandEnergy = s2.high;
+            }
+            
+            // Displace Y based on energy — rows near center get more displacement
+            var rowCenter = (row + 0.5) / grRows;
+            var centerWeight = 1 - Math.abs(rowCenter - 0.5) * 2;
+            var displacement = bandEnergy * grAmp * centerWeight;
+            
+            // Alternate direction based on row position relative to center
+            if (rowCenter < 0.5) displacement = -displacement;
+            
+            return { x: gx, y: clampY(baseGy + displacement) };
         }
 
         default:
-            return patternPosition('scatter', idx, count, params);
+            return patternPosition('scatter', idx, count, params, sig);
         }
     }
 
@@ -618,13 +689,13 @@
 
             var targetX, targetY;
             if (positionBlend >= 1) {
-                var target = patternPosition(pattern, pt.idx, particles.length, params);
+                var target = patternPosition(pattern, pt.idx, particles.length, params, sig);
                 targetX = target.x;
                 targetY = target.y;
             } else {
                 // Blend between previous and current pattern positions
-                var fromPos = patternPosition(prevPattern, pt.idx, particles.length, prevParams);
-                var toPos = patternPosition(pattern, pt.idx, particles.length, params);
+                var fromPos = patternPosition(prevPattern, pt.idx, particles.length, prevParams, sig);
+                var toPos = patternPosition(pattern, pt.idx, particles.length, params, sig);
                 targetX = fromPos.x + (toPos.x - fromPos.x) * positionBlend;
                 targetY = fromPos.y + (toPos.y - fromPos.y) * positionBlend;
             }
