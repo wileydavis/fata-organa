@@ -129,8 +129,8 @@
         var out = {};
         for (var k in DEFAULT_STATE) {
             if (k === 'pattern') {
-                // Snap to new pattern at transition midpoint for visual smoothness
-                out[k] = t < 0.5 ? a[k] || DEFAULT_STATE[k] : b[k] || DEFAULT_STATE[k];
+                // Always use the target pattern — position blending handles the visual transition
+                out[k] = b[k] || DEFAULT_STATE[k];
             } else if (k === 'params') {
                 // Lerp numeric params, snap others
                 out.params = {};
@@ -224,30 +224,19 @@
                 if (requestedDur > gap) requestedDur = gap;
             }
             cueTransitionDur = requestedDur;
-
-            // Start transition from current audioTime, not cue.t
-            // This avoids issues when the score loads late
             cueTransitionStart = audioTime;
-            
-            // If we're already past the cue by more than the transition duration,
-            // just snap (e.g. score loaded late and we're way past this cue)
-            var timePastCue = audioTime - cue.t;
-            if (cueTransitionDur > 0 && timePastCue < cueTransitionDur) {
-                positionBlend = 0;
-            } else {
-                positionBlend = 1;
-            }
-
+            positionBlend = 0;
             currentCueIdx = newIdx;
 
-            if (cueTransitionDur <= 0 || positionBlend >= 1) {
+            // No transition — snap immediately
+            if (cueTransitionDur <= 0) {
                 cueState = cloneState(cueTo);
                 positionBlend = 1;
             }
         }
 
         // Interpolate during transition
-        if (cueTransitionDur > 0) {
+        if (cueTransitionDur > 0 && positionBlend < 1) {
             var elapsed = audioTime - cueTransitionStart;
             var t = Math.min(1, elapsed / cueTransitionDur);
             // Smoothstep
