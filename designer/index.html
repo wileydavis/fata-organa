@@ -354,9 +354,11 @@
                 var rZ = (params && params.rotateZ) || 0;
                 var sc = (params && params.scale) || 1;
                 var pe = (params && params.perspective) || 400;
-                var pKey = rX + ',' + rY + ',' + rZ + ',' + sc + ',' + pe + ',' + width + ',' + height;
+                var oX = (params && params.offsetX) || 0;
+                var oY = (params && params.offsetY) || 0;
+                var pKey = rX + ',' + rY + ',' + rZ + ',' + sc + ',' + pe + ',' + oX + ',' + oY + ',' + width + ',' + height;
                 if (stlParamKey !== pKey) {
-                    stlProjected = projectSTL(stlData.points, stlData.bounds, width, height, rX, rY, rZ, sc, pe);
+                    stlProjected = projectSTL(stlData.points, stlData.bounds, width, height, rX, rY, rZ, sc, pe, oX, oY);
                     stlParamKey = pKey;
                 }
                 if (stlProjected && idx < stlProjected.length) return stlProjected[idx];
@@ -434,8 +436,8 @@
         return { center:{x:(mnX+mxX)/2,y:(mnY+mxY)/2,z:(mnZ+mxZ)/2}, size: Math.max(mxX-mnX,mxY-mnY,mxZ-mnZ)||1 };
     }
 
-    function projectSTL(points, bounds, sw, sh, rx, ry, rz, scale, persp) {
-        var cxs=sw/2,cys=sh/2,fit=Math.min(sw,sh)*0.35*scale/bounds.size;
+    function projectSTL(points, bounds, sw, sh, rx, ry, rz, scale, persp, offX, offY) {
+        var cxs=sw/2 + (offX||0)*sw, cys=sh/2 + (offY||0)*sh, fit=Math.min(sw,sh)*0.35*scale/bounds.size;
         var cX=Math.cos(rx),sX=Math.sin(rx),cY=Math.cos(ry),sY=Math.sin(ry),cZ=Math.cos(rz),sZ=Math.sin(rz);
         var out=[];
         for (var pi=0;pi<points.length;pi++) {
@@ -454,6 +456,7 @@
     document.getElementById('stl-upload').addEventListener('change', function(e) {
         var file = e.target.files[0];
         if (!file) return;
+        currentSTLName = file.name;
         document.getElementById('stl-filename').textContent = file.name;
         var reader = new FileReader();
         reader.onload = function(evt) {
@@ -506,7 +509,9 @@
             { key: 'rotateZ', label: 'Rot Z', min: -3.14, max: 3.14, step: 0.05, def: 0 },
             { key: 'spinY', label: 'Auto Spin', min: 0, max: 0.01, step: 0.0005, def: 0.002 },
             { key: 'scale', label: 'Scale', min: 0.1, max: 3, step: 0.1, def: 1 },
-            { key: 'perspective', label: 'Persp', min: 100, max: 1000, step: 50, def: 400 }
+            { key: 'perspective', label: 'Persp', min: 100, max: 1000, step: 50, def: 400 },
+            { key: 'offsetX', label: 'Offset X', min: -0.5, max: 0.5, step: 0.01, def: 0 },
+            { key: 'offsetY', label: 'Offset Y', min: -0.5, max: 0.5, step: 0.01, def: 0 }
         ]
     };
 
@@ -603,6 +608,9 @@
     // === CUE TIMELINE ===
     var cues = [];
 
+    // Track STL name for display
+    var currentSTLName = '';
+
     function currentCueSnapshot() {
         var cue = {
             t: Math.round(audio.currentTime * 10) / 10,
@@ -618,6 +626,11 @@
         if (state.litShift !== 0) cue.litShift = state.litShift;
         var defs = paramDefs[state.pattern];
         if (defs && Object.keys(state.params).length > 0) cue.params = JSON.parse(JSON.stringify(state.params));
+        // Store STL data with the cue so each cue can have a different model
+        if (state.pattern === 'stl' && stlData) {
+            cue._stlData = { points: stlData.points, bounds: stlData.bounds };
+            cue._stlName = currentSTLName;
+        }
         return cue;
     }
 
@@ -652,10 +665,12 @@
 
     function loadCueIntoUI(cue) {
         state.pattern = cue.pattern; selPattern.value = cue.pattern;
+        stlControls.style.display = cue.pattern === 'stl' ? '' : 'none';
         var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
         fields.forEach(function(k) {
             if (cue[k] !== undefined) state[k] = cue[k];
             else if (k === 'connectionDist' || k === 'connectionAlpha' || k === 'hueShift' || k === 'satShift' || k === 'litShift') state[k] = 0;
+            else if (k === 'size') state[k] = cue[k] !== undefined ? cue[k] : 1;
             var sl = document.getElementById('sl-' + k);
             var v = document.getElementById('v-' + k);
             if (sl) { sl.value = state[k]; v.textContent = state[k]; }
@@ -666,6 +681,14 @@
         }
         state.params = cue.params ? JSON.parse(JSON.stringify(cue.params)) : {};
         buildParamSliders();
+        // Restore STL data if this cue has a model
+        if (cue._stlData) {
+            stlData = cue._stlData;
+            stlProjected = null;
+            stlParamKey = '';
+            currentSTLName = cue._stlName || '';
+            document.getElementById('stl-filename').textContent = currentSTLName;
+        }
     }
 
     // Commit
@@ -786,6 +809,107 @@
         setTimeout(function() { t.classList.remove('show'); }, 1500);
     }
 
+    // === PREVIEW MODE ===
+    var previewMode = false;
+    var previewCueIdx = -1;
+    var previewFrom = {};
+    var previewTo = {};
+    var previewTransStart = 0;
+    var previewTransDur = 0;
+    var previewBlend = 1;
+    var previewPrevPattern = 'scatter';
+    var previewPrevParams = {};
+    var previewAccum = null;
+
+    function cloneObj(o) {
+        return JSON.parse(JSON.stringify(o));
+    }
+
+    function lerpNum(a, b, t) { return a + (b - a) * t; }
+
+    function updatePreview(audioTime) {
+        if (!previewMode || cues.length === 0) return;
+
+        var sorted = cues.slice().sort(function(a, b) { return a.t - b.t; });
+        var newIdx = -1;
+        for (var i = 0; i < sorted.length; i++) {
+            if (sorted[i].t <= audioTime) newIdx = i;
+            else break;
+        }
+
+        if (newIdx !== previewCueIdx && newIdx >= 0) {
+            var cue = sorted[newIdx];
+
+            // Save previous state for blending
+            previewPrevPattern = state.pattern;
+            previewPrevParams = cloneObj(state.params);
+
+            // Apply cue to state
+            var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
+            fields.forEach(function(k) { if (cue[k] !== undefined) state[k] = cue[k]; });
+            state.pattern = cue.pattern;
+            state.params = cue.params ? cloneObj(cue.params) : {};
+
+            // Restore STL data if present
+            if (cue._stlData) {
+                stlData = cue._stlData;
+                stlProjected = null;
+                stlParamKey = '';
+            }
+
+            // Set up position transition
+            previewTransStart = audioTime;
+            var dur = cue.transition || 0;
+            if (dur > 0 && newIdx < sorted.length - 1) {
+                var gap = sorted[newIdx + 1].t - cue.t;
+                if (dur > gap) dur = gap;
+            }
+            previewTransDur = dur;
+            previewBlend = dur > 0 ? 0 : 1;
+
+            // Set the designer transition blend too
+            transFrom = previewPrevPattern;
+            transFromParams = previewPrevParams;
+            transBlend = previewBlend;
+            transSpeed = dur > 0 ? 1 / (dur * 60) : 0;
+
+            previewCueIdx = newIdx;
+        }
+
+        // Update position blend
+        if (previewTransDur > 0 && previewBlend < 1) {
+            var elapsed = audioTime - previewTransStart;
+            var t = Math.min(1, elapsed / previewTransDur);
+            t = t * t * (3 - 2 * t);
+            previewBlend = t;
+            transBlend = t;
+        }
+    }
+
+    // Add preview toggle button
+    var btnPlay = document.getElementById('btn-play');
+    var previewBtn = document.createElement('button');
+    previewBtn.className = 'transport-btn';
+    previewBtn.id = 'btn-preview';
+    previewBtn.textContent = 'Preview';
+    previewBtn.title = 'Play audio and preview the committed cue sequence';
+    btnPlay.parentNode.insertBefore(previewBtn, btnPlay.nextSibling);
+
+    previewBtn.addEventListener('click', function() {
+        previewMode = !previewMode;
+        previewBtn.textContent = previewMode ? 'Preview ●' : 'Preview';
+        previewBtn.classList.toggle('active', previewMode);
+        if (previewMode) {
+            previewCueIdx = -1;
+            previewAccum = null;
+            // Start playback if not playing
+            if (!isPlaying && audio.src) {
+                audio.play(); isPlaying = true;
+                document.getElementById('btn-play').textContent = 'Pause';
+            }
+        }
+    });
+
     // === RENDER ===
     function render() {
         time++;
@@ -798,6 +922,11 @@
             scrubHead.style.left = (pct * 100) + '%';
             document.getElementById('time-display').textContent = formatTime(audio.currentTime);
             document.getElementById('duration-display').textContent = formatTime(audio.duration);
+        }
+
+        // Preview mode: apply committed cues at current audio time
+        if (previewMode && isPlaying) {
+            updatePreview(audio.currentTime);
         }
 
         // Transition blend
