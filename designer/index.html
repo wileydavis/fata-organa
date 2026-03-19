@@ -232,6 +232,17 @@
             <option value="horizon">horizon</option>
             <option value="converge">converge</option>
             <option value="explode">explode</option>
+            <option value="stl">stl (3D model)</option>
+        </select>
+
+        <!-- STL upload — visible when stl pattern selected -->
+        <div id="stl-controls" style="display:none; margin-top:6px;">
+            <div class="ctrl-label">3D Model</div>
+            <label class="transport-btn" style="display:inline-block; margin-bottom:4px; font-size:9px; cursor:pointer;">
+                Upload STL <input type="file" id="stl-upload" accept=".stl" style="display:none;">
+            </label>
+            <span id="stl-filename" style="font-size:8px; color:rgba(196,163,90,0.4); margin-left:4px;"></span>
+        </div>
         </select>
 
         <div class="ctrl-label">Movement</div>
@@ -336,9 +347,129 @@
         case 'ring': { var rRad = (params && params.radius) || Math.min(width, height) * 0.3; return { x: cx + Math.cos(t * Math.PI * 2) * rRad, y: cy + Math.sin(t * Math.PI * 2) * rRad }; }
         case 'column': { var cW = (params && params.width) || 60, r2 = seedRandom(idx * 4513); return { x: cx + (r2() - 0.5) * cW, y: margin + t * (height - margin * 2) }; }
         case 'horizon': { var hY = (params && params.y !== undefined) ? params.y * height : cy, spr = (params && params.spread) || 8, r3 = seedRandom(idx * 2741); return { x: margin + t * (width - margin * 2), y: hY + (r3() - 0.5) * spr }; }
+        case 'stl': {
+            if (stlData) {
+                var rX = (params && params.rotateX) || 0;
+                var rY = ((params && params.rotateY) || 0) + time * ((params && params.spinY) || 0);
+                var rZ = (params && params.rotateZ) || 0;
+                var sc = (params && params.scale) || 1;
+                var pe = (params && params.perspective) || 400;
+                var pKey = rX + ',' + rY + ',' + rZ + ',' + sc + ',' + pe + ',' + width + ',' + height;
+                if (stlParamKey !== pKey) {
+                    stlProjected = projectSTL(stlData.points, stlData.bounds, width, height, rX, rY, rZ, sc, pe);
+                    stlParamKey = pKey;
+                }
+                if (stlProjected && idx < stlProjected.length) return stlProjected[idx];
+            }
+            return patternPosition('scatter', idx, count, params);
+        }
         default: return patternPosition('scatter', idx, count, params);
         }
     }
+
+    // === STL SYSTEM ===
+    var stlData = null;  // { points: [{x,y,z}], bounds: {center, size} }
+    var stlProjected = null;
+    var stlParamKey = '';
+
+    function parseSTL(buffer) {
+        var view = new DataView(buffer);
+        var header = '';
+        var bytes = new Uint8Array(buffer, 0, Math.min(80, buffer.byteLength));
+        for (var hi = 0; hi < bytes.length; hi++) header += String.fromCharCode(bytes[hi]);
+        if (header.indexOf('solid') === 0 && header.indexOf('\n') > 0) {
+            var text = new TextDecoder().decode(buffer);
+            if (text.indexOf('facet') > 0) {
+                var tris = [], verts = [], lines = text.split('\n');
+                for (var li = 0; li < lines.length; li++) {
+                    var ln = lines[li].trim();
+                    if (ln.indexOf('vertex') === 0) {
+                        var pp = ln.split(/\s+/);
+                        verts.push({ x: parseFloat(pp[1]), y: parseFloat(pp[2]), z: parseFloat(pp[3]) });
+                        if (verts.length === 3) { tris.push({ v1: verts[0], v2: verts[1], v3: verts[2] }); verts = []; }
+                    }
+                }
+                return tris;
+            }
+        }
+        // Binary
+        var numTri = view.getUint32(80, true), tris2 = [], off = 84;
+        for (var ti = 0; ti < numTri; ti++) {
+            off += 12;
+            var v1 = { x: view.getFloat32(off, true), y: view.getFloat32(off+4, true), z: view.getFloat32(off+8, true) }; off += 12;
+            var v2 = { x: view.getFloat32(off, true), y: view.getFloat32(off+4, true), z: view.getFloat32(off+8, true) }; off += 12;
+            var v3 = { x: view.getFloat32(off, true), y: view.getFloat32(off+4, true), z: view.getFloat32(off+8, true) }; off += 12;
+            off += 2;
+            tris2.push({ v1: v1, v2: v2, v3: v3 });
+        }
+        return tris2;
+    }
+
+    function distributeSTLPoints(tris, count) {
+        var areas = [], total = 0;
+        for (var ai = 0; ai < tris.length; ai++) {
+            var t = tris[ai];
+            var ax = t.v2.x-t.v1.x, ay = t.v2.y-t.v1.y, az = t.v2.z-t.v1.z;
+            var bx = t.v3.x-t.v1.x, by = t.v3.y-t.v1.y, bz = t.v3.z-t.v1.z;
+            var cx2 = ay*bz-az*by, cy2 = az*bx-ax*bz, cz2 = ax*by-ay*bx;
+            total += 0.5 * Math.sqrt(cx2*cx2+cy2*cy2+cz2*cz2);
+            areas.push(total);
+        }
+        var rng = 42, points = [];
+        function rand() { rng = (rng * 16807) % 2147483647; return (rng - 1) / 2147483646; }
+        for (var pi = 0; pi < count; pi++) {
+            var r = rand() * total, ti2 = 0;
+            for (var ji = 0; ji < areas.length; ji++) { if (areas[ji] >= r) { ti2 = ji; break; } }
+            var tri = tris[ti2], u = rand(), v = rand();
+            if (u + v > 1) { u = 1-u; v = 1-v; }
+            var w = 1-u-v;
+            points.push({ x: tri.v1.x*w+tri.v2.x*u+tri.v3.x*v, y: tri.v1.y*w+tri.v2.y*u+tri.v3.y*v, z: tri.v1.z*w+tri.v2.z*u+tri.v3.z*v });
+        }
+        return points;
+    }
+
+    function computeSTLBounds(points) {
+        var mnX=Infinity,mnY=Infinity,mnZ=Infinity,mxX=-Infinity,mxY=-Infinity,mxZ=-Infinity;
+        for (var bi=0;bi<points.length;bi++) { var p=points[bi]; if(p.x<mnX)mnX=p.x;if(p.x>mxX)mxX=p.x;if(p.y<mnY)mnY=p.y;if(p.y>mxY)mxY=p.y;if(p.z<mnZ)mnZ=p.z;if(p.z>mxZ)mxZ=p.z; }
+        return { center:{x:(mnX+mxX)/2,y:(mnY+mxY)/2,z:(mnZ+mxZ)/2}, size: Math.max(mxX-mnX,mxY-mnY,mxZ-mnZ)||1 };
+    }
+
+    function projectSTL(points, bounds, sw, sh, rx, ry, rz, scale, persp) {
+        var cxs=sw/2,cys=sh/2,fit=Math.min(sw,sh)*0.35*scale/bounds.size;
+        var cX=Math.cos(rx),sX=Math.sin(rx),cY=Math.cos(ry),sY=Math.sin(ry),cZ=Math.cos(rz),sZ=Math.sin(rz);
+        var out=[];
+        for (var pi=0;pi<points.length;pi++) {
+            var x=points[pi].x-bounds.center.x,y=points[pi].y-bounds.center.y,z=points[pi].z-bounds.center.z;
+            var y1=y*cX-z*sX,z1=y*sX+z*cX;
+            var x2=x*cY+z1*sY,z2=-x*sY+z1*cY;
+            var x3=x2*cZ-y1*sZ,y3=x2*sZ+y1*cZ;
+            x3*=fit;y3*=fit;z2*=fit;
+            var ps=persp/(persp+z2);
+            out.push({x:cxs+x3*ps,y:cys-y3*ps});
+        }
+        return out;
+    }
+
+    // File upload handler
+    document.getElementById('stl-upload').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        document.getElementById('stl-filename').textContent = file.name;
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+            var tris = parseSTL(evt.target.result);
+            var points = distributeSTLPoints(tris, PARTICLE_COUNT);
+            var bounds = computeSTLBounds(points);
+            stlData = { points: points, bounds: bounds };
+            stlProjected = null;
+            stlParamKey = '';
+            console.log('STL loaded: ' + tris.length + ' triangles, ' + points.length + ' points');
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    // Show/hide STL controls based on pattern
+    var stlControls = document.getElementById('stl-controls');
 
     // === PARTICLES ===
     var PARTICLE_COUNT = Math.min(Math.floor(width * height / 4000), 300);
@@ -368,7 +499,15 @@
         ring: [{ key: 'radius', label: 'Radius', min: 50, max: 400, step: 10, def: 250 }],
         column: [{ key: 'width', label: 'Width', min: 10, max: 200, step: 5, def: 60 }],
         horizon: [{ key: 'y', label: 'Y Pos', min: 0.05, max: 0.95, step: 0.05, def: 0.15 }, { key: 'spread', label: 'Spread', min: 2, max: 40, step: 1, def: 6 }],
-        converge: [{ key: 'x', label: 'X', min: 0, max: 1, step: 0.05, def: 0.5 }, { key: 'y', label: 'Y', min: 0, max: 1, step: 0.05, def: 0.5 }, { key: 'radius', label: 'R', min: 1, max: 30, step: 1, def: 4 }]
+        converge: [{ key: 'x', label: 'X', min: 0, max: 1, step: 0.05, def: 0.5 }, { key: 'y', label: 'Y', min: 0, max: 1, step: 0.05, def: 0.5 }, { key: 'radius', label: 'R', min: 1, max: 30, step: 1, def: 4 }],
+        stl: [
+            { key: 'rotateX', label: 'Rot X', min: -3.14, max: 3.14, step: 0.05, def: 0 },
+            { key: 'rotateY', label: 'Rot Y', min: -3.14, max: 3.14, step: 0.05, def: 0 },
+            { key: 'rotateZ', label: 'Rot Z', min: -3.14, max: 3.14, step: 0.05, def: 0 },
+            { key: 'spinY', label: 'Auto Spin', min: 0, max: 0.01, step: 0.0005, def: 0.002 },
+            { key: 'scale', label: 'Scale', min: 0.1, max: 3, step: 0.1, def: 1 },
+            { key: 'perspective', label: 'Persp', min: 100, max: 1000, step: 50, def: 400 }
+        ]
     };
 
     // === UI BINDING ===
@@ -412,6 +551,7 @@
             transBlend = dur > 0 ? 0 : 1; transSpeed = dur > 0 ? 1 / (dur * 60) : 0;
         }
         state.pattern = np; state.params = {}; buildParamSliders();
+        stlControls.style.display = np === 'stl' ? '' : 'none';
     });
     buildParamSliders();
 
