@@ -1447,37 +1447,36 @@
         }
 
         /* === MOBILE FOCUS MODE === */
-        /* Half-circle anchored at bottom */
+        /* Circle anchored at bottom, sized from viewport width */
         .focus-mode .tx-panel {
-            border-radius: 100% 100% 0 0 / 140% 140% 0 0;
-            max-width: 100vw;
+            max-width: none;
             width: 100vw;
-            aspect-ratio: auto;
+            height: 100vw;
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
             position: fixed;
-            bottom: 0;
+            bottom: calc(-50vw + 10px);
             left: 0;
             right: 0;
             padding: 0;
             -webkit-mask-image: none;
             mask-image: none;
             z-index: 8;
-            height: 45vh;
             justify-content: flex-start;
             overflow: hidden;
         }
 
-        /* VU meter fills width in mobile focus */
+        /* VU meter centered in the visible top half of the circle */
         .focus-mode .tx-meter {
-            margin-top: 0;
+            margin-top: calc(8vw);
             width: 100%;
             display: flex;
             justify-content: center;
-            padding-top: 1rem;
         }
 
         .focus-mode .tx-meter canvas {
-            width: 100% !important;
-            max-width: 100vw !important;
+            width: 85vw !important;
+            max-width: 85vw !important;
             height: auto !important;
         }
 
@@ -1498,6 +1497,7 @@
         /* Transmitter fills viewport in mobile focus */
         .focus-mode .transmitter {
             padding: 0;
+            justify-content: flex-end;
         }
 
         /* Focus exit hint at top on mobile */
@@ -1511,7 +1511,7 @@
             display: none !important;
         }
 
-        /* Mobile focus nav arrows — positioned over the meter */
+        /* Mobile focus nav arrows — positioned in the visible half */
         .mobile-focus-nav {
             display: none;
         }
@@ -1519,11 +1519,11 @@
         .focus-mode .mobile-focus-nav {
             display: flex;
             position: absolute;
-            bottom: 2rem;
+            top: calc(35vw);
             left: 0;
             right: 0;
             justify-content: space-between;
-            padding: 0 1.5rem;
+            padding: 0 2rem;
             z-index: 10;
             pointer-events: none;
         }
