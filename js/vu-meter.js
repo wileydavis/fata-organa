@@ -445,11 +445,20 @@
 
         // iOS needs metadata set on the native 'playing' event
         audio.addEventListener('playing', function() {
+            statusEl.classList.remove('loading');
+            if (isPlaying) {
+                statusEl.textContent = 'RECEIVING TRANSMISSION';
+            }
             updateMediaSession(true);
         });
 
+        // Handle pauses — both intentional and external
         audio.addEventListener('pause', function() {
             if (!audio.ended) updateMediaSession(false);
+            if (isPlaying) {
+                isPlaying = false;
+                statusEl.textContent = 'SIGNAL INTERRUPTED \u2014 TAP TO RESUME';
+            }
         });
 
         audio.addEventListener('timeupdate', function() {
@@ -482,27 +491,10 @@
             }
         });
 
-        // Mobile: handle stall recovery
         audio.addEventListener('stalled', function() {
             if (isPlaying) {
                 statusEl.textContent = 'RECOVERING SIGNAL\u2026';
                 statusEl.classList.add('loading');
-            }
-        });
-
-        audio.addEventListener('playing', function() {
-            statusEl.classList.remove('loading');
-            if (isPlaying) {
-                statusEl.textContent = 'RECEIVING TRANSMISSION';
-            }
-        });
-
-        // Mobile: handle audio interruptions (phone call, etc)
-        audio.addEventListener('pause', function() {
-            // Only handle external pauses (not our own togglePlay pause)
-            if (isPlaying) {
-                isPlaying = false;
-                statusEl.textContent = 'SIGNAL INTERRUPTED \u2014 TAP TO RESUME';
             }
         });
 
@@ -538,16 +530,30 @@
 
         // Always set metadata
         try {
-            navigator.mediaSession.metadata = new MediaMetadata({
+            var metaOpts = {
                 title: title,
                 artist: 'Wiley Davis',
-                album: 'Fata Organa — ' + albumName,
-                artwork: [
-                    { src: 'https://fata-organa.pages.dev/img/fata-organa-192.png', sizes: '192x192', type: 'image/png' },
-                    { src: 'https://fata-organa.pages.dev/img/fata-organa-512.png', sizes: '512x512', type: 'image/png' }
-                ]
-            });
-        } catch(e) {}
+                album: 'Fata Organa — ' + albumName
+            };
+            // Only add artwork if images are reachable
+            if (window.location.hostname) {
+                var origin = window.location.origin;
+                metaOpts.artwork = [
+                    { src: origin + '/img/fata-organa-192.png', sizes: '192x192', type: 'image/png' },
+                    { src: origin + '/img/fata-organa-512.png', sizes: '512x512', type: 'image/png' }
+                ];
+            }
+            navigator.mediaSession.metadata = new MediaMetadata(metaOpts);
+        } catch(e) {
+            // Fallback — set without artwork
+            try {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: title,
+                    artist: 'Wiley Davis',
+                    album: 'Fata Organa — ' + albumName
+                });
+            } catch(e2) {}
+        }
 
         // Set playback state
         try {
