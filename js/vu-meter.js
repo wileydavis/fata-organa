@@ -509,26 +509,26 @@
     }
 
     // --- Media Session API (background playback on mobile) ---
+    var mediaSessionInitialized = false;
+
     function updateMediaSession(playing) {
         if (!('mediaSession' in navigator)) return;
 
-        if (playing) {
-            // Get current track title from now-playing element
-            var title = 'Fata Organa';
-            var nowPlaying = document.getElementById('now-playing-title');
-            if (nowPlaying && nowPlaying.textContent && nowPlaying.textContent.trim()) {
-                title = nowPlaying.textContent.trim();
-            }
+        // Get current track title from now-playing element
+        var title = 'Fata Organa';
+        var nowPlaying = document.getElementById('now-playing-title');
+        if (nowPlaying && nowPlaying.textContent && nowPlaying.textContent.trim()) {
+            title = nowPlaying.textContent.trim();
+        }
 
-            // Get episode display
-            var epDisplay = document.getElementById('ep-display');
-            var ep = epDisplay ? epDisplay.textContent.trim() : '';
+        var epDisplay = document.getElementById('ep-display');
+        var ep = epDisplay ? epDisplay.textContent.trim() : '';
+        var band = window.currentBand || 'transmission';
+        var albumName = band === 'score' ? 'Score' : 'Transmissions';
+        if (ep) albumName += ' — ' + ep;
 
-            // Determine band
-            var band = window.currentBand || 'transmission';
-            var albumName = band === 'score' ? 'Score' : 'Transmissions';
-            if (ep) albumName += ' — ' + ep;
-
+        // Always set metadata
+        try {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: title,
                 artist: 'Wiley Davis',
@@ -538,28 +538,51 @@
                     { src: '/img/fata-organa-512.png', sizes: '512x512', type: 'image/png' }
                 ]
             });
+        } catch(e) {}
 
-            navigator.mediaSession.setActionHandler('play', function() {
-                doPlay();
-            });
-            navigator.mediaSession.setActionHandler('pause', function() {
-                if (audio && isPlaying) {
-                    audio.pause();
-                    isPlaying = false;
-                    statusEl.textContent = 'PAUSED \u2014 TAP TO RESUME';
-                }
-            });
-            navigator.mediaSession.setActionHandler('previoustrack', function() {
-                if (window.playPrev) window.playPrev();
-            });
-            navigator.mediaSession.setActionHandler('nexttrack', function() {
-                if (window.playNext) window.playNext();
-            });
-            navigator.mediaSession.setActionHandler('seekto', function(details) {
-                if (audio && details.seekTime !== undefined) {
-                    audio.currentTime = details.seekTime;
-                }
-            });
+        // Set playback state
+        try {
+            navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+        } catch(e) {}
+
+        // Set position state if audio has duration
+        if (audio && audio.duration > 0 && !isNaN(audio.duration)) {
+            try {
+                navigator.mediaSession.setPositionState({
+                    duration: audio.duration,
+                    playbackRate: audio.playbackRate || 1,
+                    position: Math.min(audio.currentTime, audio.duration)
+                });
+            } catch(e) {}
+        }
+
+        // Register action handlers once
+        if (!mediaSessionInitialized) {
+            mediaSessionInitialized = true;
+            try {
+                navigator.mediaSession.setActionHandler('play', function() {
+                    doPlay();
+                });
+                navigator.mediaSession.setActionHandler('pause', function() {
+                    if (audio && isPlaying) {
+                        audio.pause();
+                        isPlaying = false;
+                        statusEl.textContent = 'PAUSED \u2014 TAP TO RESUME';
+                        updateMediaSession(false);
+                    }
+                });
+                navigator.mediaSession.setActionHandler('previoustrack', function() {
+                    if (window.playPrev) window.playPrev();
+                });
+                navigator.mediaSession.setActionHandler('nexttrack', function() {
+                    if (window.playNext) window.playNext();
+                });
+                navigator.mediaSession.setActionHandler('seekto', function(details) {
+                    if (audio && details.seekTime !== undefined) {
+                        audio.currentTime = details.seekTime;
+                    }
+                });
+            } catch(e) {}
         }
     }
 
@@ -780,7 +803,7 @@
             if (isPlaying) updateMediaSession(true);
         },
         play: function() { startPlayback(); },
-        pause: function() { if (audio && isPlaying) { audio.pause(); isPlaying = false; } },
+        pause: function() { if (audio && isPlaying) { audio.pause(); isPlaying = false; updateMediaSession(false); } },
         isPlaying: function() { return isPlaying; },
         getCurrentSrc: function() { return audioSrc; }
     };
@@ -793,7 +816,23 @@
     var prevLevel = 0;
     var transientBoost = 0;
 
+    var positionUpdateCounter = 0;
+
     function animate() {
+        // Update lock screen position every ~60 frames (~1 second)
+        if (isPlaying && ++positionUpdateCounter >= 60) {
+            positionUpdateCounter = 0;
+            if ('mediaSession' in navigator && audio && audio.duration > 0) {
+                try {
+                    navigator.mediaSession.setPositionState({
+                        duration: audio.duration,
+                        playbackRate: 1,
+                        position: Math.min(audio.currentTime, audio.duration)
+                    });
+                } catch(e) {}
+            }
+        }
+
         if (isPlaying && analyser && analyserConnected) {
             var dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(dataArray);
