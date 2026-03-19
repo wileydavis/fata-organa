@@ -233,6 +233,8 @@
             <option value="converge">converge</option>
             <option value="explode">explode</option>
             <option value="stl">stl (3D model)</option>
+            <option value="waveform_reactive">waveform (reactive)</option>
+            <option value="grid_reactive">grid (reactive)</option>
         </select>
 
         <!-- STL upload — visible when stl pattern selected -->
@@ -364,6 +366,50 @@
                 if (stlProjected && idx < stlProjected.length) return stlProjected[idx];
             }
             return patternPosition('scatter', idx, count, params);
+        }
+        case 'waveform_reactive': {
+            var wrAmp = (params && params.amplitude) || 120;
+            var wrFreq = (params && params.frequency) || 3;
+            var wrLayers = (params && params.layers) || 1;
+            var layer = idx % wrLayers;
+            var layerT = Math.floor(idx / wrLayers) / Math.ceil(count / wrLayers);
+            var layerOffset = (layer - (wrLayers - 1) / 2) * 25;
+            var xPos = 30 + layerT * (width - 60);
+            // Simulated audio response from playing audio
+            var aTime = (audio && !audio.paused) ? audio.currentTime : time * 0.016;
+            var simRms = 0.3 + Math.sin(aTime * 2.1) * 0.15 + Math.sin(aTime * 5.3) * 0.1;
+            var simLow = 0.3 + Math.sin(aTime * 1.2) * 0.2;
+            var simHigh = 0.2 + Math.sin(aTime * 7.8) * 0.15;
+            var baseWave = Math.sin(layerT * Math.PI * 2 * wrFreq);
+            var bassWave = Math.sin(layerT * Math.PI * 2 * 1.5) * simLow * wrAmp * 1.5;
+            var highWave = Math.sin(layerT * Math.PI * 2 * 8 + time * 0.02) * simHigh * wrAmp * 0.4;
+            var rmsWave = baseWave * simRms * wrAmp * 0.8;
+            var yPos = height / 2 + rmsWave + bassWave + highWave + layerOffset;
+            return { x: xPos, y: Math.max(30, Math.min(height - 30, yPos)) };
+        }
+        case 'grid_reactive': {
+            var grCols = (params && params.cols) || 16;
+            var grRows = (params && params.rows) || Math.ceil(count / grCols);
+            var grAmp = (params && params.amplitude) || 150;
+            var col2 = idx % grCols;
+            var row2 = Math.floor(idx / grCols);
+            if (row2 >= grRows) row2 = grRows - 1;
+            var gx2 = 30 + (col2 + 0.5) * ((width - 60) / grCols);
+            var baseGy2 = 30 + (row2 + 0.5) * ((height - 60) / grRows);
+            var aTime2 = (audio && !audio.paused) ? audio.currentTime : time * 0.016;
+            var bandT2 = col2 / (grCols - 1);
+            var simLow2 = 0.3 + Math.sin(aTime2 * 1.2) * 0.2;
+            var simRms2 = 0.3 + Math.sin(aTime2 * 2.1) * 0.15;
+            var simHigh2 = 0.2 + Math.sin(aTime2 * 7.8) * 0.15;
+            var bandEnergy2;
+            if (bandT2 < 0.33) { bandEnergy2 = simLow2 * (1 - bandT2 * 3) + simRms2 * (bandT2 * 3); }
+            else if (bandT2 < 0.66) { var mt2 = (bandT2 - 0.33) * 3; bandEnergy2 = simRms2 * (1 - mt2) + simHigh2 * mt2; }
+            else { bandEnergy2 = simHigh2; }
+            var rowCenter2 = (row2 + 0.5) / grRows;
+            var centerWeight2 = 1 - Math.abs(rowCenter2 - 0.5) * 2;
+            var disp2 = bandEnergy2 * grAmp * centerWeight2;
+            if (rowCenter2 < 0.5) disp2 = -disp2;
+            return { x: gx2, y: Math.max(30, Math.min(height - 30, baseGy2 + disp2)) };
         }
         default: return patternPosition('scatter', idx, count, params);
         }
@@ -515,6 +561,16 @@
             { key: 'perspective', label: 'Persp', min: 100, max: 1000, step: 50, def: 400 },
             { key: 'offsetX', label: 'Offset X', min: -0.5, max: 0.5, step: 0.01, def: 0 },
             { key: 'offsetY', label: 'Offset Y', min: -0.5, max: 0.5, step: 0.01, def: 0 }
+        ],
+        waveform_reactive: [
+            { key: 'frequency', label: 'Freq', min: 1, max: 8, step: 0.5, def: 3 },
+            { key: 'amplitude', label: 'Amp', min: 20, max: 300, step: 10, def: 120 },
+            { key: 'layers', label: 'Layers', min: 1, max: 5, step: 1, def: 1 }
+        ],
+        grid_reactive: [
+            { key: 'cols', label: 'Cols', min: 4, max: 32, step: 1, def: 16 },
+            { key: 'rows', label: 'Rows', min: 4, max: 20, step: 1, def: 10 },
+            { key: 'amplitude', label: 'Amp', min: 20, max: 300, step: 10, def: 150 }
         ]
     };
 
