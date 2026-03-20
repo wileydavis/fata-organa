@@ -1152,7 +1152,7 @@
 
         if (glowState > 0) {
             var glowCx = width / 2;
-            var glowCy = height * 0.42;
+            var glowCy = isMobileDevice ? height * 0.78 : height * 0.42;
             var glowRadius = Math.min(width, height) * 0.5;
             
             // Base glow — always present
