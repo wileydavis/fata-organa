@@ -299,6 +299,7 @@
         <div class="transport-cues" id="cue-list"></div>
         <div style="display:flex; gap:6px; margin-top:6px; justify-content:flex-end;">
             <button class="transport-btn" id="btn-autoscore">⚡ Auto Score</button>
+            <button class="transport-btn" id="btn-aiscore" style="border-color:rgba(120,160,220,0.3); color:rgba(120,160,220,0.7);">🧠 AI Score</button>
             <button class="transport-btn" id="btn-export">Export JSON</button>
             <button class="transport-btn" id="btn-copy-all">Copy JSON</button>
             <button class="transport-btn commit" id="btn-deploy">Deploy to Site</button>
@@ -1555,6 +1556,220 @@
         })
         .finally(function() {
             btn.textContent = '⚡ Auto Score'; btn.disabled = false;
+        });
+    });
+
+    // === AI SCORE ENGINE ===
+    // Maps tracks to their transcript files in the repo
+    var transcriptMap = {
+        'https://media.fataorgana.fm/episodes/Teaser-Intro.mp3': '_project/docs/lab_orientation_statement.md',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2': '_project/drafts/Fata_Organa_E1_D1.md',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3': '_project/drafts/Fata_Organa_E1_D1.md',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2': null,
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3': null
+    };
+
+    var GH_RAW = 'https://raw.githubusercontent.com/wileydavis/fata-organa/main/';
+
+    var patternDescriptions = {
+        scatter: 'Particles randomly distributed across the screen. Calm, ambient, unfocused.',
+        grid: 'Ordered grid of particles. Structure, control, civilization.',
+        concentric: 'Concentric rings expanding from center. Sonar, radio waves, ripples of consciousness.',
+        spiral: 'Spiral arms radiating outward. Journey, descent, being pulled inward.',
+        lattice: '3D lattice cube projected to 2D. Structure, framework, the architecture of reality.',
+        fibonacci: 'Golden ratio spiral distribution. Natural order, organic growth, life.',
+        waveform_reactive: 'Horizontal waveform driven by voice audio. The signal itself — Marcus speaking.',
+        helix: 'Double helix strands. DNA, intertwined fates, duality.',
+        lissajous: 'Mathematical curves. Precision, science, the researchers observing.',
+        ring: 'Single large ring. Boundary, containment zone border, the circle of a fata organa.',
+        column: 'Vertical column of particles. A pillar, a signal beam, standing alone.',
+        horizon: 'Flat line of particles near top of screen. The ocean horizon, vast emptiness.',
+        converge: 'All particles collapse to a single point. USE SPARINGLY — only at section endings. Disappearance, consciousness collapsing, death.',
+        explode: 'Particles fly outward from center. The weapon deploying, sudden expansion, release.',
+        drift: 'Particles flow like ocean current in one direction. The boat, crossing water, Marcus alone at sea.',
+        dissolve: 'Particles detach from a formation and drift away. Consciousness losing coherence, reality failing, the weapon\'s effect on minds.',
+        breathe: 'Synchronized expand/contract pulse. Living presence, Isla\'s constructed peace, conscious reality maintenance.',
+        interference: 'Two overlapping wave systems creating moiré patterns. The fata organa concept — false patterns emerging from real signals, mirages revealing truth.',
+        fragment: 'Small isolated clusters orbiting independently. Survivors in the CZ, isolated minds, loneliness of consciousness without connection.',
+        filament: 'Thin threads of particles between anchor points. Radio transmissions, neural connections, consciousness carried on a signal.',
+        stl: '3D model made of particles. Physical objects — the boat, the transmitter, specific things.',
+        grid_reactive: 'Grid that pulses with voice audio — center columns respond to voice, edges to bass/treble. Active listening visualization.'
+    };
+
+    document.getElementById('btn-aiscore').addEventListener('click', function() {
+        if (!audio.src) { toast('Load a track first'); return; }
+        if (!audio.duration) { toast('Wait for track to load'); return; }
+
+        var btn = document.getElementById('btn-aiscore');
+        btn.textContent = 'Analyzing...'; btn.disabled = true;
+
+        var trackUrl = document.getElementById('track-select').value;
+        var trackName = document.getElementById('track-select').selectedOptions[0].text;
+        var transcriptPath = transcriptMap[trackUrl];
+
+        // Step 1: Fetch transcript
+        var transcriptPromise;
+        if (transcriptPath) {
+            transcriptPromise = fetch(GH_RAW + transcriptPath)
+                .then(function(r) { return r.ok ? r.text() : null; })
+                .catch(function() { return null; });
+        } else {
+            transcriptPromise = Promise.resolve(null);
+        }
+
+        // Step 2: Audio energy analysis (same as auto-score but simplified)
+        var energyPromise = fetch(trackUrl)
+            .then(function(r) { return r.arrayBuffer(); })
+            .then(function(buf) {
+                var ac = new (window.AudioContext || window.webkitAudioContext)();
+                return ac.decodeAudioData(buf).then(function(decoded) { ac.close(); return decoded; });
+            })
+            .then(function(audioBuffer) {
+                var sr = audioBuffer.sampleRate;
+                var ch = audioBuffer.getChannelData(0);
+                var winSize = Math.floor(sr * 2); // 2-second windows
+                var numWins = Math.floor(ch.length / winSize);
+                var summary = [];
+                for (var w = 0; w < numWins; w++) {
+                    var off = w * winSize, sum = 0, zc = 0;
+                    for (var s = 0; s < winSize; s++) sum += ch[off + s] * ch[off + s];
+                    for (var z = 1; z < winSize; z++) if ((ch[off+z] > 0) !== (ch[off+z-1] > 0)) zc++;
+                    var rms = Math.sqrt(sum / winSize);
+                    summary.push({ t: w * 2, rms: Math.round(rms * 1000) / 1000, bright: Math.round(zc / winSize * 1000) / 1000 });
+                }
+                return { duration: audioBuffer.duration, energy: summary };
+            });
+
+        Promise.all([transcriptPromise, energyPromise]).then(function(results) {
+            var transcript = results[0];
+            var analysis = results[1];
+
+            btn.textContent = 'AI thinking...';
+
+            // Build the prompt
+            var prompt = 'You are a visual score designer for FATA ORGANA, an ambient audio drama. ';
+            prompt += 'Your job is to generate a particle animation cue sheet — a JSON array of cues that control a particle system visualization synchronized to the audio.\n\n';
+
+            prompt += '## TRACK\n';
+            prompt += 'Track: ' + trackName + '\n';
+            prompt += 'Duration: ' + Math.round(analysis.duration) + ' seconds\n\n';
+
+            if (transcript) {
+                prompt += '## TRANSCRIPT\n';
+                prompt += transcript.substring(0, 8000) + '\n\n';
+            }
+
+            prompt += '## AUDIO ENERGY (sampled every 2 seconds)\n';
+            prompt += 'Format: time(s), rms energy (0-1), spectral brightness (0-1)\n';
+            var energyLines = analysis.energy.map(function(e) { return e.t + ',' + e.rms + ',' + e.bright; });
+            prompt += energyLines.join('\n') + '\n\n';
+
+            prompt += '## AVAILABLE PATTERNS\n';
+            for (var pName in patternDescriptions) {
+                prompt += '- **' + pName + '**: ' + patternDescriptions[pName] + '\n';
+            }
+
+            prompt += '\n## CUE FORMAT\n';
+            prompt += 'Each cue is a JSON object:\n';
+            prompt += '```\n{\n';
+            prompt += '  "t": 0,              // time in seconds\n';
+            prompt += '  "pattern": "scatter", // pattern name\n';
+            prompt += '  "speed": 3,           // particle speed (1-6)\n';
+            prompt += '  "attraction": 0.04,   // how strongly particles pull to target (0.01-0.08)\n';
+            prompt += '  "wander": 0.001,      // random drift (0.0002-0.004)\n';
+            prompt += '  "damping": 0.88,      // friction (0.82-0.95, lower=snappier)\n';
+            prompt += '  "rotation": 0.0003,   // global spin (0-0.001)\n';
+            prompt += '  "brightness": 0.9,    // particle opacity multiplier (0.3-1.5)\n';
+            prompt += '  "size": 1,            // particle size multiplier (0.5-2)\n';
+            prompt += '  "transition": 8,      // seconds to morph from previous state\n';
+            prompt += '  "hueShift": 0,        // color: 0=amber, -40=red, 60=blue, 120=cyan\n';
+            prompt += '  "satShift": 0,        // saturation offset (-20 to 20)\n';
+            prompt += '  "litShift": 0,        // lightness offset (-15 to 15)\n';
+            prompt += '  "connectionDist": 0,  // draw lines between nearby particles (0=off, 40-100)\n';
+            prompt += '  "connectionAlpha": 0, // line opacity (0-0.08)\n';
+            prompt += '  "params": {}          // pattern-specific params (see below)\n';
+            prompt += '}\n```\n\n';
+
+            prompt += '## PATTERN PARAMS\n';
+            prompt += '- spiral: {arms: 2-6, tightness: 0.3-1.2}\n';
+            prompt += '- concentric: {rings: 3-8}\n';
+            prompt += '- lattice: {spacing: 30-80}\n';
+            prompt += '- waveform_reactive: {frequency: 1-6, amplitude: 80-250, layers: 1-3}\n';
+            prompt += '- helix: {frequency: 2-6, amplitude: 80-200}\n';
+            prompt += '- ring: {radius: 150-350}\n';
+            prompt += '- horizon: {y: 0.1-0.2, spread: 4-15}\n';
+            prompt += '- drift: {speed: 0.1-0.5, angle: -3.14 to 3.14, spread: 0.05-0.3}\n';
+            prompt += '- dissolve: {rate: 0.1-0.8, base: "ring" or "lattice" or "spiral"}\n';
+            prompt += '- breathe: {rate: 0.2-1.0, min: 0.4-0.8, max: 1.0-2.0}\n';
+            prompt += '- interference: {freq1: 2-6, freq2: 2-6, angle: 0.2-1.2, amplitude: 40-150}\n';
+            prompt += '- fragment: {groups: 4-12, orbitSpeed: 0.1-0.6, spread: 8-25}\n';
+            prompt += '- filament: {anchors: 3-8, thickness: 2-10}\n';
+            prompt += '- grid_reactive: {cols: 12-24, rows: 8-16, amplitude: 100-250}\n';
+            prompt += '- converge: {x: 0.5, y: 0.5, radius: 2-5} — ONLY at section endings, hold max 4 seconds\n\n';
+
+            prompt += '## GUIDELINES\n';
+            prompt += '- Match patterns to narrative meaning, not just energy level\n';
+            prompt += '- Use color shifts to reflect emotional tone (warm red/amber for intimate, cool blue for isolation, bright for revelation)\n';
+            prompt += '- Vary transition durations dramatically: 1-3s for sudden shifts, 20-60s for slow mood changes\n';
+            prompt += '- Particles must be visible OUTSIDE the center circle (the transmitter is in the middle of the screen). Use large radii, wide amplitudes, spread patterns outward.\n';
+            prompt += '- The center ~18% of the screen is occupied by the transmitter. Patterns like ring, spiral, and fibonacci naturally avoid the center. horizon and drift fill the edges. converge disappears behind the transmitter (use sparingly).\n';
+            prompt += '- Start quiet (scatter/drift/horizon), build with the narrative, peak during emotional climaxes, resolve gently\n';
+            prompt += '- Use waveform_reactive or grid_reactive when Marcus is speaking passionately — they respond to voice audio\n';
+            prompt += '- Use breathe for meditative/philosophical passages\n';
+            prompt += '- Use interference for moments about perception, mirages, or "fata organa"\n';
+            prompt += '- Use dissolve when consciousness, reality, or identity is breaking down\n';
+            prompt += '- Use drift for ocean/boat passages\n';
+            prompt += '- Use fragment when describing isolated survivors or loneliness\n';
+            prompt += '- Use filament when describing communication, signals, or reaching across distance\n';
+            prompt += '- Aim for 15-30 cues for a 30-minute track, fewer for shorter tracks\n';
+            prompt += '- Only include fields that differ from defaults (t, pattern, transition are always required)\n\n';
+
+            prompt += 'Respond ONLY with a JSON array of cues. No explanation, no markdown backticks, just the raw JSON array.';
+
+            // Call Claude API
+            return fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 4096,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var text = '';
+            for (var ci = 0; ci < data.content.length; ci++) {
+                if (data.content[ci].type === 'text') text += data.content[ci].text;
+            }
+            // Clean and parse
+            text = text.replace(/```json|```/g, '').trim();
+            var aiCues = JSON.parse(text);
+
+            if (!Array.isArray(aiCues) || aiCues.length === 0) {
+                throw new Error('AI returned empty or invalid cues');
+            }
+
+            // Replace current cues
+            if (cues.length > 0) {
+                if (!confirm('Replace existing ' + cues.length + ' cues with AI-generated score (' + aiCues.length + ' cues)?')) {
+                    btn.textContent = '🧠 AI Score'; btn.disabled = false;
+                    return;
+                }
+            }
+
+            cues = aiCues;
+            renderCueList();
+            toast('AI generated ' + aiCues.length + ' cues from narrative analysis');
+            if (cues.length > 0) loadCueIntoUI(cues[0]);
+        })
+        .catch(function(err) {
+            toast('AI Score failed: ' + err.message);
+            console.error('AI Score error:', err);
+        })
+        .finally(function() {
+            btn.textContent = '🧠 AI Score'; btn.disabled = false;
         });
     });
 
