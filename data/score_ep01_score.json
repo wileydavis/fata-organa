@@ -1,0 +1,94 @@
+{
+  "track": "EP 01 Score — Attrition (7:54)",
+  "duration": 475,
+  "cues": [
+    {
+      "t": 0, "pattern": "scatter", "speed": 0.3, "attraction": 0.002, "wander": 0.004,
+      "damping": 0.97, "rotation": 0.00005, "brightness": 0.2, "size": 0.5,
+      "glow": 1, "glowIntensity": 0.3, "glowHue": 38, "haze": 0.4,
+      "transition": 0
+    },
+    {
+      "t": 10, "pattern": "breathe", "speed": 0.4, "attraction": 0.005, "wander": 0.002,
+      "damping": 0.96, "brightness": 0.35, "size": 0.7,
+      "glowIntensity": 0.4, "haze": 0.35,
+      "transition": 15, "params": { "rate": 0.2, "min": 0.75, "max": 1.1 }
+    },
+    {
+      "t": 40, "pattern": "grid_reactive", "speed": 0.5, "attraction": 0.006, "wander": 0.001,
+      "damping": 0.95, "brightness": 0.4, "size": 0.75,
+      "connectionDist": 45, "connectionAlpha": 0.02,
+      "glowIntensity": 0.45, "glowHue": 35, "haze": 0.3,
+      "transition": 20, "params": { "cols": 14, "rows": 10, "amplitude": 25, "sphereRadius": 1.5 }
+    },
+    {
+      "t": 75, "pattern": "spiral", "speed": 0.7, "attraction": 0.008, "wander": 0.001,
+      "damping": 0.94, "brightness": 0.5, "size": 0.85,
+      "connectionDist": 0, "connectionAlpha": 0,
+      "glowIntensity": 0.55, "glowHue": 38, "haze": 0.2,
+      "transition": 25, "params": { "arms": 3, "tightness": 0.5 }
+    },
+    {
+      "t": 120, "pattern": "waveform_reactive", "speed": 1.0, "attraction": 0.012, "wander": 0.0005,
+      "damping": 0.92, "brightness": 0.65, "size": 0.95,
+      "glowIntensity": 0.7, "glowHue": 42, "haze": 0.1,
+      "transition": 20, "params": { "frequency": 2, "amplitude": 80, "layers": 3 }
+    },
+    {
+      "t": 170, "pattern": "interference", "speed": 0.9, "attraction": 0.01, "wander": 0.0008,
+      "damping": 0.93, "brightness": 0.7, "size": 1.0,
+      "glowIntensity": 0.8, "glowHue": 45, "haze": 0.1,
+      "transition": 25, "params": { "freq1": 3, "freq2": 3.7, "amplitude": 85 }
+    },
+    {
+      "t": 205, "pattern": "dissolve", "speed": 0.4, "attraction": 0.003, "wander": 0.004,
+      "damping": 0.96, "brightness": 0.3, "size": 0.6,
+      "glowIntensity": 0.25, "glowHue": 25, "haze": 0.65,
+      "transition": 20, "params": { "rate": 0.4, "base": "spiral" }
+    },
+    {
+      "t": 240, "pattern": "scatter", "speed": 0.2, "attraction": 0.002, "wander": 0.005,
+      "damping": 0.97, "brightness": 0.15, "size": 0.4,
+      "glowIntensity": 0.15, "glowHue": 20, "haze": 0.75,
+      "transition": 25
+    },
+    {
+      "t": 275, "pattern": "drift", "speed": 0.4, "attraction": 0.004, "wander": 0.003,
+      "damping": 0.96, "brightness": 0.3, "size": 0.6,
+      "glowIntensity": 0.3, "glowHue": 30, "haze": 0.5,
+      "transition": 25, "params": { "speed": 0.12, "angle": 0.1, "spread": 30 }
+    },
+    {
+      "t": 310, "pattern": "grid_reactive", "speed": 0.8, "attraction": 0.01, "wander": 0.0008,
+      "damping": 0.93, "brightness": 0.6, "size": 0.9,
+      "connectionDist": 55, "connectionAlpha": 0.03,
+      "glowIntensity": 0.65, "glowHue": 40, "haze": 0.15,
+      "transition": 20, "params": { "cols": 16, "rows": 10, "amplitude": 50, "sphereRadius": 2.5 }
+    },
+    {
+      "t": 350, "pattern": "waveform_reactive", "speed": 1.2, "attraction": 0.015, "wander": 0.0004,
+      "damping": 0.91, "brightness": 0.75, "size": 1.05,
+      "connectionDist": 0, "connectionAlpha": 0,
+      "glowIntensity": 0.85, "glowHue": 45, "haze": 0.05,
+      "transition": 15, "params": { "frequency": 2.5, "amplitude": 110, "layers": 4 }
+    },
+    {
+      "t": 390, "pattern": "breathe", "speed": 0.5, "attraction": 0.006, "wander": 0.0015,
+      "damping": 0.95, "brightness": 0.5, "size": 0.8,
+      "glowIntensity": 0.5, "glowHue": 38, "haze": 0.35,
+      "transition": 25, "params": { "rate": 0.15, "min": 0.8, "max": 1.15 }
+    },
+    {
+      "t": 420, "pattern": "filament", "speed": 0.3, "attraction": 0.004, "wander": 0.002,
+      "damping": 0.96, "brightness": 0.3, "size": 0.6,
+      "glowIntensity": 0.25, "glowHue": 30, "haze": 0.55,
+      "transition": 25, "params": { "anchors": 2, "thickness": 4 }
+    },
+    {
+      "t": 455, "pattern": "scatter", "speed": 0.15, "attraction": 0.001, "wander": 0.004,
+      "damping": 0.98, "brightness": 0.1, "size": 0.35,
+      "glowIntensity": 0.08, "glowHue": 38, "haze": 0.8,
+      "transition": 18
+    }
+  ]
+}
