@@ -3,706 +3,143 @@
   "duration": 1808,
   "cues": [
     {
-      "t": 0,
-      "pattern": "scatter",
-      "speed": 2,
-      "attraction": 0.02,
-      "wander": 0.003,
-      "damping": 0.92,
-      "rotation": 0.0003,
-      "brightness": 0.4205716017459822,
-      "size": 0.7006804782690265,
-      "transition": 6
+      "t": 0, "pattern": "scatter", "speed": 0.8, "attraction": 0.008, "wander": 0.003, "damping": 0.96,
+      "brightness": 0.2, "size": 0.4, "transition": 0, "hueShift": 0, "satShift": -10, "litShift": -15
     },
     {
-      "t": 15,
-      "pattern": "lattice",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.0008,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.6398352970534354,
-      "size": 0.8272895069151328,
-      "transition": 6,
-      "params": {
-        "spacing": 50
-      }
+      "t": 8, "pattern": "breathe", "speed": 1.5, "attraction": 0.02, "wander": 0.001, "damping": 0.94,
+      "brightness": 0.5, "size": 0.7, "transition": 10, "hueShift": -15, "satShift": 0, "litShift": -5,
+      "params": { "rate": 0.3, "min": 0.5, "max": 1.1 }
     },
     {
-      "t": 30,
-      "pattern": "concentric",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.9304310311891053,
-      "size": 0.9753591926575877,
-      "transition": 30,
-      "params": {
-        "rings": 5
-      }
+      "t": 30, "pattern": "drift", "speed": 1.5, "attraction": 0.015, "wander": 0.002, "damping": 0.94,
+      "brightness": 0.6, "size": 0.8, "transition": 15, "hueShift": -10, "satShift": -5, "litShift": -3,
+      "params": { "speed": 0.2, "angle": 0.3, "spread": 0.12 }
     },
     {
-      "t": 124,
-      "pattern": "grid_reactive",
-      "speed": 3.5,
-      "attraction": 0.05,
-      "wander": 0.001,
-      "damping": 0.86,
-      "rotation": 0.0003,
-      "brightness": 1.1289816602143328,
-      "size": 1.1608180501786105,
-      "transition": 6,
-      "params": {
-        "cols": 16,
-        "rows": 10,
-        "amplitude": 150
-      }
+      "t": 70, "pattern": "fragment", "speed": 2, "attraction": 0.02, "wander": 0.002, "damping": 0.93,
+      "brightness": 0.65, "size": 0.8, "transition": 20, "hueShift": -5, "satShift": 0, "litShift": -3,
+      "params": { "groups": 6, "orbitSpeed": 0.2, "spread": 15 }
     },
     {
-      "t": 139,
-      "pattern": "lattice",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.0008,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7492017822566571,
-      "size": 0.9345115512320168,
-      "transition": 19.8,
-      "params": {
-        "spacing": 50
-      }
+      "t": 115, "pattern": "filament", "speed": 2.5, "attraction": 0.03, "wander": 0.001, "damping": 0.9,
+      "brightness": 0.75, "size": 0.9, "transition": 20, "hueShift": 5, "satShift": 0, "litShift": 0,
+      "params": { "anchors": 5, "thickness": 4 }
     },
     {
-      "t": 188.5,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7498347867054492,
-      "size": 0.8942914691717122,
-      "transition": 6,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
+      "t": 165, "pattern": "spiral", "speed": 3, "attraction": 0.035, "wander": 0.001, "damping": 0.9,
+      "brightness": 0.85, "size": 1, "transition": 25, "hueShift": 10, "satShift": 3, "litShift": 0,
+      "params": { "arms": 4, "tightness": 0.5 }
     },
     {
-      "t": 203.5,
-      "pattern": "explode",
-      "speed": 5,
-      "attraction": 0.05,
-      "wander": 0.004,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 1.3269604431131148,
-      "size": 1.5759235029933798,
-      "transition": 30
+      "t": 195, "pattern": "waveform_reactive", "speed": 4, "attraction": 0.06, "wander": 0.001, "damping": 0.85,
+      "brightness": 1.1, "size": 1.1, "transition": 3, "hueShift": -30, "satShift": 10, "litShift": 5,
+      "params": { "frequency": 3, "amplitude": 180, "layers": 2 }
     },
     {
-      "t": 522.5,
-      "pattern": "ring",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.0005,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 0.9645742964584999,
-      "size": 1.0038119137154164,
-      "transition": 21.400000000000002,
-      "params": {
-        "radius": 250
-      }
+      "t": 260, "pattern": "lattice", "speed": 3, "attraction": 0.035, "wander": 0.001, "damping": 0.9,
+      "brightness": 0.9, "size": 1, "transition": 25, "hueShift": 15, "satShift": 5, "litShift": 3,
+      "connectionDist": 60, "connectionAlpha": 0.04,
+      "params": { "spacing": 55 }
     },
     {
-      "t": 576,
-      "pattern": "helix",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 0.7674336062001883,
-      "size": 0.9105866724075817,
-      "transition": 8.4,
-      "params": {
-        "frequency": 4,
-        "amplitude": 100
-      }
+      "t": 340, "pattern": "helix", "speed": 3.5, "attraction": 0.04, "wander": 0.001, "damping": 0.88,
+      "brightness": 1, "size": 1, "transition": 30, "hueShift": 20, "satShift": 5, "litShift": 3,
+      "params": { "frequency": 3, "amplitude": 150 }
     },
     {
-      "t": 597,
-      "pattern": "ring",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.0005,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 0.9743470554768656,
-      "size": 1.0119558795640546,
-      "transition": 18.6,
-      "params": {
-        "radius": 250
-      }
+      "t": 400, "pattern": "interference", "speed": 3.5, "attraction": 0.04, "wander": 0.001, "damping": 0.88,
+      "brightness": 1, "size": 1, "transition": 25, "hueShift": 25, "satShift": 8, "litShift": 5,
+      "params": { "freq1": 3.5, "freq2": 4.2, "angle": 0.5, "amplitude": 100 }
     },
     {
-      "t": 643.5,
-      "pattern": "lattice",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.0008,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7022176231159457,
-      "size": 0.8884486501136722,
-      "transition": 6,
-      "params": {
-        "spacing": 50
-      }
+      "t": 520, "pattern": "drift", "speed": 1.5, "attraction": 0.015, "wander": 0.003, "damping": 0.94,
+      "brightness": 0.55, "size": 0.8, "transition": 30, "hueShift": 0, "satShift": -5, "litShift": -5,
+      "params": { "speed": 0.15, "angle": -0.2, "spread": 0.2 }
     },
     {
-      "t": 658.5,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.8420541404284604,
-      "size": 0.9796797596559818,
-      "transition": 7.4,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
+      "t": 575, "pattern": "horizon", "speed": 1.5, "attraction": 0.02, "wander": 0.002, "damping": 0.93,
+      "brightness": 0.5, "size": 0.7, "transition": 25, "hueShift": -5, "satShift": -5, "litShift": -8,
+      "params": { "y": 0.15, "spread": 8 }
     },
     {
-      "t": 677,
-      "pattern": "explode",
-      "speed": 5,
-      "attraction": 0.05,
-      "wander": 0.004,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 1.2751239694807452,
-      "size": 1.526080739885332,
-      "transition": 7.6000000000000005
+      "t": 650, "pattern": "fragment", "speed": 2, "attraction": 0.02, "wander": 0.002, "damping": 0.93,
+      "brightness": 0.6, "size": 0.8, "transition": 30, "hueShift": 40, "satShift": -5, "litShift": -5,
+      "params": { "groups": 10, "orbitSpeed": 0.1, "spread": 12 }
     },
     {
-      "t": 696,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.774554206771396,
-      "size": 0.9171798210846258,
-      "transition": 10.600000000000001,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
+      "t": 760, "pattern": "breathe", "speed": 1.5, "attraction": 0.02, "wander": 0.001, "damping": 0.93,
+      "brightness": 0.5, "size": 0.7, "transition": 40, "hueShift": 30, "satShift": -8, "litShift": -8,
+      "params": { "rate": 0.25, "min": 0.5, "max": 1.0 }
     },
     {
-      "t": 722.5,
-      "pattern": "grid_reactive",
-      "speed": 3.5,
-      "attraction": 0.05,
-      "wander": 0.001,
-      "damping": 0.86,
-      "rotation": 0.0003,
-      "brightness": 1.067228286849255,
-      "size": 1.1093569057077126,
-      "transition": 6,
-      "params": {
-        "cols": 16,
-        "rows": 10,
-        "amplitude": 150
-      }
+      "t": 850, "pattern": "filament", "speed": 2.5, "attraction": 0.03, "wander": 0.001, "damping": 0.9,
+      "brightness": 0.75, "size": 0.9, "transition": 30, "hueShift": 10, "satShift": 0, "litShift": 0,
+      "params": { "anchors": 7, "thickness": 5 }
     },
     {
-      "t": 737.5,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7518070818929354,
-      "size": 0.8961176684193847,
-      "transition": 6,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
+      "t": 940, "pattern": "spiral", "speed": 3, "attraction": 0.04, "wander": 0.001, "damping": 0.88,
+      "brightness": 0.9, "size": 1, "transition": 30, "hueShift": 15, "satShift": 5, "litShift": 3,
+      "params": { "arms": 5, "tightness": 0.5 }
     },
     {
-      "t": 752.5,
-      "pattern": "ring",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.0005,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 0.9885950257543614,
-      "size": 1.0238291881286345,
-      "transition": 6,
-      "params": {
-        "radius": 250
-      }
+      "t": 1000, "pattern": "waveform_reactive", "speed": 4.5, "attraction": 0.06, "wander": 0.001, "damping": 0.84,
+      "brightness": 1.2, "size": 1.2, "transition": 3, "hueShift": -35, "satShift": 12, "litShift": 8,
+      "params": { "frequency": 2, "amplitude": 200, "layers": 3 }
     },
     {
-      "t": 767.5,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.6388027488137349,
-      "size": 0.7914840266793841,
-      "transition": 6,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
+      "t": 1060, "pattern": "grid_reactive", "speed": 4, "attraction": 0.05, "wander": 0.001, "damping": 0.85,
+      "brightness": 1.2, "size": 1.1, "transition": 20, "hueShift": -25, "satShift": 10, "litShift": 8,
+      "params": { "cols": 22, "rows": 14, "amplitude": 220 }
     },
     {
-      "t": 782.5,
-      "pattern": "waveform_reactive",
-      "speed": 4,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.85,
-      "rotation": 0.0003,
-      "brightness": 1.2272719514627637,
-      "size": 1.2627266262189698,
-      "transition": 19.8,
-      "params": {
-        "frequency": 3,
-        "amplitude": 120,
-        "layers": 1
-      }
+      "t": 1140, "pattern": "interference", "speed": 4, "attraction": 0.04, "wander": 0.001, "damping": 0.86,
+      "brightness": 1.1, "size": 1.1, "transition": 30, "hueShift": -15, "satShift": 8, "litShift": 5,
+      "params": { "freq1": 4, "freq2": 5.3, "angle": 0.6, "amplitude": 120 }
     },
     {
-      "t": 832,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7462896918532713,
-      "size": 0.8910089739382142,
-      "transition": 6,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
+      "t": 1210, "pattern": "dissolve", "speed": 2.5, "attraction": 0.025, "wander": 0.003, "damping": 0.92,
+      "brightness": 0.8, "size": 0.9, "transition": 30, "hueShift": 50, "satShift": -5, "litShift": -5,
+      "params": { "rate": 0.35, "base": "ring" }
     },
     {
-      "t": 847,
-      "pattern": "waveform_reactive",
-      "speed": 4,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.85,
-      "rotation": 0.0003,
-      "brightness": 1.159098259305108,
-      "size": 1.2059152160875901,
-      "transition": 6.6000000000000005,
-      "params": {
-        "frequency": 3,
-        "amplitude": 120,
-        "layers": 1
-      }
+      "t": 1300, "pattern": "drift", "speed": 1.5, "attraction": 0.015, "wander": 0.002, "damping": 0.94,
+      "brightness": 0.55, "size": 0.8, "transition": 35, "hueShift": 5, "satShift": -5, "litShift": -5,
+      "params": { "speed": 0.2, "angle": 0.5, "spread": 0.15 }
     },
     {
-      "t": 863.5,
-      "pattern": "lattice",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.0008,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7188927711321155,
-      "size": 0.9047968344432504,
-      "transition": 10.200000000000001,
-      "params": {
-        "spacing": 50
-      }
+      "t": 1360, "pattern": "fibonacci", "speed": 3, "attraction": 0.035, "wander": 0.001, "damping": 0.9,
+      "brightness": 0.85, "size": 1, "transition": 25, "hueShift": 10, "satShift": 3, "litShift": 0
     },
     {
-      "t": 889,
-      "pattern": "waveform_reactive",
-      "speed": 4,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.85,
-      "rotation": 0.0003,
-      "brightness": 1.1712584677605258,
-      "size": 1.2160487231337715,
-      "transition": 30,
-      "params": {
-        "frequency": 3,
-        "amplitude": 120,
-        "layers": 1
-      }
+      "t": 1440, "pattern": "lattice", "speed": 2.5, "attraction": 0.03, "wander": 0.001, "damping": 0.9,
+      "brightness": 0.8, "size": 0.9, "transition": 30, "hueShift": 5, "satShift": 0, "litShift": 0,
+      "connectionDist": 50, "connectionAlpha": 0.03,
+      "params": { "spacing": 60 }
     },
     {
-      "t": 1007.5,
-      "pattern": "grid_reactive",
-      "speed": 3.5,
-      "attraction": 0.05,
-      "wander": 0.001,
-      "damping": 0.86,
-      "rotation": 0.0003,
-      "brightness": 1.254354824602839,
-      "size": 1.2652956871690324,
-      "transition": 30,
-      "params": {
-        "cols": 16,
-        "rows": 10,
-        "amplitude": 150
-      }
+      "t": 1530, "pattern": "breathe", "speed": 2, "attraction": 0.025, "wander": 0.001, "damping": 0.92,
+      "brightness": 0.75, "size": 0.9, "transition": 35, "hueShift": -10, "satShift": -3, "litShift": -3,
+      "params": { "rate": 0.35, "min": 0.5, "max": 1.15 }
     },
     {
-      "t": 1214,
-      "pattern": "explode",
-      "speed": 5,
-      "attraction": 0.05,
-      "wander": 0.004,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 1.3989890360274855,
-      "size": 1.6451817654110439,
-      "transition": 6
+      "t": 1620, "pattern": "filament", "speed": 2.5, "attraction": 0.03, "wander": 0.001, "damping": 0.9,
+      "brightness": 0.8, "size": 0.9, "transition": 30, "hueShift": 5, "satShift": 0, "litShift": 0,
+      "params": { "anchors": 5, "thickness": 5 }
     },
     {
-      "t": 1229,
-      "pattern": "lattice",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.0008,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7374949849531568,
-      "size": 0.923034298973683,
-      "transition": 13.4,
-      "params": {
-        "spacing": 50
-      }
+      "t": 1700, "pattern": "horizon", "speed": 1.5, "attraction": 0.015, "wander": 0.002, "damping": 0.94,
+      "brightness": 0.5, "size": 0.7, "transition": 40, "hueShift": 0, "satShift": -8, "litShift": -10,
+      "params": { "y": 0.13, "spread": 6 }
     },
     {
-      "t": 1262.5,
-      "pattern": "waveform_reactive",
-      "speed": 4,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.85,
-      "rotation": 0.0003,
-      "brightness": 1.1923526419547978,
-      "size": 1.2336272016289984,
-      "transition": 10.8,
-      "params": {
-        "frequency": 3,
-        "amplitude": 120,
-        "layers": 1
-      }
+      "t": 1770, "pattern": "scatter", "speed": 1, "attraction": 0.01, "wander": 0.003, "damping": 0.95,
+      "brightness": 0.3, "size": 0.5, "transition": 30, "hueShift": 0, "satShift": -12, "litShift": -15
     },
     {
-      "t": 1289.5,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7654096981456708,
-      "size": 0.9087126834682137,
-      "transition": 7.800000000000001,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
-    },
-    {
-      "t": 1309,
-      "pattern": "fibonacci",
-      "speed": 2.5,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.8614328682534367,
-      "size": 0.9976230261605894,
-      "transition": 6.4
-    },
-    {
-      "t": 1325,
-      "pattern": "concentric",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.8255510381340758,
-      "size": 0.8879591984450632,
-      "transition": 15.4,
-      "params": {
-        "rings": 5
-      }
-    },
-    {
-      "t": 1363.5,
-      "pattern": "grid_reactive",
-      "speed": 3.5,
-      "attraction": 0.05,
-      "wander": 0.001,
-      "damping": 0.86,
-      "rotation": 0.0003,
-      "brightness": 1.0844926053771848,
-      "size": 1.123743837814321,
-      "transition": 12.600000000000001,
-      "params": {
-        "cols": 16,
-        "rows": 10,
-        "amplitude": 150
-      }
-    },
-    {
-      "t": 1395,
-      "pattern": "lattice",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.0008,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.762498218434354,
-      "size": 0.9475472729748569,
-      "transition": 9.200000000000001,
-      "params": {
-        "spacing": 50
-      }
-    },
-    {
-      "t": 1418,
-      "pattern": "waveform_reactive",
-      "speed": 4,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.85,
-      "rotation": 0.0003,
-      "brightness": 1.1954473348422399,
-      "size": 1.2362061123685335,
-      "transition": 6,
-      "params": {
-        "frequency": 3,
-        "amplitude": 120,
-        "layers": 1
-      }
-    },
-    {
-      "t": 1433,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7427616323742217,
-      "size": 0.8877422521983533,
-      "transition": 6,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
-    },
-    {
-      "t": 1448,
-      "pattern": "waveform_reactive",
-      "speed": 4,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.85,
-      "rotation": 0.0003,
-      "brightness": 1.1903358385167937,
-      "size": 1.231946532097328,
-      "transition": 11.4,
-      "params": {
-        "frequency": 3,
-        "amplitude": 120,
-        "layers": 1
-      }
-    },
-    {
-      "t": 1476.5,
-      "pattern": "helix",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 0.7594022948935794,
-      "size": 0.9031502730496105,
-      "transition": 30,
-      "params": {
-        "frequency": 4,
-        "amplitude": 100
-      }
-    },
-    {
-      "t": 1561,
-      "pattern": "scatter",
-      "speed": 2,
-      "attraction": 0.02,
-      "wander": 0.003,
-      "damping": 0.92,
-      "rotation": 0.0003,
-      "brightness": 0.5583890042410181,
-      "size": 0.8647488145726406,
-      "transition": 10
-    },
-    {
-      "t": 1586,
-      "pattern": "ring",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.0005,
-      "damping": 0.88,
-      "rotation": 0.0003,
-      "brightness": 0.9497375753956998,
-      "size": 0.9914479794964165,
-      "transition": 8,
-      "params": {
-        "radius": 250
-      }
-    },
-    {
-      "t": 1606,
-      "pattern": "converge",
-      "speed": 6,
-      "attraction": 0.08,
-      "wander": 0.0002,
-      "damping": 0.82,
-      "rotation": 0.0003,
-      "brightness": 0.6704683442600452,
-      "size": 0.5390427151625282,
-      "transition": 3,
-      "params": {
-        "x": 0.5,
-        "y": 0.5,
-        "radius": 3
-      }
-    },
-    {
-      "t": 1610,
-      "pattern": "scatter",
-      "speed": 2.6,
-      "attraction": 0.02,
-      "wander": 0.003,
-      "damping": 0.92,
-      "rotation": 0.0003,
-      "brightness": 0.84,
-      "size": 1,
-      "transition": 2
-    },
-    {
-      "t": 1630.5,
-      "pattern": "grid_reactive",
-      "speed": 3.5,
-      "attraction": 0.05,
-      "wander": 0.001,
-      "damping": 0.86,
-      "rotation": 0.0003,
-      "brightness": 1.0816047559428836,
-      "size": 1.1213372966190696,
-      "transition": 27.6,
-      "params": {
-        "cols": 16,
-        "rows": 10,
-        "amplitude": 150
-      }
-    },
-    {
-      "t": 1699.5,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "rotation": 0.0003,
-      "brightness": 0.7581032393334991,
-      "size": 0.901947443827314,
-      "transition": 19.8,
-      "params": {
-        "arms": 3,
-        "tightness": 0.8
-      }
-    },
-    {
-      "t": 1749,
-      "pattern": "grid_reactive",
-      "speed": 3.5,
-      "attraction": 0.05,
-      "wander": 0.001,
-      "damping": 0.86,
-      "rotation": 0.0003,
-      "brightness": 1.0613544200874527,
-      "size": 1.104462016739544,
-      "transition": 6.2,
-      "params": {
-        "cols": 16,
-        "rows": 10,
-        "amplitude": 150
-      }
-    },
-    {
-      "t": 1764.5,
-      "pattern": "converge",
-      "speed": 6,
-      "attraction": 0.08,
-      "wander": 0.0002,
-      "damping": 0.82,
-      "rotation": 0.0003,
-      "brightness": 0.6699300122736526,
-      "size": 0.5387062576710328,
-      "transition": 3,
-      "params": {
-        "x": 0.5,
-        "y": 0.5,
-        "radius": 3
-      }
-    },
-    {
-      "t": 1768.5,
-      "pattern": "scatter",
-      "speed": 2.6,
-      "attraction": 0.02,
-      "wander": 0.003,
-      "damping": 0.92,
-      "rotation": 0.0003,
-      "brightness": 0.84,
-      "size": 1,
-      "transition": 2
-    },
-    {
-      "t": 1781,
-      "pattern": "scatter",
-      "speed": 2,
-      "attraction": 0.02,
-      "wander": 0.003,
-      "damping": 0.92,
-      "rotation": 0.0003,
-      "brightness": 0.5216957350266007,
-      "size": 0.8210663512221437,
-      "transition": 8
+      "t": 1798, "pattern": "converge", "speed": 6, "attraction": 0.08, "damping": 0.82,
+      "brightness": 0.2, "size": 0.3, "transition": 3, "hueShift": 0, "satShift": -15, "litShift": -15,
+      "params": { "x": 0.5, "y": 0.5, "radius": 2 }
     }
   ]
 }
