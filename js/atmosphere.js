@@ -690,6 +690,26 @@
         }
     }
 
+    // Push any position outside the center dead zone
+    // This applies to ALL patterns universally
+    function excludeDeadZone(pos) {
+        var cx = width / 2, cy = height / 2;
+        var deadR = Math.min(width, height) * 0.22; // slightly larger than the transmitter
+        var dx = pos.x - cx, dy = pos.y - cy;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < deadR && dist > 0) {
+            // Push to the edge of the dead zone + small buffer
+            var scale = (deadR + 10) / dist;
+            return { x: cx + dx * scale, y: cy + dy * scale };
+        }
+        if (dist === 0) {
+            // Exactly at center — push in a seeded direction
+            var angle = (pos.x * 7 + pos.y * 13) % (Math.PI * 2);
+            return { x: cx + Math.cos(angle) * (deadR + 10), y: cy + Math.sin(angle) * (deadR + 10) };
+        }
+        return pos;
+    }
+
     // =========================================
     // PARTICLES
     // =========================================
@@ -899,6 +919,11 @@
             targetX += Math.sin(dispAngle) * audioDisp * 15;
             targetY += Math.cos(dispAngle * 0.7) * audioDisp * 10;
 
+            // Exclude from center dead zone (transmitter area)
+            var excluded = excludeDeadZone({ x: targetX, y: targetY });
+            targetX = excluded.x;
+            targetY = excluded.y;
+
             // Movement — always attract to pattern, stronger when playing
             var activeAttraction = attraction * speed * dt;
             if (reactivity < 0.1) {
@@ -915,12 +940,12 @@
                 pt.vy += Math.sin(pt.wanderAngle) * wander * 0.3 * speed * dt;
             }
 
-            // Center repulsion
+            // Center repulsion — strong push to keep particles out of transmitter
             var cdx = pt.x - cx;
             var cdy = pt.y - cy;
             var cDist = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
             if (cDist < deadR) {
-                var repel = (1 - cDist / deadR) * 0.08 * dt;
+                var repel = (1 - cDist / deadR) * 0.3 * dt;
                 pt.vx += (cdx / cDist) * repel;
                 pt.vy += (cdy / cDist) * repel;
             }
