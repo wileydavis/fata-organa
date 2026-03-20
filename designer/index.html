@@ -1986,9 +1986,19 @@
             pt.alpha = pt.baseAlpha * (Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7) * state.brightness;
 
             if (pt.alpha > 0.01) {
+                var dSize = pt.size * state.size;
                 var h = pt.hue + state.hueShift, s = Math.max(0, Math.min(100, pt.sat + state.satShift)), l = Math.max(0, Math.min(100, pt.lit + state.litShift));
-                ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size * state.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'hsla(' + h + ',' + s + '%,' + l + '%,' + pt.alpha + ')'; ctx.fill();
+                ctx.fillStyle = 'hsla(' + h + ',' + s + '%,' + l + '%,' + pt.alpha + ')';
+                var vel = Math.sqrt(pt.vx * pt.vx + pt.vy * pt.vy);
+                var stretch = Math.min(vel * 3, 8);
+                if (stretch > 0.5) {
+                    var ang = Math.atan2(pt.vy, pt.vx);
+                    ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(ang);
+                    ctx.beginPath(); ctx.ellipse(0, 0, dSize + stretch, dSize, 0, 0, Math.PI * 2);
+                    ctx.fill(); ctx.restore();
+                } else {
+                    ctx.beginPath(); ctx.arc(pt.x, pt.y, dSize, 0, Math.PI * 2); ctx.fill();
+                }
             }
         }
 
