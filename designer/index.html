@@ -300,6 +300,7 @@
         <div style="display:flex; gap:6px; margin-top:6px; justify-content:flex-end;">
             <button class="transport-btn" id="btn-autoscore">⚡ Auto Score</button>
             <button class="transport-btn" id="btn-aiscore" style="border-color:rgba(120,160,220,0.3); color:rgba(120,160,220,0.7);">🧠 AI Score</button>
+            <button class="transport-btn" id="btn-loadscore">↓ Load Score</button>
             <button class="transport-btn" id="btn-export">Export JSON</button>
             <button class="transport-btn" id="btn-copy-all">Copy JSON</button>
             <button class="transport-btn commit" id="btn-deploy">Deploy to Site</button>
@@ -1595,6 +1596,44 @@
         stl: '3D model made of particles. Physical objects — the boat, the transmitter, specific things.',
         grid_reactive: 'Grid that pulses with voice audio — center columns respond to voice, edges to bass/treble. Active listening visualization.'
     };
+
+    // === LOAD EXISTING SCORE ===
+    document.getElementById('btn-loadscore').addEventListener('click', function() {
+        var trackUrl = document.getElementById('track-select').value;
+        var scorePath = scorePathMap[trackUrl];
+        if (!scorePath) { toast('No score path for this track'); return; }
+
+        var btn = document.getElementById('btn-loadscore');
+        btn.textContent = 'Loading...'; btn.disabled = true;
+
+        fetch('/' + scorePath + '?_=' + Date.now())
+        .then(function(r) {
+            if (!r.ok) throw new Error('Score not found');
+            return r.json();
+        })
+        .then(function(data) {
+            var loadedCues = data.cues || [];
+            if (loadedCues.length === 0) throw new Error('Score has no cues');
+
+            if (cues.length > 0) {
+                if (!confirm('Replace existing ' + cues.length + ' cues with loaded score (' + loadedCues.length + ' cues)?')) {
+                    btn.textContent = '↓ Load Score'; btn.disabled = false;
+                    return;
+                }
+            }
+
+            cues = loadedCues;
+            renderCueList();
+            toast('Loaded ' + loadedCues.length + ' cues from ' + scorePath);
+            if (cues.length > 0) loadCueIntoUI(cues[0]);
+        })
+        .catch(function(err) {
+            toast('Load failed: ' + err.message);
+        })
+        .finally(function() {
+            btn.textContent = '↓ Load Score'; btn.disabled = false;
+        });
+    });
 
     document.getElementById('btn-aiscore').addEventListener('click', function() {
         if (!audio.src) { toast('Load a track first'); return; }
