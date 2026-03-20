@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dust Mote Laboratory Manual — FATA ORGANA</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/document.css">
+    <link rel="stylesheet" href="/css/spoiler.css">
+</head>
+<body>
+    <div class="scanline-overlay"></div>
+    <div class="noise-overlay"></div>
+    
+    <nav class="site-nav">
+        <a href="/" class="nav-logo" aria-label="Home">
+            <svg class="nav-octopus" viewBox="0 0 44 28" width="40" height="25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5 3C10.5 3 8 5.5 8 9c0 1.8.5 3.2 1.2 4.3l-.3.5c-.8 1.2-1.6 2.8-2.2 4.5-.2.5.2.8.5.5.8-.8 1.5-1.8 2-2.5.1.3.1.7 0 1.2-.3 1.5-.2 2.8.3 3.8.2.3.5.2.6-.1.3-1.2.3-2.3.2-3.2.4.4 1 1 1.8 1.5.3.2.6 0 .5-.3-.4-1-.6-2-.5-2.8.5.3 1.2.5 2 .5l.4 2c.1.5.3 1.2.4 1.8.1.3.4.3.5 0 .2-.7.2-1.5.2-2.1l.3-1.7c.7-.1 1.2-.3 1.7-.5l.5 1.8c.2.8.5 2 .8 2.8.1.3.4.2.5-.1 0-.8-.1-1.8-.3-2.6l-.3-1.8c.7-.4 1.3-1 1.7-1.6.3.8.4 1.8.3 2.8 0 .3.3.5.5.2.6-1 .8-2.2.7-3.2.6-.3 1.2-.9 1.5-1.4.5.6 1.1 1.4 1.8 2 .3.2.6 0 .4-.4-.5-1.2-1.2-2.5-1.8-3.5.6-1 1-2.3 1-3.8C19 5.5 16.5 3 13.5 3z" fill="currentColor" opacity="0.85"/>
+                <ellipse cx="13.5" cy="8.5" rx="1.8" ry="1.5" fill="currentColor" opacity="0.4"/>
+                <ellipse cx="13.5" cy="8.5" rx="0.9" ry="1.1" fill="rgba(8,8,10,0.95)"/>
+                <path d="M24 8c1.5-1.8 1.5-4.5 0-6.3" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" opacity="0.5" fill="none"/>
+                <path d="M27.5 9.5c2.5-2.8 2.5-7.2 0-10" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" opacity="0.3" fill="none"/>
+                <path d="M31 11c3.5-3.8 3.5-9.8 0-13.5" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" opacity="0.18" fill="none"/>
+            </svg>
+        </a>
+        <div class="nav-links">
+            <a href="/">Listen</a>
+            <a href="/archive/">Field Manuals</a>
+        </div>
+    </nav>
+
+    <main class="page-content document">
+        <div class="document-header">
+            <span class="document-classification">TECHNICAL DOCUMENT — INTERNAL</span>
+            <h1>Dust Mote Laboratory</h1>
+            <p class="page-subtitle">Visual Score Authoring System — Operations Manual</p>
+            <div class="document-meta">
+                <span>CLEARANCE: LEVEL 0 — UNRESTRICTED</span>
+                <span>VERSION: 1.0</span>
+            </div>
+        </div>
+
+        <div class="document-note">
+            <p><em>This document describes the Dust Mote Laboratory, an internal tool used by the research team to author visual particle scores for recovered transmissions. The "dust motes" are the amber particles visible during focused listening mode. Their movement is not random — it is scored to each transmission, synchronized to the audio.</em></p>
+        </div>
+
+        <section class="document-section">
+            <h2>Overview</h2>
+            <p>The Dust Mote Laboratory is a browser-based tool for designing, previewing, and deploying particle animation sequences synchronized to audio transmissions. Each transmission has a corresponding "visual score" — a timeline of cues that control how particles move, form patterns, change color, and respond to the audio signal.</p>
+            <p>The tool is accessed at <code>/designer/</code> from the main site. It consists of three areas: a full-screen particle preview, a control panel on the right, and an audio transport bar at the bottom.</p>
+        </section>
+
+        <section class="document-section">
+            <h2>Interface Layout</h2>
+
+            <h3>Particle Preview (Center)</h3>
+            <p>The main screen area shows a live preview of the particle system. A dashed circle in the center represents the transmitter panel — the area that will be obscured during focused listening. Particles are programmed to avoid this zone. What you see here is what the listener sees behind the VU meter.</p>
+
+            <h3>Control Panel (Right Sidebar)</h3>
+            <p>All particle parameters and action buttons live here. It scrolls vertically. The panel can be toggled with the "Hide Panel" button in the top-right corner. Parameters are organized into groups:</p>
+            <p><strong>Pattern</strong> — the formation particles move toward. Each pattern has a distinct visual character and may expose additional parameters below the main controls.</p>
+            <p><strong>Movement</strong> — controls how particles travel to their target positions. Speed is the velocity multiplier. Attraction is the pull strength. Wander adds random drift. Damping is friction. Rotation spins the entire formation.</p>
+            <p><strong>Appearance</strong> — size multiplies each particle's radius. Brightness scales opacity. Connection distance and alpha control lines drawn between nearby particles.</p>
+            <p><strong>Color</strong> — hue, saturation, and lightness offsets applied to the base amber palette. Hue 0 is amber, negative is red, positive shifts toward blue/cyan.</p>
+            <p><strong>Transition</strong> — how many seconds the system takes to morph from the previous cue's state to this one. All values interpolate smoothly: positions, colors, size, speed, everything. Range is 0 to 180 seconds (3 minutes).</p>
+            <p><strong>Actions</strong> — buttons for committing cues, generating scores, loading/deploying, and exporting.</p>
+
+            <h3>Transport Bar (Bottom)</h3>
+            <p>Contains the track selector, play/pause, time display, scrub bar, and the cue timeline. Green markers on the scrub bar show where cues are placed — these are draggable. Cue chips below the scrub bar show each cue's timestamp and pattern. The Preview button toggles playback of the committed cue sequence.</p>
+        </section>
+
+        <section class="document-section">
+            <h2>Available Patterns</h2>
+
+            <h3>Geometric</h3>
+            <p><strong>scatter</strong> — random distribution. The default state, ambient and unfocused.</p>
+            <p><strong>grid</strong> — ordered rows and columns. Structure and control.</p>
+            <p><strong>lattice</strong> — 3D cube of points projected to 2D. Architectural, framework-like.</p>
+            <p><strong>concentric</strong> — expanding rings from center. Ripples, sonar, radio waves.</p>
+            <p><strong>spiral</strong> — arms radiating outward. Journey, descent, being drawn inward. Params: arms, tightness.</p>
+            <p><strong>fibonacci</strong> — golden ratio distribution. Organic, natural order.</p>
+            <p><strong>ring</strong> — single large circle. Boundaries, containment.</p>
+            <p><strong>column</strong> — vertical line of particles. Signal beam, standing alone.</p>
+            <p><strong>horizon</strong> — flat line near the top of screen. Ocean horizon, vast emptiness. Param: y position, spread.</p>
+            <p><strong>helix</strong> — intertwined strands. DNA, duality.</p>
+            <p><strong>lissajous</strong> — mathematical curves. Precision, observation.</p>
+            <p><strong>converge</strong> — all particles collapse to a point. Use sparingly — particles disappear behind the transmitter. Fast speed, max 4 seconds, always followed by an expand.</p>
+            <p><strong>explode</strong> — particles fly outward. Sudden release, the weapon deploying.</p>
+
+            <h3>Narrative</h3>
+            <p><strong>drift</strong> — particles flow like ocean current. The boat, crossing water, solitude at sea. Params: speed, angle, spread.</p>
+            <p><strong>dissolve</strong> — particles detach from a base formation and drift away. Consciousness losing coherence, reality failing. Params: rate (0–1), base pattern.</p>
+            <p><strong>breathe</strong> — synchronized expand/contract pulse. Living presence, conscious reality maintenance. Audio-reactive: voice drives expansion. Params: rate, min/max scale.</p>
+            <p><strong>interference</strong> — two overlapping wave systems creating moiré. The fata organa concept — false patterns from real signals. Params: freq1, freq2, angle, amplitude.</p>
+            <p><strong>fragment</strong> — small isolated clusters orbiting independently. Survivors in the CZ, isolated consciousness. Params: groups, orbit speed, spread.</p>
+            <p><strong>filament</strong> — thin threads between anchor points. Radio transmissions, neural connections. Params: anchors (thread count), thickness.</p>
+
+            <h3>Audio-Reactive</h3>
+            <p><strong>waveform_reactive</strong> — horizontal wave driven by voice audio. The primary driver is vocal energy — the waveform comes alive when Marcus speaks. Bass adds slow undulation, highs add shimmer. Flat line when silent. Params: frequency, amplitude, layers.</p>
+            <p><strong>grid_reactive</strong> — grid that pulses with audio. Center columns respond to voice, edges to bass and treble. Static grid when silent. Params: cols, rows, amplitude.</p>
+
+            <h3>3D Model</h3>
+            <p><strong>stl</strong> — particles map to the surface of an uploaded STL file. Back-face culling makes the object appear opaque. Params: rotation XYZ, auto-spin, scale, perspective, offset XY. Each cue can reference a different STL file.</p>
+        </section>
+
+        <section class="document-section">
+            <h2>Workflow</h2>
+
+            <h3>Manual Scoring</h3>
+            <p>1. Select a track from the dropdown and press Play.</p>
+            <p>2. Listen. Scrub to a moment where you want the visuals to change.</p>
+            <p>3. Select a pattern from the dropdown. Adjust sliders. Watch the particles respond in real time.</p>
+            <p>4. Press "● New Cue" to commit the current settings at the current playhead position.</p>
+            <p>5. A cue chip appears in the timeline and a green marker appears on the scrub bar.</p>
+            <p>6. Repeat for each visual change across the track.</p>
+            <p>7. Press Preview to watch the full sequence play back with the audio.</p>
+            <p>8. Press "↑ Deploy" to push the score to the live site (password required).</p>
+
+            <h3>Editing Cues</h3>
+            <p>Click a cue chip to select it. The chip highlights green, the playhead jumps to that time, and all sliders load that cue's settings. The button changes to "● Update Cue". Adjust parameters and press Update to overwrite in place. Click the scrub bar to deselect and return to creating new cues.</p>
+            <p>Drag the green markers on the scrub bar to adjust when a cue fires. The audio follows the drag so you can hear the new position. Delete a cue by clicking the × on its chip.</p>
+
+            <h3>Auto Score</h3>
+            <p>The "⚡ Auto" button fetches and decodes the track's audio, analyzes energy levels and spectral brightness in half-second windows, detects section boundaries, classifies each section by intensity and trend, and assigns patterns with appropriate defaults. This is a fast first pass — expect to adjust individual cues afterward.</p>
+
+            <h3>AI Score</h3>
+            <p>The "🧠 AI" button performs the same audio analysis but also fetches the track's written transcript from the repository. Both are sent to an AI model along with descriptions of all available patterns and narrative guidelines. The AI generates cues that match the story's meaning — not just its volume. This feature requires network access to the API.</p>
+
+            <h3>Loading and Deploying</h3>
+            <p>"↓ Load" fetches the currently deployed score for the selected track and loads it into the timeline for editing. "↑ Deploy" pushes the current score JSON (and any STL model files) directly to the GitHub repository. Cloudflare auto-deploys from the main branch, so changes appear on the live site within about 30 seconds. Deploy requires a password.</p>
+        </section>
+
+        <section class="document-section">
+            <h2>Technical Notes</h2>
+
+            <h3>Cue Format</h3>
+            <p>Scores are stored as JSON files in the <code>/data/</code> directory (e.g., <code>score_intro.json</code>, <code>score_ep01.json</code>). Each file contains a track name, duration, and an array of cue objects. Each cue specifies a timestamp and only the fields that change — unspecified fields carry forward from the previous cue.</p>
+
+            <h3>Transitions</h3>
+            <p>When a cue fires, all numeric values (positions, colors, physics, size) interpolate from the previous state to the new state over the transition duration using a smoothstep curve. Pattern target positions also blend — particles slide from their old formation to the new one. If a cue's transition duration exceeds the gap to the next cue, it is clamped to fit.</p>
+
+            <h3>Dead Zone</h3>
+            <p>The center ~23% of the screen is occupied by the transmitter panel and VU meter. All patterns automatically exclude this zone — target positions inside it are pushed outward. A physics repulsion force also prevents particles from drifting through center during transitions.</p>
+
+            <h3>Mobile</h3>
+            <p>On mobile devices, particle count is reduced to 150 (from up to 300 on desktop). Movement uses delta-time normalization for consistent speed regardless of framerate. The VU meter drives needle movement from pre-analyzed volume data rather than live AudioContext analysis, preserving background playback.</p>
+
+            <h3>STL Pipeline</h3>
+            <p>STL files uploaded in the designer are stored per-cue. On deploy, they are pushed to <code>/models/</code> in the repository, and the score JSON references them by URL. The atmosphere loads them via fetch, parses the triangles, distributes particles across surfaces (area-weighted), and projects with rotation and perspective. Back-face culling redirects particles from hidden surfaces to visible ones, doubling density on the side facing the viewer.</p>
+        </section>
+
+        <section class="document-section">
+            <h2>Pattern Selection Guide</h2>
+            <p>When scoring a transmission, consider what the listener is hearing at each moment:</p>
+            <p><strong>Silence or ambient tone</strong> → scatter, drift, horizon, breathe. Dim, slow, minimal.</p>
+            <p><strong>Marcus speaking calmly</strong> → filament, breathe, fibonacci. Measured, contemplative.</p>
+            <p><strong>Marcus speaking with intensity</strong> → waveform_reactive, grid_reactive. Let the voice drive the visuals.</p>
+            <p><strong>Describing the ocean or the boat</strong> → drift. Let it flow.</p>
+            <p><strong>Describing the Containment Zone</strong> → dissolve, fragment, interference. Reality is uncertain.</p>
+            <p><strong>Describing consciousness or perception</strong> → breathe, interference. The fata organa itself.</p>
+            <p><strong>Describing a specific object or place</strong> → stl (if a model exists), lattice, concentric.</p>
+            <p><strong>Emotional climax</strong> → fast transition to waveform_reactive or explode. Then slow dissolve or breathe as it settles.</p>
+            <p><strong>End of a section</strong> → converge (brief, fast) → explode or scatter. Collapse and release.</p>
+            <p><strong>End of the transmission</strong> → slow fade to scatter or horizon. Final converge as the signal dies.</p>
+        </section>
+
+    </main>
+
+    <script src="/js/layers.js"></script>
+</body>
+</html>
