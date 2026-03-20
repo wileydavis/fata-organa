@@ -21,7 +21,8 @@
       "glow": 1,
       "glowIntensity": 0.5,
       "glowHue": 38,
-      "params": {}
+      "params": {},
+      "haze": 0
     },
     {
       "t": 3,
@@ -45,7 +46,8 @@
       "connectionAlpha": 0,
       "glow": 1,
       "glowIntensity": 1.5,
-      "glowHue": 147
+      "glowHue": 38,
+      "haze": 0
     },
     {
       "t": 18,
@@ -54,22 +56,23 @@
       "attraction": 0.025,
       "wander": 0.003,
       "damping": 0.92,
+      "rotation": 0.0003,
       "brightness": 0.7,
       "size": 0.9,
       "transition": 12,
       "hueShift": -20,
       "satShift": 5,
-      "litShift": 0,
+      "glowIntensity": 2,
+      "glowHue": -20,
+      "haze": 0,
       "params": {
         "rate": 0.25,
         "base": "lattice"
       },
-      "rotation": 0.0003,
       "connectionDist": 0,
       "connectionAlpha": 0,
-      "glow": 1,
-      "glowIntensity": 2,
-      "glowHue": -60
+      "litShift": 0,
+      "glow": 1
     },
     {
       "t": 40,
@@ -80,7 +83,7 @@
       "damping": 0.93,
       "brightness": 0.7,
       "size": 0.9,
-      "transition": 15,
+      "transition": 12,
       "hueShift": -10,
       "satShift": 0,
       "litShift": -5,
@@ -88,7 +91,14 @@
         "groups": 8,
         "orbitSpeed": 0.15,
         "spread": 18
-      }
+      },
+      "rotation": 0.0003,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "glow": 1,
+      "glowIntensity": 0.5,
+      "glowHue": 38,
+      "haze": 1
     },
     {
       "t": 65,
@@ -106,7 +116,14 @@
       "params": {
         "anchors": 6,
         "thickness": 5
-      }
+      },
+      "rotation": 0.0003,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "glow": 1,
+      "glowIntensity": 0.5,
+      "glowHue": 38,
+      "haze": 0
     },
     {
       "t": 95,
@@ -123,7 +140,14 @@
       "litShift": 0,
       "params": {
         "rings": 5
-      }
+      },
+      "rotation": 0.0003,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "glow": 1,
+      "glowIntensity": 0.5,
+      "glowHue": -20,
+      "haze": 0.8
     },
     {
       "t": 125,
