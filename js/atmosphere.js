@@ -829,7 +829,10 @@
             audioTime = a.currentTime;
         }
 
-        updateCues(audioTime);
+        // Only run cue system when not overridden (designer controls directly)
+        if (!window.atmosphereOverride) {
+            updateCues(audioTime);
+        }
 
         // Read state — override from designer takes priority
         var activeState = window.atmosphereOverride || cueState;
