@@ -71,13 +71,13 @@
     var currentCueIdx = -1;
 
     // The interpolated state that drives particles each frame
-    var cueState = {};
+    var cueState = cloneState(DEFAULT_STATE);
     var cueTransitionStart = 0;
     var cueTransitionDur = 0;
     var cueFrom = {};
     var cueTo = {};
     // Track the "accumulated" state — each cue overrides only the fields it specifies
-    var accumulatedState = {};
+    var accumulatedState = cloneState(DEFAULT_STATE);
     // Pattern position blending
     var prevPattern = 'scatter';
     var prevParams = {};
