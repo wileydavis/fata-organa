@@ -3,513 +3,194 @@
   "duration": 1808,
   "cues": [
     {
-      "t": 0,
-      "pattern": "scatter",
-      "speed": 0.8,
-      "attraction": 0.008,
-      "wander": 0.003,
-      "damping": 0.96,
-      "brightness": 0.2,
-      "size": 0.4,
-      "transition": 0,
-      "hueShift": 0,
-      "satShift": -10,
-      "litShift": -15
+      "t": 0, "pattern": "scatter", "speed": 0.3, "attraction": 0.002, "wander": 0.004,
+      "damping": 0.97, "rotation": 0.00003, "brightness": 0.2, "size": 0.5,
+      "glow": 1, "glowIntensity": 0.25, "glowHue": 38, "haze": 0.3,
+      "transition": 0
     },
     {
-      "t": 8,
-      "pattern": "breathe",
-      "speed": 1.5,
-      "attraction": 0.02,
-      "wander": 0.001,
-      "damping": 0.94,
-      "brightness": 0.5,
-      "size": 0.7,
-      "transition": 10,
-      "hueShift": -15,
-      "satShift": 0,
-      "litShift": -5,
-      "params": {
-        "rate": 0.3,
-        "min": 0.5,
-        "max": 1.1
-      }
+      "t": 10, "pattern": "breathe", "speed": 0.5, "attraction": 0.005, "wander": 0.002,
+      "damping": 0.96, "brightness": 0.35, "size": 0.7,
+      "glowIntensity": 0.4, "haze": 0.25,
+      "transition": 12, "params": { "rate": 0.2, "min": 0.8, "max": 1.1 }
     },
     {
-      "t": 30,
-      "pattern": "drift",
-      "speed": 1.5,
-      "attraction": 0.015,
-      "wander": 0.002,
-      "damping": 0.94,
-      "brightness": 0.6,
-      "size": 0.8,
-      "transition": 15,
-      "hueShift": -10,
-      "satShift": -5,
-      "litShift": -3,
-      "params": {
-        "speed": 0.2,
-        "angle": 0.3,
-        "spread": 0.12
-      }
+      "t": 40, "pattern": "drift", "speed": 0.6, "attraction": 0.006, "wander": 0.002,
+      "damping": 0.95, "brightness": 0.45, "size": 0.8,
+      "glowIntensity": 0.5, "glowHue": 35, "haze": 0.2,
+      "transition": 20, "params": { "speed": 0.15, "angle": 0.05, "spread": 25 }
     },
     {
-      "t": 70,
-      "pattern": "fragment",
-      "speed": 2,
-      "attraction": 0.02,
-      "wander": 0.002,
-      "damping": 0.93,
-      "brightness": 0.65,
-      "size": 0.8,
-      "transition": 20,
-      "hueShift": -5,
-      "satShift": 0,
-      "litShift": -3,
-      "params": {
-        "groups": 6,
-        "orbitSpeed": 0.2,
-        "spread": 15
-      }
+      "t": 90, "pattern": "filament", "speed": 0.8, "attraction": 0.01, "wander": 0.001,
+      "damping": 0.93, "brightness": 0.55, "size": 0.85,
+      "glowIntensity": 0.55, "glowHue": 38,
+      "transition": 25, "params": { "anchors": 4, "thickness": 7 }
     },
     {
-      "t": 115,
-      "pattern": "filament",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.001,
-      "damping": 0.9,
-      "brightness": 0.75,
-      "size": 0.9,
-      "transition": 20,
-      "hueShift": 5,
-      "satShift": 0,
-      "litShift": 0,
-      "params": {
-        "anchors": 5,
-        "thickness": 4
-      }
+      "t": 150, "pattern": "waveform_reactive", "speed": 1.0, "attraction": 0.012, "wander": 0.0006,
+      "damping": 0.92, "brightness": 0.6, "size": 0.9,
+      "glowIntensity": 0.65, "glowHue": 38, "haze": 0.1,
+      "transition": 25, "params": { "frequency": 2, "amplitude": 90, "layers": 3 }
     },
     {
-      "t": 165,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "brightness": 0.85,
-      "size": 1,
-      "transition": 25,
-      "hueShift": 10,
-      "satShift": 3,
-      "litShift": 0,
-      "params": {
-        "arms": 4,
-        "tightness": 0.5
-      }
+      "t": 210, "pattern": "spiral", "speed": 0.8, "attraction": 0.008, "wander": 0.001,
+      "damping": 0.94, "brightness": 0.65, "size": 0.9,
+      "glowIntensity": 0.7, "glowHue": 40, "haze": 0.15,
+      "transition": 30, "params": { "arms": 3, "tightness": 0.6 }
     },
     {
-      "t": 195,
-      "pattern": "waveform_reactive",
-      "speed": 4,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.85,
-      "brightness": 1.1,
-      "size": 1.1,
-      "transition": 3,
-      "hueShift": -30,
-      "satShift": 10,
-      "litShift": 5,
-      "params": {
-        "frequency": 3,
-        "amplitude": 180,
-        "layers": 2
-      }
+      "t": 270, "pattern": "breathe", "speed": 0.5, "attraction": 0.006, "wander": 0.0015,
+      "damping": 0.95, "brightness": 0.5, "size": 0.8,
+      "glowIntensity": 0.5, "glowHue": 35, "haze": 0.35,
+      "transition": 30, "params": { "rate": 0.2, "min": 0.75, "max": 1.15 }
     },
     {
-      "t": 260,
-      "pattern": "lattice",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "brightness": 0.9,
-      "size": 1,
-      "transition": 25,
-      "hueShift": 15,
-      "satShift": 5,
-      "litShift": 3,
-      "connectionDist": 60,
-      "connectionAlpha": 0.04,
-      "params": {
-        "spacing": 55
-      }
+      "t": 330, "pattern": "drift", "speed": 0.5, "attraction": 0.004, "wander": 0.003,
+      "damping": 0.96, "brightness": 0.45, "haze": 0.4,
+      "glowIntensity": 0.4, "glowHue": 30,
+      "transition": 30, "params": { "speed": 0.12, "angle": -0.1, "spread": 30 }
     },
     {
-      "t": 340,
-      "pattern": "helix",
-      "speed": 3.5,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.88,
-      "brightness": 1,
-      "size": 1,
-      "transition": 30,
-      "hueShift": 20,
-      "satShift": 5,
-      "litShift": 3,
-      "params": {
-        "frequency": 3,
-        "amplitude": 150
-      }
+      "t": 400, "pattern": "grid_reactive", "speed": 0.7, "attraction": 0.008, "wander": 0.001,
+      "damping": 0.94, "brightness": 0.55, "size": 0.85,
+      "connectionDist": 60, "connectionAlpha": 0.03,
+      "glowIntensity": 0.55, "glowHue": 38, "haze": 0.2,
+      "transition": 35, "params": { "cols": 14, "rows": 10, "amplitude": 40, "sphereRadius": 2 }
     },
     {
-      "t": 400,
-      "pattern": "interference",
-      "speed": 3.5,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.88,
-      "brightness": 1,
-      "size": 1,
-      "transition": 25,
-      "hueShift": 25,
-      "satShift": 8,
-      "litShift": 5,
-      "params": {
-        "freq1": 3.5,
-        "freq2": 4.2,
-        "angle": 0.5,
-        "amplitude": 100
-      }
+      "t": 480, "pattern": "dissolve", "speed": 0.4, "attraction": 0.004, "wander": 0.003,
+      "damping": 0.96, "brightness": 0.4, "size": 0.7,
+      "connectionDist": 0, "connectionAlpha": 0,
+      "glowIntensity": 0.35, "glowHue": 25, "haze": 0.55,
+      "transition": 35, "params": { "rate": 0.25, "base": "ring" }
     },
     {
-      "t": 520,
-      "pattern": "drift",
-      "speed": 1.5,
-      "attraction": 0.015,
-      "wander": 0.003,
-      "damping": 0.94,
-      "brightness": 0.55,
-      "size": 0.8,
-      "transition": 30,
-      "hueShift": 0,
-      "satShift": -5,
-      "litShift": -5,
-      "params": {
-        "speed": 0.15,
-        "angle": -0.2,
-        "spread": 0.2
-      }
+      "t": 540, "pattern": "scatter", "speed": 0.3, "attraction": 0.002, "wander": 0.004,
+      "damping": 0.97, "brightness": 0.25, "size": 0.5,
+      "glowIntensity": 0.2, "glowHue": 20, "haze": 0.65,
+      "transition": 30
     },
     {
-      "t": 575,
-      "pattern": "horizon",
-      "speed": 1.5,
-      "attraction": 0.02,
-      "wander": 0.002,
-      "damping": 0.93,
-      "brightness": 0.5,
-      "size": 0.7,
-      "transition": 25,
-      "hueShift": -5,
-      "satShift": -5,
-      "litShift": -8,
-      "params": {
-        "y": 0.15,
-        "spread": 8
-      }
+      "t": 600, "pattern": "waveform_reactive", "speed": 1.2, "attraction": 0.015, "wander": 0.0004,
+      "damping": 0.91, "brightness": 0.7, "size": 1.0,
+      "glowIntensity": 0.8, "glowHue": 42, "haze": 0.1,
+      "transition": 20, "params": { "frequency": 2.5, "amplitude": 110, "layers": 3 }
     },
     {
-      "t": 650,
-      "pattern": "fragment",
-      "speed": 2,
-      "attraction": 0.02,
-      "wander": 0.002,
-      "damping": 0.93,
-      "brightness": 0.6,
-      "size": 0.8,
-      "transition": 30,
-      "hueShift": 40,
-      "satShift": -5,
-      "litShift": -5,
-      "params": {
-        "groups": 10,
-        "orbitSpeed": 0.1,
-        "spread": 12
-      }
+      "t": 660, "pattern": "filament", "speed": 0.7, "attraction": 0.008, "wander": 0.001,
+      "damping": 0.93, "brightness": 0.55, "size": 0.85,
+      "glowIntensity": 0.55, "glowHue": 38, "haze": 0.25,
+      "transition": 30, "params": { "anchors": 5, "thickness": 6 }
     },
     {
-      "t": 760,
-      "pattern": "breathe",
-      "speed": 1.5,
-      "attraction": 0.02,
-      "wander": 0.001,
-      "damping": 0.93,
-      "brightness": 0.5,
-      "size": 0.7,
-      "transition": 40,
-      "hueShift": 30,
-      "satShift": -8,
-      "litShift": -8,
-      "params": {
-        "rate": 0.25,
-        "min": 0.5,
-        "max": 1
-      }
+      "t": 720, "pattern": "interference", "speed": 0.8, "attraction": 0.01, "wander": 0.001,
+      "damping": 0.93, "brightness": 0.6, "size": 0.9,
+      "glowIntensity": 0.65, "glowHue": 45, "haze": 0.2,
+      "transition": 30, "params": { "freq1": 2.5, "freq2": 3.3, "amplitude": 70 }
     },
     {
-      "t": 850,
-      "pattern": "filament",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.001,
-      "damping": 0.9,
-      "brightness": 0.75,
-      "size": 0.9,
-      "transition": 30,
-      "hueShift": 10,
-      "satShift": 0,
-      "litShift": 0,
-      "params": {
-        "anchors": 7,
-        "thickness": 5
-      }
+      "t": 780, "pattern": "fragment", "speed": 0.5, "attraction": 0.005, "wander": 0.002,
+      "damping": 0.95, "brightness": 0.45, "size": 0.75,
+      "glowIntensity": 0.4, "glowHue": 30, "haze": 0.45,
+      "transition": 30, "params": { "groups": 5, "orbitSpeed": 0.2, "spread": 12 }
     },
     {
-      "t": 940,
-      "pattern": "spiral",
-      "speed": 3,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.88,
-      "brightness": 0.9,
-      "size": 1,
-      "transition": 30,
-      "hueShift": 15,
-      "satShift": 5,
-      "litShift": 3,
-      "params": {
-        "arms": 5,
-        "tightness": 0.5
-      }
+      "t": 840, "pattern": "drift", "speed": 0.4, "attraction": 0.004, "wander": 0.003,
+      "damping": 0.96, "brightness": 0.4, "haze": 0.5,
+      "glowIntensity": 0.35, "glowHue": 28,
+      "transition": 35, "params": { "speed": 0.1, "angle": 0.15, "spread": 35 }
     },
     {
-      "t": 1000,
-      "pattern": "waveform_reactive",
-      "speed": 4.5,
-      "attraction": 0.06,
-      "wander": 0.001,
-      "damping": 0.84,
-      "brightness": 1.2,
-      "size": 1.2,
-      "transition": 3,
-      "hueShift": -35,
-      "satShift": 12,
-      "litShift": 8,
-      "params": {
-        "frequency": 2,
-        "amplitude": 200,
-        "layers": 3
-      }
+      "t": 900, "pattern": "breathe", "speed": 0.6, "attraction": 0.007, "wander": 0.001,
+      "damping": 0.94, "brightness": 0.55, "size": 0.85,
+      "glowIntensity": 0.55, "glowHue": 38, "haze": 0.3,
+      "transition": 35, "params": { "rate": 0.2, "min": 0.7, "max": 1.2 }
     },
     {
-      "t": 1060,
-      "pattern": "grid_reactive",
-      "speed": 4,
-      "attraction": 0.05,
-      "wander": 0.001,
-      "damping": 0.85,
-      "brightness": 1.2,
-      "size": 1.1,
-      "transition": 20,
-      "hueShift": -25,
-      "satShift": 10,
-      "litShift": 8,
-      "params": {
-        "cols": 22,
-        "rows": 14,
-        "amplitude": 220
-      }
+      "t": 960, "pattern": "fibonacci", "speed": 0.5, "attraction": 0.006, "wander": 0.0015,
+      "damping": 0.95, "brightness": 0.5, "size": 0.8,
+      "glowIntensity": 0.45, "glowHue": 35, "haze": 0.35,
+      "transition": 30
     },
     {
-      "t": 1140,
-      "pattern": "interference",
-      "speed": 4,
-      "attraction": 0.04,
-      "wander": 0.001,
-      "damping": 0.86,
-      "brightness": 1.1,
-      "size": 1.1,
-      "transition": 30,
-      "hueShift": -15,
-      "satShift": 8,
-      "litShift": 5,
-      "params": {
-        "freq1": 4,
-        "freq2": 5.3,
-        "angle": 0.6,
-        "amplitude": 120
-      }
+      "t": 1020, "pattern": "grid_reactive", "speed": 0.6, "attraction": 0.007, "wander": 0.001,
+      "damping": 0.94, "brightness": 0.5, "size": 0.8,
+      "connectionDist": 50, "connectionAlpha": 0.025,
+      "glowIntensity": 0.5, "glowHue": 38, "haze": 0.2,
+      "transition": 30, "params": { "cols": 16, "rows": 10, "amplitude": 30, "sphereRadius": 1.5 }
     },
     {
-      "t": 1210,
-      "pattern": "dissolve",
-      "speed": 2.5,
-      "attraction": 0.025,
-      "wander": 0.003,
-      "damping": 0.92,
-      "brightness": 0.8,
-      "size": 0.9,
-      "transition": 30,
-      "hueShift": 50,
-      "satShift": -5,
-      "litShift": -5,
-      "params": {
-        "rate": 0.35,
-        "base": "ring"
-      }
+      "t": 1080, "pattern": "waveform_reactive", "speed": 1.0, "attraction": 0.012, "wander": 0.0005,
+      "damping": 0.92, "brightness": 0.7, "size": 1.0,
+      "connectionDist": 0, "connectionAlpha": 0,
+      "glowIntensity": 0.75, "glowHue": 42, "haze": 0.1,
+      "transition": 25, "params": { "frequency": 2, "amplitude": 100, "layers": 3 }
     },
     {
-      "t": 1300,
-      "pattern": "drift",
-      "speed": 1.5,
-      "attraction": 0.015,
-      "wander": 0.002,
-      "damping": 0.94,
-      "brightness": 0.55,
-      "size": 0.8,
-      "transition": 35,
-      "hueShift": 5,
-      "satShift": -5,
-      "litShift": -5,
-      "params": {
-        "speed": 0.2,
-        "angle": 0.5,
-        "spread": 0.15
-      }
+      "t": 1140, "pattern": "spiral", "speed": 0.7, "attraction": 0.008, "wander": 0.001,
+      "damping": 0.94, "brightness": 0.6, "size": 0.9,
+      "glowIntensity": 0.6, "glowHue": 40, "haze": 0.2,
+      "transition": 30, "params": { "arms": 3, "tightness": 0.5 }
     },
     {
-      "t": 1360,
-      "pattern": "fibonacci",
-      "speed": 3,
-      "attraction": 0.035,
-      "wander": 0.001,
-      "damping": 0.9,
-      "brightness": 0.85,
-      "size": 1,
-      "transition": 25,
-      "hueShift": 10,
-      "satShift": 3,
-      "litShift": 0
+      "t": 1200, "pattern": "dissolve", "speed": 0.4, "attraction": 0.003, "wander": 0.003,
+      "damping": 0.96, "brightness": 0.35, "size": 0.7,
+      "glowIntensity": 0.3, "glowHue": 22, "haze": 0.6,
+      "transition": 35, "params": { "rate": 0.35, "base": "concentric" }
     },
     {
-      "t": 1440,
-      "pattern": "lattice",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.001,
-      "damping": 0.9,
-      "brightness": 0.8,
-      "size": 0.9,
-      "transition": 30,
-      "hueShift": 5,
-      "satShift": 0,
-      "litShift": 0,
-      "connectionDist": 50,
-      "connectionAlpha": 0.03,
-      "params": {
-        "spacing": 60
-      }
+      "t": 1260, "pattern": "waveform_reactive", "speed": 1.3, "attraction": 0.018, "wander": 0.0003,
+      "damping": 0.9, "brightness": 0.8, "size": 1.1,
+      "glowIntensity": 0.9, "glowHue": 45, "haze": 0.05,
+      "transition": 20, "params": { "frequency": 2, "amplitude": 120, "layers": 4 }
     },
     {
-      "t": 1530,
-      "pattern": "breathe",
-      "speed": 2,
-      "attraction": 0.025,
-      "wander": 0.001,
-      "damping": 0.92,
-      "brightness": 0.75,
-      "size": 0.9,
-      "transition": 35,
-      "hueShift": -10,
-      "satShift": -3,
-      "litShift": -3,
-      "params": {
-        "rate": 0.35,
-        "min": 0.5,
-        "max": 1.15
-      }
+      "t": 1320, "pattern": "breathe", "speed": 0.5, "attraction": 0.005, "wander": 0.002,
+      "damping": 0.96, "brightness": 0.4, "size": 0.7,
+      "glowIntensity": 0.35, "glowHue": 35, "haze": 0.45,
+      "transition": 35, "params": { "rate": 0.15, "min": 0.8, "max": 1.1 }
     },
     {
-      "t": 1620,
-      "pattern": "filament",
-      "speed": 2.5,
-      "attraction": 0.03,
-      "wander": 0.001,
-      "damping": 0.9,
-      "brightness": 0.8,
-      "size": 0.9,
-      "transition": 30,
-      "hueShift": 5,
-      "satShift": 0,
-      "litShift": 0,
-      "params": {
-        "anchors": 5,
-        "thickness": 5
-      }
+      "t": 1400, "pattern": "filament", "speed": 0.5, "attraction": 0.006, "wander": 0.001,
+      "damping": 0.95, "brightness": 0.45, "size": 0.8,
+      "glowIntensity": 0.4, "glowHue": 32, "haze": 0.35,
+      "transition": 35, "params": { "anchors": 3, "thickness": 5 }
     },
     {
-      "t": 1700,
-      "pattern": "horizon",
-      "speed": 1.5,
-      "attraction": 0.015,
-      "wander": 0.002,
-      "damping": 0.94,
-      "brightness": 0.5,
-      "size": 0.7,
-      "transition": 40,
-      "hueShift": 0,
-      "satShift": -8,
-      "litShift": -10,
-      "params": {
-        "y": 0.13,
-        "spread": 6
-      }
+      "t": 1470, "pattern": "drift", "speed": 0.4, "attraction": 0.004, "wander": 0.002,
+      "damping": 0.96, "brightness": 0.4, "haze": 0.45,
+      "glowIntensity": 0.35, "glowHue": 30,
+      "transition": 35, "params": { "speed": 0.1, "angle": -0.05, "spread": 25 }
     },
     {
-      "t": 1770,
-      "pattern": "scatter",
-      "speed": 1,
-      "attraction": 0.01,
-      "wander": 0.003,
-      "damping": 0.95,
-      "brightness": 0.3,
-      "size": 0.5,
-      "transition": 30,
-      "hueShift": 0,
-      "satShift": -12,
-      "litShift": -15
+      "t": 1530, "pattern": "waveform_reactive", "speed": 1.0, "attraction": 0.012, "wander": 0.0005,
+      "damping": 0.92, "brightness": 0.65, "size": 0.95,
+      "glowIntensity": 0.7, "glowHue": 40, "haze": 0.15,
+      "transition": 25, "params": { "frequency": 2, "amplitude": 90, "layers": 3 }
     },
     {
-      "t": 1798,
-      "pattern": "converge",
-      "speed": 6,
-      "attraction": 0.08,
-      "damping": 0.82,
-      "brightness": 0.2,
-      "size": 0.3,
-      "transition": 3,
-      "hueShift": 0,
-      "satShift": -15,
-      "litShift": -15,
-      "params": {
-        "x": 0.5,
-        "y": 0.5,
-        "radius": 2
-      }
+      "t": 1590, "pattern": "interference", "speed": 0.6, "attraction": 0.007, "wander": 0.001,
+      "damping": 0.94, "brightness": 0.5, "size": 0.85,
+      "glowIntensity": 0.5, "glowHue": 42, "haze": 0.3,
+      "transition": 30, "params": { "freq1": 2, "freq2": 2.7, "amplitude": 60 }
+    },
+    {
+      "t": 1650, "pattern": "breathe", "speed": 0.4, "attraction": 0.005, "wander": 0.0015,
+      "damping": 0.96, "brightness": 0.45, "size": 0.75,
+      "glowIntensity": 0.4, "glowHue": 35, "haze": 0.4,
+      "transition": 30, "params": { "rate": 0.15, "min": 0.8, "max": 1.1 }
+    },
+    {
+      "t": 1710, "pattern": "filament", "speed": 0.3, "attraction": 0.004, "wander": 0.002,
+      "damping": 0.96, "brightness": 0.3, "size": 0.6,
+      "glowIntensity": 0.25, "glowHue": 30, "haze": 0.55,
+      "transition": 30, "params": { "anchors": 2, "thickness": 4 }
+    },
+    {
+      "t": 1760, "pattern": "scatter", "speed": 0.2, "attraction": 0.002, "wander": 0.004,
+      "damping": 0.97, "brightness": 0.15, "size": 0.4,
+      "glowIntensity": 0.1, "glowHue": 38, "haze": 0.75,
+      "transition": 25
     }
   ]
 }
