@@ -1804,8 +1804,78 @@
     // Expose the audio element for atmosphere to read time from
     window._fataAudio = audio;
 
+    // === VOLUME DATA FOR REACTIVE PATTERNS ===
+    var volMap = {
+        'https://media.fataorgana.fm/episodes/Teaser-Intro.mp3': '/data/vol_intro.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2': '/data/vol_ep01.json',
+        'https://media.fataorgana.fm/episodes/E1%20V3.mp3': '/data/vol_ep01.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2': '/data/vol_ep01_score.json',
+        'https://media.fataorgana.fm/episodes/Attrition%20Final.mp3': '/data/vol_ep01_score.json'
+    };
+    var volData = null;
+    var volFps = 20;
+    var smoothRms = 0;
+    var smoothLow = 0;
+
+    function loadVolData(trackUrl) {
+        var path = volMap[trackUrl] || volMap[trackUrl.split('?')[0]];
+        if (!path) { volData = null; return; }
+        fetch(path).then(function(r) { return r.json(); }).then(function(data) {
+            volData = data.v;
+            volFps = data.fps || 20;
+        }).catch(function() { volData = null; });
+    }
+
+    // Load volume data when track changes
+    var origTrackChange = document.getElementById('track-select').onchange;
+    document.getElementById('track-select').addEventListener('change', function() {
+        loadVolData(this.value);
+    });
+    // Load for initial track
+    loadVolData(document.getElementById('track-select').value);
+
+    // Initialize vuSignal
+    window.vuSignal = {
+        rms: 0, low: 0, high: 0, peak: 0,
+        isPlaying: false, hasStarted: false,
+        smoothRms: 0, smoothLow: 0
+    };
+
+    function updateVuSignal() {
+        if (!isPlaying || !volData || !audio.duration) {
+            window.vuSignal.isPlaying = false;
+            window.vuSignal.rms = 0;
+            window.vuSignal.smoothRms *= 0.95;
+            window.vuSignal.smoothLow *= 0.95;
+            return;
+        }
+
+        var idx = Math.floor(audio.currentTime * volFps);
+        if (idx < 0) idx = 0;
+        if (idx >= volData.length) idx = volData.length - 1;
+        var vol = (volData[idx] || 0) / 255;
+
+        // Simulate low/high from volume with some variation
+        var low = vol * (0.6 + Math.sin(audio.currentTime * 1.2) * 0.15);
+        var high = vol * (0.3 + Math.sin(audio.currentTime * 7.8) * 0.1);
+
+        smoothRms += (vol - smoothRms) * 0.08;
+        smoothLow += (low - smoothLow) * 0.05;
+
+        window.vuSignal.rms = vol;
+        window.vuSignal.low = low;
+        window.vuSignal.high = high;
+        window.vuSignal.peak = Math.max(vol, (window.vuSignal.peak || 0) * 0.98);
+        window.vuSignal.isPlaying = true;
+        window.vuSignal.hasStarted = true;
+        window.vuSignal.smoothRms = smoothRms;
+        window.vuSignal.smoothLow = smoothLow;
+    }
+
     // Transport display update loop
     function updateTransport() {
+        updateVuSignal();
+
         if (audio.duration > 0) {
             var pct = audio.currentTime / audio.duration;
             scrubProgress.style.width = (pct * 100) + '%';
