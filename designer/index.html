@@ -48,10 +48,10 @@
 
     /* === CONTROL PANEL — right side === */
     #controls {
-        position: fixed; top: 36px; right: 0; bottom: 0; width: 260px;
+        position: fixed; top: 36px; right: 0; bottom: 80px; width: 260px;
         background: rgba(8, 8, 10, 0.92); backdrop-filter: blur(12px);
         border-left: 1px solid rgba(196, 163, 90, 0.06);
-        z-index: 90; overflow-y: auto; padding: 12px 14px 80px;
+        z-index: 90; overflow-y: auto; padding: 12px 14px 16px;
         scrollbar-width: thin; scrollbar-color: rgba(196,163,90,0.1) transparent;
     }
     #controls::-webkit-scrollbar { width: 3px; }
@@ -232,7 +232,6 @@
             <option value="https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2">EP 01 — Calibration (30:08)</option>
             <option value="https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2">EP 01 Score — Attrition (7:54)</option>
         </select>
-        <button class="transport-btn" id="btn-play" title="Play or pause the audio" style="width:100%; margin-top:4px;">Play</button>
 
         <div class="ctrl-label" style="margin-top:8px;">Pattern</div>
         <select class="ctrl-select" id="sel-pattern">
@@ -294,7 +293,10 @@
         <div class="ctrl-label">Transition</div>
         <div class="ctrl-row" title="Seconds to ease into this cue from the previous state. Max 3 minutes."><label>Duration</label><input type="range" id="sl-transition" min="0" max="180" step="0.5" value="3"><span class="ctrl-val" id="v-transition">3</span></div>
 
-        <div class="ctrl-label" style="margin-top:12px;">Actions</div>
+        <div class="ctrl-label" style="margin-top:12px;">Playback</div>
+        <button class="transport-btn" id="btn-play" title="Play or pause the audio (spacebar)" style="width:100%;">▶ Play</button>
+
+        <div class="ctrl-label" style="margin-top:8px;">Actions</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
             <button class="transport-btn commit" id="btn-commit" style="flex:1; min-width:100px;" title="Create a new cue at the current playhead position, or update the selected cue">● New Cue</button>
         </div>
@@ -614,15 +616,26 @@
 
     document.getElementById('track-select').addEventListener('change', function() {
         audio.src = this.value; audio.load(); isPlaying = false;
-        document.getElementById('btn-play').textContent = 'Play';
+        document.getElementById('btn-play').textContent = '▶ Play';
         resetPreview();
         pushStateToAtmosphere();
     });
 
-    document.getElementById('btn-play').addEventListener('click', function() {
+    function togglePlay() {
+        var playBtn = document.getElementById('btn-play');
         if (!audio.src) { audio.src = document.getElementById('track-select').value; audio.load(); }
-        if (isPlaying) { audio.pause(); isPlaying = false; this.textContent = 'Play'; }
-        else { audio.play(); isPlaying = true; this.textContent = 'Pause'; }
+        if (isPlaying) { audio.pause(); isPlaying = false; playBtn.textContent = '▶ Play'; }
+        else { audio.play(); isPlaying = true; playBtn.textContent = '⏸ Pause'; }
+    }
+
+    document.getElementById('btn-play').addEventListener('click', togglePlay);
+
+    // Spacebar to play/pause
+    document.addEventListener('keydown', function(e) {
+        if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            togglePlay();
+        }
     });
 
     // Scrubber
