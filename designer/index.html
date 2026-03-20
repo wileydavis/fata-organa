@@ -1099,9 +1099,9 @@
             // Target is the accumulated state
             previewToState = cloneObj(previewAccumulated);
 
-            // Transition timing
+            // Transition timing — start from cue's declared time
             var cue = sorted[newIdx];
-            previewTransStart = audioTime;
+            previewTransStart = cue.t;
             var dur = cue.transition || 0;
             if (dur > 0 && newIdx < sorted.length - 1) {
                 var gap = sorted[newIdx + 1].t - cue.t;
@@ -1115,7 +1115,8 @@
                 window.atmosphereAPI.triggerTransition(
                     previewFromState.pattern,
                     previewFromState.params,
-                    dur
+                    dur,
+                    cue.t
                 );
             }
 
