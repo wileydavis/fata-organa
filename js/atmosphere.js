@@ -999,10 +999,29 @@
                 var h = pt.hue + hueShift;
                 var s = Math.max(0, Math.min(100, pt.sat + satShift));
                 var l = Math.max(0, Math.min(100, pt.lit + litShift));
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, drawSize, 0, Math.PI * 2);
                 ctx.fillStyle = 'hsla(' + h + ', ' + s + '%, ' + l + '%, ' + pt.alpha + ')';
-                ctx.fill();
+
+                // Motion blur: elongate in velocity direction
+                var vel = Math.sqrt(pt.vx * pt.vx + pt.vy * pt.vy);
+                var stretch = Math.min(vel * 3, 8); // cap at 8x
+
+                if (stretch > 0.5) {
+                    // Draw elongated ellipse rotated to velocity direction
+                    var angle = Math.atan2(pt.vy, pt.vx);
+                    ctx.save();
+                    ctx.translate(pt.x, pt.y);
+                    ctx.rotate(angle);
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, drawSize + stretch, drawSize, 0, 0, Math.PI * 2);
+                    // Dimmer tail
+                    ctx.fill();
+                    ctx.restore();
+                } else {
+                    // At rest — sharp circle
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, drawSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
