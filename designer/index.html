@@ -1125,6 +1125,13 @@
             }
 
             previewCueIdx = newIdx;
+
+            // Highlight the active cue chip
+            var chips = document.getElementById('cue-list').children;
+            for (var ci = 0; ci < chips.length; ci++) {
+                chips[ci].style.borderColor = ci === newIdx ? 'rgba(196, 163, 90, 0.5)' : '';
+                chips[ci].style.color = ci === newIdx ? 'rgba(196, 163, 90, 1)' : '';
+            }
         }
 
         // Interpolate during transition
