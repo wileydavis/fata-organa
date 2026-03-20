@@ -471,6 +471,7 @@
             var grCols = (params && params.cols) || 16;
             var grRows = (params && params.rows) || Math.ceil(count / grCols);
             var grAmp = (params && params.amplitude) || 150;
+            var grSphereR = (params && params.sphereRadius) || 3;
             var s2 = sig || { smoothRms: 0, low: 0, high: 0, rms: 0, smoothLow: 0, isPlaying: false };
             
             var col = idx % grCols;
@@ -485,34 +486,47 @@
                 return { x: gx, y: baseGy };
             }
             
-            // Voice energy dominates the mid columns
+            // Voice energy = sphere size and movement speed
             var voice2 = Math.max(0, s2.rms - s2.smoothLow * 0.5 - s2.high * 0.3);
             
-            // Map columns: edges = bass/treble, center = voice
-            var bandT = col / (grCols - 1);
-            var bandEnergy;
-            if (bandT < 0.25) {
-                // Bass region
-                bandEnergy = s2.smoothLow * (1 - bandT * 4) + voice2 * (bandT * 4);
-            } else if (bandT < 0.75) {
-                // Voice region — dominant
-                var voiceT = (bandT - 0.25) / 0.5;
-                var voiceWeight = 1 - Math.abs(voiceT - 0.5) * 1.2;
-                bandEnergy = voice2 * (0.8 + voiceWeight * 0.5);
-            } else {
-                // High region
-                var ht = (bandT - 0.75) * 4;
-                bandEnergy = voice2 * (1 - ht) + s2.high * ht;
-            }
+            // Sphere position travels across the grid driven by audio
+            // Main sphere follows a lissajous-like path, speed driven by voice
+            var sphereSpeed = 0.003 + voice2 * 0.008;
+            var sphereX = (Math.sin(time * sphereSpeed * 2.3) * 0.5 + 0.5);
+            var sphereY = (Math.sin(time * sphereSpeed * 1.7 + 1.2) * 0.5 + 0.5);
             
-            // Rows near center get more displacement
-            var rowCenter = (row + 0.5) / grRows;
-            var centerWeight = 1 - Math.abs(rowCenter - 0.5) * 2;
-            var displacement = bandEnergy * grAmp * centerWeight;
+            // Second smaller sphere from bass
+            var sphere2X = (Math.sin(time * 0.004 * 1.5 + 3.0) * 0.5 + 0.5);
+            var sphere2Y = (Math.sin(time * 0.004 * 1.1 + 0.7) * 0.5 + 0.5);
             
-            if (rowCenter < 0.5) displacement = -displacement;
+            // Normalized grid position (0-1)
+            var normCol = col / (grCols - 1);
+            var normRow = row / (grRows - 1);
             
-            return { x: gx, y: clampY(baseGy + displacement) };
+            // Distance from each grid point to the sphere center
+            var dx1 = normCol - sphereX;
+            var dy1 = normRow - sphereY;
+            var dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+            
+            // Sphere influence: gaussian falloff
+            var radius1 = grSphereR * 0.1 * (0.5 + voice2 * 1.5);
+            var push1 = Math.exp(-(dist1 * dist1) / (2 * radius1 * radius1));
+            var displacement1 = push1 * grAmp * (0.3 + voice2 * 1.0);
+            
+            // Second sphere from bass — smaller, subtler
+            var dx2 = normCol - sphere2X;
+            var dy2 = normRow - sphere2Y;
+            var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+            var radius2 = grSphereR * 0.06 * (0.3 + s2.smoothLow * 1.0);
+            var push2 = Math.exp(-(dist2 * dist2) / (2 * radius2 * radius2));
+            var displacement2 = push2 * grAmp * 0.5 * s2.smoothLow;
+            
+            // High frequencies add subtle ripple across the whole grid
+            var ripple = Math.sin(normCol * 20 + time * 0.05) * s2.high * grAmp * 0.08;
+            
+            var totalDisp = -(displacement1 + displacement2 + ripple);
+            
+            return { x: gx, y: clampY(baseGy + totalDisp) };
         }
 
         case 'drift': {
