@@ -3,52 +3,198 @@
   "duration": 211,
   "cues": [
     {
-      "t": 0, "pattern": "scatter", "speed": 1, "attraction": 0.01, "wander": 0.004, "damping": 0.95,
-      "brightness": 0.3, "size": 0.5, "transition": 0, "hueShift": 0, "satShift": -10, "litShift": -10
+      "t": 0,
+      "pattern": "scatter",
+      "speed": 1,
+      "attraction": 0.01,
+      "wander": 0.004,
+      "damping": 0.95,
+      "brightness": 0.3,
+      "size": 0.5,
+      "transition": 0,
+      "hueShift": 0,
+      "satShift": -10,
+      "litShift": -10,
+      "rotation": 0.0003,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "glow": 1,
+      "glowIntensity": 0.5,
+      "glowHue": 38,
+      "params": {}
     },
     {
-      "t": 3, "pattern": "filament", "speed": 1.5, "attraction": 0.02, "wander": 0.002, "damping": 0.93,
-      "brightness": 0.5, "size": 0.7, "transition": 8, "hueShift": 0, "satShift": -5, "litShift": -5,
-      "params": { "anchors": 4, "thickness": 3 }
+      "t": 3,
+      "pattern": "filament",
+      "speed": 1.5,
+      "attraction": 0.02,
+      "wander": 0.002,
+      "damping": 0.93,
+      "brightness": 0.5,
+      "size": 0.7,
+      "transition": 8,
+      "hueShift": 0,
+      "satShift": -5,
+      "litShift": -5,
+      "params": {
+        "anchors": 4,
+        "thickness": 3
+      },
+      "rotation": 0.0003,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "glow": 1,
+      "glowIntensity": 1.5,
+      "glowHue": 147
     },
     {
-      "t": 18, "pattern": "dissolve", "speed": 2, "attraction": 0.025, "wander": 0.003, "damping": 0.92,
-      "brightness": 0.7, "size": 0.9, "transition": 12, "hueShift": -20, "satShift": 5, "litShift": 0,
-      "params": { "rate": 0.25, "base": "lattice" }
+      "t": 18,
+      "pattern": "dissolve",
+      "speed": 2,
+      "attraction": 0.025,
+      "wander": 0.003,
+      "damping": 0.92,
+      "brightness": 0.7,
+      "size": 0.9,
+      "transition": 12,
+      "hueShift": -20,
+      "satShift": 5,
+      "litShift": 0,
+      "params": {
+        "rate": 0.25,
+        "base": "lattice"
+      },
+      "rotation": 0.0003,
+      "connectionDist": 0,
+      "connectionAlpha": 0,
+      "glow": 1,
+      "glowIntensity": 2,
+      "glowHue": -60
     },
     {
-      "t": 40, "pattern": "fragment", "speed": 2, "attraction": 0.02, "wander": 0.002, "damping": 0.93,
-      "brightness": 0.7, "size": 0.9, "transition": 15, "hueShift": -10, "satShift": 0, "litShift": -5,
-      "params": { "groups": 8, "orbitSpeed": 0.15, "spread": 18 }
+      "t": 40,
+      "pattern": "fragment",
+      "speed": 2,
+      "attraction": 0.02,
+      "wander": 0.002,
+      "damping": 0.93,
+      "brightness": 0.7,
+      "size": 0.9,
+      "transition": 15,
+      "hueShift": -10,
+      "satShift": 0,
+      "litShift": -5,
+      "params": {
+        "groups": 8,
+        "orbitSpeed": 0.15,
+        "spread": 18
+      }
     },
     {
-      "t": 65, "pattern": "filament", "speed": 2.5, "attraction": 0.03, "wander": 0.001, "damping": 0.9,
-      "brightness": 0.8, "size": 0.9, "transition": 12, "hueShift": 5, "satShift": 0, "litShift": 0,
-      "params": { "anchors": 6, "thickness": 5 }
+      "t": 65,
+      "pattern": "filament",
+      "speed": 2.5,
+      "attraction": 0.03,
+      "wander": 0.001,
+      "damping": 0.9,
+      "brightness": 0.8,
+      "size": 0.9,
+      "transition": 12,
+      "hueShift": 5,
+      "satShift": 0,
+      "litShift": 0,
+      "params": {
+        "anchors": 6,
+        "thickness": 5
+      }
     },
     {
-      "t": 95, "pattern": "concentric", "speed": 2, "attraction": 0.025, "wander": 0.001, "damping": 0.92,
-      "brightness": 0.8, "size": 1, "transition": 15, "hueShift": 0, "satShift": 0, "litShift": 0,
-      "params": { "rings": 5 }
+      "t": 95,
+      "pattern": "concentric",
+      "speed": 2,
+      "attraction": 0.025,
+      "wander": 0.001,
+      "damping": 0.92,
+      "brightness": 0.8,
+      "size": 1,
+      "transition": 15,
+      "hueShift": 0,
+      "satShift": 0,
+      "litShift": 0,
+      "params": {
+        "rings": 5
+      }
     },
     {
-      "t": 125, "pattern": "interference", "speed": 2.5, "attraction": 0.03, "wander": 0.001, "damping": 0.9,
-      "brightness": 0.9, "size": 1, "transition": 15, "hueShift": 15, "satShift": 5, "litShift": 3,
-      "params": { "freq1": 3, "freq2": 3.7, "angle": 0.4, "amplitude": 80 }
+      "t": 125,
+      "pattern": "interference",
+      "speed": 2.5,
+      "attraction": 0.03,
+      "wander": 0.001,
+      "damping": 0.9,
+      "brightness": 0.9,
+      "size": 1,
+      "transition": 15,
+      "hueShift": 15,
+      "satShift": 5,
+      "litShift": 3,
+      "params": {
+        "freq1": 3,
+        "freq2": 3.7,
+        "angle": 0.4,
+        "amplitude": 80
+      }
     },
     {
-      "t": 160, "pattern": "breathe", "speed": 2, "attraction": 0.025, "wander": 0.001, "damping": 0.92,
-      "brightness": 0.85, "size": 1, "transition": 20, "hueShift": 10, "satShift": 0, "litShift": 0,
-      "params": { "rate": 0.4, "min": 0.6, "max": 1.2 }
+      "t": 160,
+      "pattern": "breathe",
+      "speed": 2,
+      "attraction": 0.025,
+      "wander": 0.001,
+      "damping": 0.92,
+      "brightness": 0.85,
+      "size": 1,
+      "transition": 20,
+      "hueShift": 10,
+      "satShift": 0,
+      "litShift": 0,
+      "params": {
+        "rate": 0.4,
+        "min": 0.6,
+        "max": 1.2
+      }
     },
     {
-      "t": 190, "pattern": "scatter", "speed": 1.5, "attraction": 0.015, "wander": 0.003, "damping": 0.94,
-      "brightness": 0.5, "size": 0.7, "transition": 15, "hueShift": 0, "satShift": -10, "litShift": -10
+      "t": 190,
+      "pattern": "scatter",
+      "speed": 1.5,
+      "attraction": 0.015,
+      "wander": 0.003,
+      "damping": 0.94,
+      "brightness": 0.5,
+      "size": 0.7,
+      "transition": 15,
+      "hueShift": 0,
+      "satShift": -10,
+      "litShift": -10
     },
     {
-      "t": 206, "pattern": "converge", "speed": 6, "attraction": 0.08, "damping": 0.82,
-      "brightness": 0.3, "size": 0.4, "transition": 3, "hueShift": 0, "satShift": -15, "litShift": -15,
-      "params": { "x": 0.5, "y": 0.5, "radius": 3 }
+      "t": 206,
+      "pattern": "converge",
+      "speed": 6,
+      "attraction": 0.08,
+      "damping": 0.82,
+      "brightness": 0.3,
+      "size": 0.4,
+      "transition": 3,
+      "hueShift": 0,
+      "satShift": -15,
+      "litShift": -15,
+      "params": {
+        "x": 0.5,
+        "y": 0.5,
+        "radius": 3
+      }
     }
   ]
 }
