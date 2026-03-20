@@ -752,7 +752,11 @@
 
                 // Drag handle on right edge of tail
                 var tailHandle = document.createElement('div');
-                tailHandle.style.cssText = 'position:absolute;top:4px;width:8px;height:16px;cursor:ew-resize;pointer-events:auto;background:rgba(90,180,90,0.3);border-radius:1px;';
+                tailHandle.style.cssText = 'position:absolute;top:4px;width:8px;height:16px;cursor:ew-resize;pointer-events:auto;background:transparent;';
+                // Thin red line centered in grab area
+                var tailLine = document.createElement('div');
+                tailLine.style.cssText = 'position:absolute;left:3px;top:0;width:1px;height:100%;background:rgba(180,60,50,0.5);pointer-events:none;';
+                tailHandle.appendChild(tailLine);
                 tailHandle.style.left = endPct + '%';
                 tailHandle.style.transform = 'translateX(-4px)';
                 tailHandle.style.display = transDur > 0 ? '' : 'none';
