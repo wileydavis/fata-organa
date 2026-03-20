@@ -62,6 +62,9 @@
         color: rgba(196, 163, 90, 0.3); margin: 8px 0 4px; border-bottom: 1px solid rgba(196,163,90,0.06); padding-bottom: 3px;
     }
     .ctrl-label:first-child { margin-top: 0; }
+    .ctrl-separator {
+        border-top: 1px solid rgba(196, 163, 90, 0.12); margin: 10px 0 2px; padding: 0;
+    }
 
     .ctrl-select {
         width: 100%; background: rgba(196, 163, 90, 0.04);
@@ -233,7 +236,8 @@
             <option value="https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2">EP 01 Score — Attrition (7:54)</option>
         </select>
 
-        <div class="ctrl-label" style="margin-top:8px;">Pattern</div>
+        <div class="ctrl-separator"></div>
+        <div class="ctrl-label">Pattern</div>
         <select class="ctrl-select" id="sel-pattern">
             <option value="scatter">scatter</option>
             <option value="grid">grid</option>
@@ -293,10 +297,8 @@
         <div class="ctrl-label">Transition</div>
         <div class="ctrl-row" title="Seconds to ease into this cue from the previous state. Max 3 minutes."><label>Duration</label><input type="range" id="sl-transition" min="0" max="180" step="0.5" value="3"><span class="ctrl-val" id="v-transition">3</span></div>
 
-        <div class="ctrl-label" style="margin-top:12px;">Playback</div>
-        <button class="transport-btn" id="btn-play" title="Play or pause the audio (spacebar)" style="width:100%;">▶ Play</button>
-
-        <div class="ctrl-label" style="margin-top:8px;">Actions</div>
+        <div class="ctrl-separator"></div>
+        <div class="ctrl-label">Actions</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
             <button class="transport-btn commit" id="btn-commit" style="flex:1; min-width:100px;" title="Create a new cue at the current playhead position, or update the selected cue">● New Cue</button>
         </div>
@@ -315,6 +317,9 @@
         <div style="display:flex; gap:4px; margin-top:4px;">
             <button class="transport-btn danger" id="btn-clear" style="flex:1;" title="Delete all cues from the timeline">Clear All</button>
         </div>
+
+        <div class="ctrl-separator"></div>
+        <button class="transport-btn commit" id="btn-play" title="Play or pause the audio (spacebar)" style="width:100%; padding:8px 10px; font-size:11px;">▶ Play</button>
     </div>
 
     <!-- BOTTOM BAR — timeline only -->
@@ -1022,24 +1027,43 @@
     }
 
     // === PREVIEW ===
-    // When audio plays and cues exist, automatically preview the sequence.
-    // When audio stops or user adjusts sliders, return to manual override.
     var previewCueIdx = -1;
-    var previewFromState = {};
+    var previewFromState = null;
     var previewToState = null;
     var previewTransStart = 0;
     var previewTransDur = 0;
     var previewBlend = 1;
+    var previewAccumulated = null;
+
+    var DEFAULT_PREVIEW_STATE = {
+        pattern: 'scatter', speed: 1, attraction: 0.006, wander: 0.006,
+        damping: 0.95, rotation: 0.0002, brightness: 1, size: 1,
+        connectionDist: 0, connectionAlpha: 0,
+        hueShift: 0, satShift: 0, litShift: 0, params: {}
+    };
+
+    var PREVIEW_FIELDS = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
 
     function cloneObj(o) {
         return JSON.parse(JSON.stringify(o));
     }
 
-    function updatePreview(audioTime) {
-        if (cues.length === 0) {
-            // No cues — keep manual override active
-            return;
+    function mergePreviewState(base, cue) {
+        var out = cloneObj(base);
+        for (var k in cue) {
+            if (k === 't' || k === 'transition' || k.charAt(0) === '_') continue;
+            if (k === 'params') {
+                if (!out.params) out.params = {};
+                for (var pk in cue.params) out.params[pk] = cue.params[pk];
+            } else {
+                out[k] = cue[k];
+            }
         }
+        return out;
+    }
+
+    function updatePreview(audioTime) {
+        if (cues.length === 0) return;
 
         var sorted = cues.slice().sort(function(a, b) { return a.t - b.t; });
         var newIdx = -1;
@@ -1048,29 +1072,35 @@
             else break;
         }
 
-        if (newIdx < 0) {
-            // Before first cue — show default state
-            return;
-        }
+        if (newIdx < 0) return;
 
         if (newIdx !== previewCueIdx) {
-            var cue = sorted[newIdx];
+            // Rebuild accumulated state up to this cue
+            if (newIdx < previewCueIdx || !previewAccumulated) {
+                // Backward seek or first time — rebuild from scratch
+                previewAccumulated = cloneObj(DEFAULT_PREVIEW_STATE);
+                for (var ri = 0; ri <= newIdx; ri++) {
+                    previewAccumulated = mergePreviewState(previewAccumulated, sorted[ri]);
+                }
+            } else {
+                // Forward — merge skipped cues in order
+                for (var fi = previewCueIdx + 1; fi <= newIdx; fi++) {
+                    previewAccumulated = mergePreviewState(previewAccumulated, sorted[fi]);
+                }
+            }
 
-            // Capture current state as "from"
-            var currentOverride = window.atmosphereOverride || {};
-            var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
+            // Capture current visual state as "from"
+            var currentOverride = window.atmosphereOverride || cloneObj(DEFAULT_PREVIEW_STATE);
             previewFromState = {};
-            fields.forEach(function(k) { previewFromState[k] = currentOverride[k] || 0; });
+            PREVIEW_FIELDS.forEach(function(k) { previewFromState[k] = currentOverride[k] !== undefined ? currentOverride[k] : DEFAULT_PREVIEW_STATE[k]; });
             previewFromState.pattern = currentOverride.pattern || 'scatter';
             previewFromState.params = currentOverride.params ? cloneObj(currentOverride.params) : {};
 
-            // Build target
-            previewToState = {};
-            fields.forEach(function(k) { previewToState[k] = (cue[k] !== undefined) ? cue[k] : (previewFromState[k] || 0); });
-            previewToState.pattern = cue.pattern;
-            previewToState.params = cue.params ? cloneObj(cue.params) : {};
+            // Target is the accumulated state
+            previewToState = cloneObj(previewAccumulated);
 
-            // Transition timing — clamp to gap before next cue
+            // Transition timing
+            var cue = sorted[newIdx];
             previewTransStart = audioTime;
             var dur = cue.transition || 0;
             if (dur > 0 && newIdx < sorted.length - 1) {
@@ -1080,7 +1110,7 @@
             previewTransDur = dur;
             previewBlend = dur > 0 ? 0 : 1;
 
-            // Trigger pattern position transition in atmosphere
+            // Trigger pattern position blending in atmosphere
             if (window.atmosphereAPI) {
                 window.atmosphereAPI.triggerTransition(
                     previewFromState.pattern,
@@ -1103,10 +1133,11 @@
             var t = Math.min(1, elapsed / previewTransDur);
             t = t * t * (3 - 2 * t);
 
-            var fields2 = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
             var interpolated = { pattern: previewToState.pattern, params: previewToState.params };
-            fields2.forEach(function(k) {
-                interpolated[k] = (previewFromState[k] || 0) + ((previewToState[k] || 0) - (previewFromState[k] || 0)) * t;
+            PREVIEW_FIELDS.forEach(function(k) {
+                var from = previewFromState[k] !== undefined ? previewFromState[k] : 0;
+                var to = previewToState[k] !== undefined ? previewToState[k] : 0;
+                interpolated[k] = from + (to - from) * t;
             });
             window.atmosphereOverride = interpolated;
             previewBlend = t;
@@ -1115,10 +1146,10 @@
         }
     }
 
-    // Reset preview index when scrubbing or changing tracks
     function resetPreview() {
         previewCueIdx = -1;
         previewToState = null;
+        previewAccumulated = null;
         previewBlend = 1;
     }
 
