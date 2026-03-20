@@ -472,7 +472,15 @@
             var tri = tris[ti2], u = rand(), v = rand();
             if (u + v > 1) { u = 1-u; v = 1-v; }
             var w = 1-u-v;
-            points.push({ x: tri.v1.x*w+tri.v2.x*u+tri.v3.x*v, y: tri.v1.y*w+tri.v2.y*u+tri.v3.y*v, z: tri.v1.z*w+tri.v2.z*u+tri.v3.z*v });
+            // Compute face normal
+            var eax=tri.v2.x-tri.v1.x,eay=tri.v2.y-tri.v1.y,eaz=tri.v2.z-tri.v1.z;
+            var ebx=tri.v3.x-tri.v1.x,eby=tri.v3.y-tri.v1.y,ebz=tri.v3.z-tri.v1.z;
+            points.push({
+                x: tri.v1.x*w+tri.v2.x*u+tri.v3.x*v,
+                y: tri.v1.y*w+tri.v2.y*u+tri.v3.y*v,
+                z: tri.v1.z*w+tri.v2.z*u+tri.v3.z*v,
+                nx: eay*ebz-eaz*eby, ny: eaz*ebx-eax*ebz, nz: eax*eby-eay*ebx
+            });
         }
         return points;
     }
@@ -484,17 +492,31 @@
     }
 
     function projectSTL(points, bounds, sw, sh, rx, ry, rz, scale, persp, offX, offY) {
-        var cxs=sw/2 + (offX||0)*sw, cys=sh/2 + (offY||0)*sh, fit=Math.min(sw,sh)*0.35*scale/bounds.size;
+        var cxs=sw/2+(offX||0)*sw, cys=sh/2+(offY||0)*sh, fit=Math.min(sw,sh)*0.35*scale/bounds.size;
         var cX=Math.cos(rx),sX=Math.sin(rx),cY=Math.cos(ry),sY=Math.sin(ry),cZ=Math.cos(rz),sZ=Math.sin(rz);
-        var out=[];
+        // First pass: project all, determine facing
+        var all=[], front=[];
         for (var pi=0;pi<points.length;pi++) {
-            var x=points[pi].x-bounds.center.x,y=points[pi].y-bounds.center.y,z=points[pi].z-bounds.center.z;
+            var pt=points[pi];
+            var x=pt.x-bounds.center.x,y=pt.y-bounds.center.y,z=pt.z-bounds.center.z;
             var y1=y*cX-z*sX,z1=y*sX+z*cX;
             var x2=x*cY+z1*sY,z2=-x*sY+z1*cY;
             var x3=x2*cZ-y1*sZ,y3=x2*sZ+y1*cZ;
+            // Rotate normal
+            var ny1=pt.ny*cX-pt.nz*sX,nz1=pt.ny*sX+pt.nz*cX;
+            var nz2=-pt.nx*sY+nz1*cY;
+            var facing=nz2>0;
             x3*=fit;y3*=fit;z2*=fit;
             var ps=persp/(persp+z2);
-            out.push({x:cxs+x3*ps,y:cys-y3*ps});
+            all.push({x:cxs+x3*ps,y:cys-y3*ps,facing:facing});
+            if(facing) front.push(pi);
+        }
+        // Second pass: redistribute back-face points to front-face
+        if(front.length===0) return all;
+        var out=[], fi=0;
+        for(var k=0;k<all.length;k++){
+            if(all[k].facing){out.push({x:all[k].x,y:all[k].y});}
+            else{var d=front[fi%front.length];fi++;out.push({x:all[d].x,y:all[d].y});}
         }
         return out;
     }
