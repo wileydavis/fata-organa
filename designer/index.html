@@ -309,6 +309,7 @@
         <div class="ctrl-row" title="Ambient backlight on/off. 0 = off. 1 = on."><label>Glow</label><input type="range" id="sl-glow" min="0" max="1" step="1" value="1"><span class="ctrl-val" id="v-glow">1</span></div>
         <div class="ctrl-row" title="Glow intensity. Controls how much the audio drives the backlight brightness."><label>Intensity</label><input type="range" id="sl-glowIntensity" min="0" max="2" step="0.05" value="0.5"><span class="ctrl-val" id="v-glowIntensity">0.5</span></div>
         <div class="ctrl-row" title="Glow hue. 38 = amber. -20 = red. 200 = blue. Interpolates smoothly between cues."><label>Glow Hue</label><input type="range" id="sl-glowHue" min="-60" max="240" step="1" value="38"><span class="ctrl-val" id="v-glowHue">38</span></div>
+        <div class="ctrl-row" title="Atmospheric haze. 0 = clear. 1 = deep fog. Creates depth layers — far particles dim and shrink, near particles stay bright. Fog diffuses particle light."><label>Haze</label><input type="range" id="sl-haze" min="0" max="1" step="0.05" value="0"><span class="ctrl-val" id="v-haze">0</span></div>
 
         <div id="params-container"></div>
 
@@ -512,7 +513,7 @@
     var state = {
         pattern: 'scatter', speed: 3, attraction: 0.04, wander: 0.0005, damping: 0.88,
         rotation: 0.0003, brightness: 0.9, size: 1, connectionDist: 0, connectionAlpha: 0,
-        hueShift: 0, satShift: 0, litShift: 0, glow: 1, glowIntensity: 0.5, glowHue: 38, params: {}
+        hueShift: 0, satShift: 0, litShift: 0, glow: 1, glowIntensity: 0.5, glowHue: 38, haze: 0, params: {}
     };
 
 
@@ -580,7 +581,7 @@
     };
 
     // === UI BINDING ===
-    var sliderKeys = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift','glow','glowIntensity','glowHue','transition'];
+    var sliderKeys = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift','glow','glowIntensity','glowHue','haze','transition'];
     sliderKeys.forEach(function(key) {
         var sl = document.getElementById('sl-' + key);
         var val = document.getElementById('v-' + key);
@@ -732,6 +733,7 @@
         if (state.glow !== 1) cue.glow = state.glow;
         if (state.glowIntensity !== 0.5) cue.glowIntensity = state.glowIntensity;
         if (state.glowHue !== 38) cue.glowHue = state.glowHue;
+        if (state.haze > 0) cue.haze = state.haze;
         var defs = paramDefs[state.pattern];
         if (defs && Object.keys(state.params).length > 0) cue.params = JSON.parse(JSON.stringify(state.params));
         // Store STL data with the cue so each cue can have a different model
@@ -914,8 +916,8 @@
     function loadCueIntoUI(cue) {
         state.pattern = cue.pattern; selPattern.value = cue.pattern;
         stlControls.style.display = cue.pattern === 'stl' ? '' : 'none';
-        var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift','glow','glowIntensity','glowHue'];
-        var fieldDefaults = { connectionDist: 0, connectionAlpha: 0, hueShift: 0, satShift: 0, litShift: 0, size: 1, glow: 1, glowIntensity: 0.5, glowHue: 38 };
+        var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift','glow','glowIntensity','glowHue','haze'];
+        var fieldDefaults = { connectionDist: 0, connectionAlpha: 0, hueShift: 0, satShift: 0, litShift: 0, size: 1, glow: 1, glowIntensity: 0.5, glowHue: 38, haze: 0 };
         fields.forEach(function(k) {
             if (cue[k] !== undefined) state[k] = cue[k];
             else if (fieldDefaults[k] !== undefined) state[k] = fieldDefaults[k];
@@ -1146,10 +1148,10 @@
         damping: 0.95, rotation: 0.0002, brightness: 1, size: 1,
         connectionDist: 0, connectionAlpha: 0,
         hueShift: 0, satShift: 0, litShift: 0,
-        glow: 1, glowIntensity: 0.5, glowHue: 38, params: {}
+        glow: 1, glowIntensity: 0.5, glowHue: 38, haze: 0, params: {}
     };
 
-    var PREVIEW_FIELDS = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift','glow','glowIntensity','glowHue'];
+    var PREVIEW_FIELDS = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift','glow','glowIntensity','glowHue','haze'];
 
     function cloneObj(o) {
         return JSON.parse(JSON.stringify(o));
@@ -1899,6 +1901,7 @@
             window.atmosphereOverride.glow = state.glow;
             window.atmosphereOverride.glowIntensity = state.glowIntensity;
             window.atmosphereOverride.glowHue = state.glowHue;
+            window.atmosphereOverride.haze = state.haze;
             window.atmosphereOverride.params = state.params;
         }
 
@@ -1921,6 +1924,7 @@
             c.glow = state.glow;
             c.glowIntensity = state.glowIntensity;
             c.glowHue = state.glowHue;
+            c.haze = state.haze;
             c.transition = parseFloat(document.getElementById('sl-transition').value) || 0;
             c.params = state.params ? JSON.parse(JSON.stringify(state.params)) : {};
         }
@@ -1932,7 +1936,7 @@
         damping: 0.88, rotation: 0.0003, brightness: 0.9, size: 1,
         connectionDist: 0, connectionAlpha: 0,
         hueShift: 0, satShift: 0, litShift: 0,
-        glow: 1, glowIntensity: 0.5, glowHue: 38, params: {}
+        glow: 1, glowIntensity: 0.5, glowHue: 38, haze: 0, params: {}
     };
 
     // Expose the audio element for atmosphere to read time from
