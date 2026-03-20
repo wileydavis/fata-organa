@@ -832,6 +832,14 @@
         // Only run cue system when not overridden (designer controls directly)
         if (!window.atmosphereOverride) {
             updateCues(audioTime);
+        } else {
+            // Advance position blend for pattern transitions triggered by designer
+            if (cueTransitionDur > 0 && positionBlend < 1) {
+                var elapsed = audioTime - cueTransitionStart;
+                var t = Math.min(1, elapsed / cueTransitionDur);
+                t = t * t * (3 - 2 * t);
+                positionBlend = t;
+            }
         }
 
         // Read state — override from designer takes priority
@@ -1095,15 +1103,13 @@
             window.atmosphereOverride = null;
         },
         // Trigger a pattern transition (for designer preview)
-        triggerTransition: function(fromPattern, fromParams, dur) {
+        triggerTransition: function(fromPattern, fromParams, dur, startTime) {
             prevPattern = fromPattern || 'scatter';
             prevParams = fromParams || {};
             positionBlend = dur > 0 ? 0 : 1;
-            // positionBlend will advance via the normal interpolation path
-            // We hack cueTransitionStart and cueTransitionDur for position blending
             var a = window._fataAudio;
             var audioTime = (a && a.currentTime) ? a.currentTime : 0;
-            cueTransitionStart = audioTime;
+            cueTransitionStart = startTime !== undefined ? startTime : audioTime;
             cueTransitionDur = dur;
         },
         // Get current position blend (for designer to track transitions)
