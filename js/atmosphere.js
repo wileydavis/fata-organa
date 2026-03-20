@@ -7,16 +7,20 @@
 (function() {
     'use strict';
 
-    var canvas = document.createElement('canvas');
-    canvas.id = 'atmosphere';
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.pointerEvents = 'none';
-    canvas.style.zIndex = '1';
-    document.body.insertBefore(canvas, document.body.firstChild);
+    // Use existing canvas if present (designer mode), otherwise create one
+    var canvas = document.getElementById('atmosphere');
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'atmosphere';
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '1';
+        document.body.insertBefore(canvas, document.body.firstChild);
+    }
 
     var ctx = canvas.getContext('2d');
     var width = 0;
@@ -27,8 +31,8 @@
     var glitchIntensity = 0;
 
     function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
+        width = canvas.offsetWidth || window.innerWidth;
+        height = canvas.offsetHeight || window.innerHeight;
         canvas.width = width;
         canvas.height = height;
     }
@@ -827,21 +831,22 @@
 
         updateCues(audioTime);
 
-        // Read state
-        var speed = cueState.speed || 1;
-        var pattern = cueState.pattern || 'scatter';
-        var rotation = cueState.rotation || 0.0002;
-        var attraction = cueState.attraction || 0.006;
-        var wander = cueState.wander || 0.006;
-        var damping = cueState.damping || 0.95;
-        var connDist = cueState.connectionDist || 0;
-        var connAlpha = cueState.connectionAlpha || 0;
-        var brightness = cueState.brightness || 1;
-        var sizeMult = cueState.size || 1;
-        var hueShift = cueState.hueShift || 0;
-        var satShift = cueState.satShift || 0;
-        var litShift = cueState.litShift || 0;
-        var params = cueState.params || {};
+        // Read state — override from designer takes priority
+        var activeState = window.atmosphereOverride || cueState;
+        var speed = activeState.speed || 1;
+        var pattern = activeState.pattern || 'scatter';
+        var rotation = activeState.rotation || 0.0002;
+        var attraction = activeState.attraction || 0.006;
+        var wander = activeState.wander || 0.006;
+        var damping = activeState.damping || 0.95;
+        var connDist = activeState.connectionDist || 0;
+        var connAlpha = activeState.connectionAlpha || 0;
+        var brightness = activeState.brightness || 1;
+        var sizeMult = activeState.size || 1;
+        var hueShift = activeState.hueShift || 0;
+        var satShift = activeState.satShift || 0;
+        var litShift = activeState.litShift || 0;
+        var params = activeState.params || {};
 
         // Glitch
         glitchTimer--;
@@ -1075,5 +1080,33 @@
     }
 
     render();
+
+    // Expose API for designer integration
+    window.atmosphereAPI = {
+        // Set override state (designer slider changes)
+        setOverride: function(state) {
+            window.atmosphereOverride = state;
+        },
+        // Clear override (let cue system drive)
+        clearOverride: function() {
+            window.atmosphereOverride = null;
+        },
+        // Trigger a pattern transition (for designer preview)
+        triggerTransition: function(fromPattern, fromParams, dur) {
+            prevPattern = fromPattern || 'scatter';
+            prevParams = fromParams || {};
+            positionBlend = dur > 0 ? 0 : 1;
+            // positionBlend will advance via the normal interpolation path
+            // We hack cueTransitionStart and cueTransitionDur for position blending
+            var a = window._fataAudio;
+            var audioTime = (a && a.currentTime) ? a.currentTime : 0;
+            cueTransitionStart = audioTime;
+            cueTransitionDur = dur;
+        },
+        // Get current position blend (for designer to track transitions)
+        getPositionBlend: function() { return positionBlend; },
+        // Force resize (e.g. after layout change)
+        resize: resize
+    };
 
 })();
