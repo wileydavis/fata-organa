@@ -740,16 +740,68 @@
 
             // Scrubber marker — draggable
             if (audio.duration > 0) {
-                // Transition tail — shows duration of transition
+                // Transition tail — shows duration of transition, right edge is draggable
                 var transDur = cue.transition || 0;
-                if (transDur > 0) {
-                    var tail = document.createElement('div'); tail.className = 'cue-marker-tail';
-                    var startPct = (cue.t / audio.duration) * 100;
-                    var endPct = Math.min(((cue.t + transDur) / audio.duration) * 100, 100);
-                    tail.style.left = startPct + '%';
-                    tail.style.width = (endPct - startPct) + '%';
-                    markers.appendChild(tail);
-                }
+                var tail = document.createElement('div'); tail.className = 'cue-marker-tail';
+                var startPct = (cue.t / audio.duration) * 100;
+                var endPct = transDur > 0 ? Math.min(((cue.t + transDur) / audio.duration) * 100, 100) : startPct;
+                tail.style.left = startPct + '%';
+                tail.style.width = Math.max(0, endPct - startPct) + '%';
+                tail.style.display = transDur > 0 ? '' : 'none';
+                markers.appendChild(tail);
+
+                // Drag handle on right edge of tail
+                var tailHandle = document.createElement('div');
+                tailHandle.style.cssText = 'position:absolute;top:4px;width:8px;height:16px;cursor:ew-resize;pointer-events:auto;background:rgba(90,180,90,0.3);border-radius:1px;';
+                tailHandle.style.left = endPct + '%';
+                tailHandle.style.transform = 'translateX(-4px)';
+                tailHandle.style.display = transDur > 0 ? '' : 'none';
+                markers.appendChild(tailHandle);
+
+                // Tail drag handling
+                (function(tailEl, handleEl, cueIdx, tailStartPct) {
+                    var draggingTail = false;
+                    handleEl.addEventListener('mousedown', function(e) {
+                        e.stopPropagation(); e.preventDefault();
+                        draggingTail = true;
+                    });
+                    window.addEventListener('mousemove', function(e) {
+                        if (!draggingTail) return;
+                        var rect = scrubWrap.getBoundingClientRect();
+                        var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                        var endTime = pct * audio.duration;
+                        var newDur = Math.max(0, Math.round((endTime - cues[cueIdx].t) * 10) / 10);
+                        cues[cueIdx].transition = newDur;
+                        var newEndPct = Math.min(((cues[cueIdx].t + newDur) / audio.duration) * 100, 100);
+                        var curStartPct = (cues[cueIdx].t / audio.duration) * 100;
+                        tailEl.style.width = Math.max(0, newEndPct - curStartPct) + '%';
+                        handleEl.style.left = newEndPct + '%';
+                        // Update transition slider if this cue is selected
+                        if (editingCueIdx === cueIdx) {
+                            document.getElementById('sl-transition').value = newDur;
+                            document.getElementById('v-transition').textContent = newDur;
+                        }
+                    });
+                    window.addEventListener('mouseup', function() {
+                        if (draggingTail) { draggingTail = false; renderCueList(); }
+                    });
+                    // Touch
+                    handleEl.addEventListener('touchstart', function(e) {
+                        e.stopPropagation(); e.preventDefault(); draggingTail = true;
+                    });
+                    window.addEventListener('touchmove', function(e) {
+                        if (!draggingTail) return;
+                        var touch = e.touches[0];
+                        var rect = scrubWrap.getBoundingClientRect();
+                        var pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+                        var endTime = pct * audio.duration;
+                        var newDur = Math.max(0, Math.round((endTime - cues[cueIdx].t) * 10) / 10);
+                        cues[cueIdx].transition = newDur;
+                    });
+                    window.addEventListener('touchend', function() {
+                        if (draggingTail) { draggingTail = false; renderCueList(); }
+                    });
+                })(tail, tailHandle, idx, startPct);
 
                 var marker = document.createElement('div'); marker.className = 'cue-marker';
                 marker.style.left = ((cue.t / audio.duration) * 100) + '%';
@@ -1806,6 +1858,26 @@
             window.atmosphereOverride.satShift = state.satShift;
             window.atmosphereOverride.litShift = state.litShift;
             window.atmosphereOverride.params = state.params;
+        }
+
+        // Auto-update selected cue with current slider values
+        if (editingCueIdx >= 0 && editingCueIdx < cues.length) {
+            var c = cues[editingCueIdx];
+            c.pattern = state.pattern;
+            c.speed = state.speed;
+            c.attraction = state.attraction;
+            c.wander = state.wander;
+            c.damping = state.damping;
+            c.rotation = state.rotation;
+            c.brightness = state.brightness;
+            c.size = state.size;
+            c.connectionDist = state.connectionDist;
+            c.connectionAlpha = state.connectionAlpha;
+            c.hueShift = state.hueShift;
+            c.satShift = state.satShift;
+            c.litShift = state.litShift;
+            c.transition = parseFloat(document.getElementById('sl-transition').value) || 0;
+            c.params = state.params ? JSON.parse(JSON.stringify(state.params)) : {};
         }
     }
 
