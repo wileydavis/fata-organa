@@ -963,6 +963,8 @@
     var previewBlend = 1;
     var previewPrevPattern = 'scatter';
     var previewPrevParams = {};
+    var previewFromState = {};
+    var previewToState = null;
     var previewAccum = null;
 
     function cloneObj(o) {
@@ -984,15 +986,20 @@
         if (newIdx !== previewCueIdx && newIdx >= 0) {
             var cue = sorted[newIdx];
 
-            // Save previous state for blending
+            // Capture current state as "from" for interpolation
             previewPrevPattern = state.pattern;
             previewPrevParams = cloneObj(state.params);
-
-            // Apply cue to state
+            previewFromState = {};
             var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
-            fields.forEach(function(k) { if (cue[k] !== undefined) state[k] = cue[k]; });
-            state.pattern = cue.pattern;
-            state.params = cue.params ? cloneObj(cue.params) : {};
+            fields.forEach(function(k) { previewFromState[k] = state[k] || 0; });
+
+            // Build target state from cue
+            previewToState = {};
+            fields.forEach(function(k) { previewToState[k] = (cue[k] !== undefined) ? cue[k] : (previewFromState[k] || 0); });
+
+            // Pattern and params apply to target
+            previewToState.pattern = cue.pattern;
+            previewToState.params = cue.params ? cloneObj(cue.params) : {};
 
             // Restore STL data if present
             if (cue._stlData) {
@@ -1001,7 +1008,7 @@
                 stlParamKey = '';
             }
 
-            // Set up position transition
+            // Set up transition timing
             previewTransStart = audioTime;
             var dur = cue.transition || 0;
             if (dur > 0 && newIdx < sorted.length - 1) {
@@ -1011,22 +1018,45 @@
             previewTransDur = dur;
             previewBlend = dur > 0 ? 0 : 1;
 
-            // Set the designer transition blend too
+            // Pattern position blending
             transFrom = previewPrevPattern;
             transFromParams = previewPrevParams;
             transBlend = previewBlend;
             transSpeed = dur > 0 ? 1 / (dur * 60) : 0;
 
+            // If no transition, snap all values immediately
+            if (dur <= 0) {
+                fields.forEach(function(k) { state[k] = previewToState[k]; });
+                state.pattern = previewToState.pattern;
+                state.params = previewToState.params;
+            }
+
             previewCueIdx = newIdx;
         }
 
-        // Update position blend
+        // Interpolate all state values during transition
         if (previewTransDur > 0 && previewBlend < 1) {
             var elapsed = audioTime - previewTransStart;
             var t = Math.min(1, elapsed / previewTransDur);
-            t = t * t * (3 - 2 * t);
+            t = t * t * (3 - 2 * t); // smoothstep
+
+            var fields2 = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
+            fields2.forEach(function(k) {
+                var from = previewFromState[k] || 0;
+                var to = previewToState[k] || 0;
+                state[k] = from + (to - from) * t;
+            });
+
+            // Pattern snaps at start (positions blend via transBlend)
+            state.pattern = previewToState.pattern;
+            state.params = previewToState.params;
+
             previewBlend = t;
             transBlend = t;
+        } else if (previewTransDur > 0 && previewBlend >= 1 && previewToState) {
+            // Transition complete — ensure final values are set
+            var fields3 = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
+            fields3.forEach(function(k) { state[k] = previewToState[k] || 0; });
         }
     }
 
