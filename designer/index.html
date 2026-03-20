@@ -613,6 +613,8 @@
     document.getElementById('track-select').addEventListener('change', function() {
         audio.src = this.value; audio.load(); isPlaying = false;
         document.getElementById('btn-play').textContent = 'Play';
+        resetPreview();
+        pushStateToAtmosphere();
     });
 
     document.getElementById('btn-play').addEventListener('click', function() {
@@ -631,6 +633,7 @@
         var rect = scrubWrap.getBoundingClientRect();
         var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         audio.currentTime = pct * audio.duration;
+        resetPreview();
     }
 
     var scrubbing = false;
@@ -1003,8 +1006,9 @@
         setTimeout(function() { t.classList.remove('show'); }, 1500);
     }
 
-    // === PREVIEW MODE ===
-    var previewMode = false;
+    // === PREVIEW ===
+    // When audio plays and cues exist, automatically preview the sequence.
+    // When audio stops or user adjusts sliders, return to manual override.
     var previewCueIdx = -1;
     var previewFromState = {};
     var previewToState = null;
@@ -1017,7 +1021,10 @@
     }
 
     function updatePreview(audioTime) {
-        if (!previewMode || cues.length === 0) return;
+        if (cues.length === 0) {
+            // No cues — keep manual override active
+            return;
+        }
 
         var sorted = cues.slice().sort(function(a, b) { return a.t - b.t; });
         var newIdx = -1;
@@ -1026,11 +1033,16 @@
             else break;
         }
 
-        if (newIdx !== previewCueIdx && newIdx >= 0) {
+        if (newIdx < 0) {
+            // Before first cue — show default state
+            return;
+        }
+
+        if (newIdx !== previewCueIdx) {
             var cue = sorted[newIdx];
 
-            // Capture current override as "from"
-            var currentOverride = window.atmosphereOverride || state;
+            // Capture current state as "from"
+            var currentOverride = window.atmosphereOverride || {};
             var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
             previewFromState = {};
             fields.forEach(function(k) { previewFromState[k] = currentOverride[k] || 0; });
@@ -1043,7 +1055,7 @@
             previewToState.pattern = cue.pattern;
             previewToState.params = cue.params ? cloneObj(cue.params) : {};
 
-            // Transition timing
+            // Transition timing — clamp to gap before next cue
             previewTransStart = audioTime;
             var dur = cue.transition || 0;
             if (dur > 0 && newIdx < sorted.length - 1) {
@@ -1062,7 +1074,7 @@
                 );
             }
 
-            // If no transition, snap immediately
+            // Snap if no transition
             if (dur <= 0) {
                 window.atmosphereOverride = cloneObj(previewToState);
             }
@@ -1070,7 +1082,7 @@
             previewCueIdx = newIdx;
         }
 
-        // Interpolate override during transition
+        // Interpolate during transition
         if (previewTransDur > 0 && previewBlend < 1) {
             var elapsed = audioTime - previewTransStart;
             var t = Math.min(1, elapsed / previewTransDur);
@@ -1088,29 +1100,12 @@
         }
     }
 
-    // Add preview toggle button
-    var btnPlay = document.getElementById('btn-play');
-    var previewBtn = document.createElement('button');
-    previewBtn.className = 'transport-btn';
-    previewBtn.id = 'btn-preview';
-    previewBtn.textContent = 'Preview';
-    previewBtn.title = 'Play audio and preview the committed cue sequence';
-    btnPlay.parentNode.insertBefore(previewBtn, btnPlay.nextSibling);
-
-    previewBtn.addEventListener('click', function() {
-        previewMode = !previewMode;
-        previewBtn.textContent = previewMode ? 'Preview ●' : 'Preview';
-        if (previewMode) {
-            previewCueIdx = -1;
-            if (!isPlaying && audio.src) {
-                audio.play(); isPlaying = true;
-                document.getElementById('btn-play').textContent = 'Pause';
-            }
-        } else {
-            // Exiting preview — restore manual override
-            pushStateToAtmosphere();
-        }
-    });
+    // Reset preview index when scrubbing or changing tracks
+    function resetPreview() {
+        previewCueIdx = -1;
+        previewToState = null;
+        previewBlend = 1;
+    }
 
     // === AUTO SCORE ===
     var autoScorePatterns = {
@@ -1765,8 +1760,8 @@
             document.getElementById('duration-display').textContent = formatTime(audio.duration);
         }
 
-        // Preview mode: apply committed cues at current audio time
-        if (previewMode && isPlaying) {
+        // When playing, preview committed cues automatically
+        if (isPlaying && cues.length > 0) {
             updatePreview(audio.currentTime);
         }
 
