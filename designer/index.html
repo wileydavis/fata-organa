@@ -593,6 +593,24 @@
         });
     });
 
+    // Scroll wheel adjusts sliders when hovering over their row
+    document.getElementById('controls').addEventListener('wheel', function(e) {
+        var row = e.target.closest('.ctrl-row');
+        if (!row) return;
+        var sl = row.querySelector('input[type="range"]');
+        if (!sl) return;
+        e.preventDefault();
+        var step = parseFloat(sl.step) || 1;
+        var min = parseFloat(sl.min);
+        var max = parseFloat(sl.max);
+        var cur = parseFloat(sl.value);
+        // Scroll up = increase, scroll down = decrease
+        var dir = e.deltaY < 0 ? 1 : -1;
+        var newVal = Math.round(Math.max(min, Math.min(max, cur + step * dir)) * 10000) / 10000;
+        sl.value = newVal;
+        sl.dispatchEvent(new Event('input'));
+    }, { passive: false });
+
     var selPattern = document.getElementById('sel-pattern');
     var paramsContainer = document.getElementById('params-container');
 
