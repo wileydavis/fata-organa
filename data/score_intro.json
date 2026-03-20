@@ -62,7 +62,7 @@
       "transition": 12,
       "hueShift": -20,
       "satShift": 5,
-      "glowIntensity": 2,
+      "glowIntensity": 0.15,
       "glowHue": -20,
       "haze": 0,
       "params": {
@@ -96,7 +96,7 @@
       "connectionDist": 0,
       "connectionAlpha": 0,
       "glow": 1,
-      "glowIntensity": 0.5,
+      "glowIntensity": 0.3,
       "glowHue": 38,
       "haze": 1
     },
