@@ -269,7 +269,7 @@
         var cy = height / 2;
         var t = idx / count;
         var margin = 30;
-        var deadR = Math.min(width, height) * 0.18;
+        var deadR = Math.min(width, height) * 0.23;
 
         switch (name) {
 
@@ -326,8 +326,16 @@
             var oy = (yi - side/2) * spacing;
             var oz = (zi - side/2) * spacing * 0.6;
             var perspective = 400;
-            var scale = perspective / (perspective + oz);
-            return { x: cx + ox * scale, y: cy + oy * scale };
+            var lScale = perspective / (perspective + oz);
+            var lx = cx + ox * lScale, ly = cy + oy * lScale;
+            // Push outward if inside dead zone
+            var ldx = lx - cx, ldy = ly - cy, lDist = Math.sqrt(ldx*ldx + ldy*ldy);
+            var lDeadR = Math.min(width, height) * 0.22;
+            if (lDist < lDeadR && lDist > 0) {
+                var lPush = (lDeadR + spacing * 0.5) / lDist;
+                lx = cx + ldx * lPush; ly = cy + ldy * lPush;
+            }
+            return { x: lx, y: ly };
         }
 
         case 'waveform': {
@@ -565,28 +573,28 @@
 
         case 'breathe': {
             // Synchronized expand/contract pulse from center
-            var bRate = (params && params.rate) || 0.5; // pulses per second
-            var bMin = (params && params.min) || 0.6; // minimum scale
-            var bMax = (params && params.max) || 1.3; // maximum scale
+            var bRate = (params && params.rate) || 0.5;
+            var bMin = (params && params.min) || 0.6;
+            var bMax = (params && params.max) || 1.3;
             var s5 = sig || { smoothRms: 0, isPlaying: false };
+            var bDeadR = Math.min(width, height) * 0.23;
 
-            // Audio drives the breath — louder = more expanded
             var breathPhase;
             if (s5.isPlaying && s5.smoothRms > 0.01) {
-                // Voice-driven: expand with energy
                 breathPhase = bMin + (bMax - bMin) * s5.smoothRms * 2;
                 breathPhase = Math.min(breathPhase, bMax);
             } else {
-                // Autonomous slow pulse when silent
                 breathPhase = bMin + (bMax - bMin) * (Math.sin(time * bRate * 0.02) * 0.5 + 0.5);
             }
 
-            // Distribute in a circle, scale by breath
+            // Distribute in layers, starting OUTSIDE the dead zone
             var bAngle = (idx / count) * Math.PI * 2;
             var bLayers = Math.ceil(Math.sqrt(count / Math.PI));
             var bLayer = Math.floor(idx / Math.max(1, Math.ceil(count / bLayers)));
             var bLayerT = bLayer / bLayers;
-            var bRadius = (80 + bLayerT * (Math.min(width, height) * 0.35)) * breathPhase;
+            var bMinR = bDeadR + 15; // start just outside the transmitter
+            var bMaxR = Math.min(width, height) * 0.42;
+            var bRadius = (bMinR + bLayerT * (bMaxR - bMinR)) * breathPhase;
             var bA = bAngle + bLayer * 0.3;
 
             return { x: cx + Math.cos(bA) * bRadius, y: cy + Math.sin(bA) * bRadius };
@@ -635,7 +643,8 @@
 
             // Each group has its own orbit center and radius
             var gAngle = (group / fGroups) * Math.PI * 2 + gRng() * 0.5;
-            var gRadius = 120 + gRng() * (Math.min(width, height) * 0.25);
+            var fDeadR = Math.min(width, height) * 0.24;
+            var gRadius = fDeadR + 30 + gRng() * (Math.min(width, height) * 0.25);
             var gOrbitPhase = time * fOrbitSpeed * 0.005 * (0.5 + gRng() * 0.5) + gRng() * Math.PI * 2;
 
             var gCenterX = cx + Math.cos(gAngle + gOrbitPhase) * gRadius;
@@ -885,7 +894,7 @@
         // Global rotation
         var cx = width / 2;
         var cy = height / 2;
-        var deadR = Math.min(width, height) * 0.18;
+        var deadR = Math.min(width, height) * 0.23;
         var patternRotation = time * rotation;
         var cosR = Math.cos(patternRotation);
         var sinR = Math.sin(patternRotation);
