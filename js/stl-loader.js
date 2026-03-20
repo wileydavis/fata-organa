@@ -74,8 +74,15 @@
         return 0.5 * Math.sqrt(cx * cx + cy * cy + cz * cz);
     }
 
+    // Compute triangle normal (unnormalized is fine for facing test)
+    function triangleNormal(t) {
+        var ax = t.v2.x - t.v1.x, ay = t.v2.y - t.v1.y, az = t.v2.z - t.v1.z;
+        var bx = t.v3.x - t.v1.x, by = t.v3.y - t.v1.y, bz = t.v3.z - t.v1.z;
+        return { x: ay * bz - az * by, y: az * bx - ax * bz, z: ax * by - ay * bx };
+    }
+
     // Distribute N points across triangle surfaces (area-weighted)
-    // Returns array of {x, y, z} in model space
+    // Returns array of {x, y, z, nx, ny, nz} — position + face normal
     function distributePoints(triangles, count, seed) {
         if (triangles.length === 0) return [];
 
@@ -104,6 +111,7 @@
                 if (areas[j] >= r) { triIdx = j; break; }
             }
             var tri = triangles[triIdx];
+            var n = triangleNormal(tri);
 
             // Random point on triangle (barycentric coordinates)
             var u = rand(), v = rand();
@@ -113,7 +121,8 @@
             points.push({
                 x: tri.v1.x * w + tri.v2.x * u + tri.v3.x * v,
                 y: tri.v1.y * w + tri.v2.y * u + tri.v3.y * v,
-                z: tri.v1.z * w + tri.v2.z * u + tri.v3.z * v
+                z: tri.v1.z * w + tri.v2.z * u + tri.v3.z * v,
+                nx: n.x, ny: n.y, nz: n.z
             });
         }
 
@@ -136,7 +145,8 @@
         };
     }
 
-    // Project 3D points to 2D screen positions with rotation, perspective, and offset
+    // Project 3D points to 2D with back-face culling
+    // Points on back-facing triangles are redistributed to front-facing points
     function projectPoints(points, bounds, screenW, screenH, rotX, rotY, rotZ, scale, perspective, offsetX, offsetY) {
         var cx = screenW / 2 + (offsetX || 0) * screenW;
         var cy = screenH / 2 + (offsetY || 0) * screenH;
@@ -146,35 +156,61 @@
         var cosY = Math.cos(rotY), sinY = Math.sin(rotY);
         var cosZ = Math.cos(rotZ), sinZ = Math.sin(rotZ);
 
-        var projected = [];
-        for (var i = 0; i < points.length; i++) {
-            // Center the model
-            var x = points[i].x - bounds.center.x;
-            var y = points[i].y - bounds.center.y;
-            var z = points[i].z - bounds.center.z;
+        // First pass: project all points, track which face the camera
+        var allProjected = [];
+        var frontIndices = [];
 
-            // Rotate X
+        for (var i = 0; i < points.length; i++) {
+            var pt = points[i];
+            // Center the model
+            var x = pt.x - bounds.center.x;
+            var y = pt.y - bounds.center.y;
+            var z = pt.z - bounds.center.z;
+
+            // Rotate position
             var y1 = y * cosX - z * sinX;
             var z1 = y * sinX + z * cosX;
-            // Rotate Y
             var x2 = x * cosY + z1 * sinY;
             var z2 = -x * sinY + z1 * cosY;
-            // Rotate Z
             var x3 = x2 * cosZ - y1 * sinZ;
             var y3 = x2 * sinZ + y1 * cosZ;
 
-            // Scale
-            x3 *= fitScale;
-            y3 *= fitScale;
-            z2 *= fitScale;
+            // Rotate normal with same matrix
+            var ny1 = pt.ny * cosX - pt.nz * sinX;
+            var nz1 = pt.ny * sinX + pt.nz * cosX;
+            var nz2 = -pt.nx * sinY + nz1 * cosY;
 
-            // Perspective projection
+            // nz2 > 0 means normal faces toward camera (visible surface)
+            var facing = nz2 > 0;
+
+            x3 *= fitScale; y3 *= fitScale; z2 *= fitScale;
             var pScale = perspective / (perspective + z2);
-            projected.push({
+
+            allProjected.push({
                 x: cx + x3 * pScale,
-                y: cy - y3 * pScale  // flip Y for screen coords
+                y: cy - y3 * pScale,
+                facing: facing
             });
+
+            if (facing) frontIndices.push(i);
         }
+
+        // Second pass: back-face points get remapped to front-face points
+        if (frontIndices.length === 0) return allProjected; // edge case: no visible faces
+
+        var projected = [];
+        var frontIdx = 0;
+        for (var k = 0; k < allProjected.length; k++) {
+            if (allProjected[k].facing) {
+                projected.push({ x: allProjected[k].x, y: allProjected[k].y });
+            } else {
+                // Redistribute to a front-face point (round-robin for even spread)
+                var donor = frontIndices[frontIdx % frontIndices.length];
+                frontIdx++;
+                projected.push({ x: allProjected[donor].x, y: allProjected[donor].y });
+            }
+        }
+
         return projected;
     }
 
