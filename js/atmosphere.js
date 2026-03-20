@@ -863,7 +863,7 @@
         var satShift = activeState.satShift || 0;
         var litShift = activeState.litShift || 0;
         var params = activeState.params || {};
-        var haze = activeState.haze || 0;
+        var haze = (activeState.haze !== undefined) ? activeState.haze : 0;
 
         // Glitch
         glitchTimer--;
@@ -1013,9 +1013,9 @@
             if (sig.isPlaying) pt.alpha *= (1 + sig.smoothRms * 0.8);
 
             if (haze > 0) {
-                // Depth effect: back particles (depth~0) are dimmer/smaller, front (depth~1) are brighter
-                var depthFade = 0.2 + pt.depth * 0.8; // back=0.2, front=1.0
-                pt.alpha *= (1 - haze) + haze * depthFade;
+                // Depth effect: back particles (depth~0) nearly invisible, front (depth~1) full
+                var depthFade = pt.depth * pt.depth; // quadratic — most particles are dim, few are bright
+                pt.alpha *= (1 - haze) + haze * (0.05 + depthFade * 0.95);
             }
 
             if (glitchActive && Math.random() > 0.93) {
@@ -1026,9 +1026,9 @@
             if (pt.alpha > 0.01) {
                 var drawSize = pt.size * sizeMult * (1 + sig.smoothRms * 0.3);
 
-                // Depth affects size when haze is on — far particles are smaller
+                // Depth affects size when haze is on — far particles are much smaller
                 if (haze > 0) {
-                    var depthScale = 0.5 + pt.depth * 0.5; // back=0.5x, front=1.0x
+                    var depthScale = 0.3 + pt.depth * 0.7; // back=0.3x, front=1.0x
                     drawSize *= (1 - haze) + haze * depthScale;
                 }
 
@@ -1036,11 +1036,11 @@
                 var s = Math.max(0, Math.min(100, pt.sat + satShift));
                 var l = Math.max(0, Math.min(100, pt.lit + litShift));
 
-                // Depth desaturates and cools back particles when haze is on
+                // Depth desaturates and darkens back particles heavily
                 if (haze > 0) {
-                    var depthDesat = pt.depth; // 0=full desat, 1=no effect
-                    s = s * ((1 - haze) + haze * (0.3 + depthDesat * 0.7));
-                    l = l * ((1 - haze) + haze * (0.7 + depthDesat * 0.3));
+                    var dd = pt.depth; // 0=full effect, 1=no effect
+                    s = s * ((1 - haze) + haze * (0.1 + dd * 0.9));
+                    l = l * ((1 - haze) + haze * (0.4 + dd * 0.6));
                 }
 
                 ctx.fillStyle = 'hsla(' + h + ', ' + s + '%, ' + l + '%, ' + pt.alpha + ')';
@@ -1073,22 +1073,34 @@
         if (haze > 0.01) {
             var fogCx = width / 2;
             var fogCy = height * 0.45;
-            var fogR = Math.max(width, height) * 0.6;
+            var fogR = Math.max(width, height) * 0.7;
 
-            // Soft fog layer — covers entire scene
-            var fogAlpha = haze * 0.03;
-            var fg1 = ctx.createRadialGradient(fogCx, fogCy, fogR * 0.1, fogCx, fogCy, fogR);
-            fg1.addColorStop(0, 'hsla(38, 15%, 8%, ' + (fogAlpha * 1.5) + ')');
-            fg1.addColorStop(0.5, 'hsla(38, 10%, 5%, ' + fogAlpha + ')');
-            fg1.addColorStop(1, 'hsla(38, 5%, 3%, ' + (fogAlpha * 0.3) + ')');
+            // Main fog layer — warm dark mist across entire scene
+            var fogAlpha = haze * 0.12;
+            var fg1 = ctx.createRadialGradient(fogCx, fogCy, fogR * 0.05, fogCx, fogCy, fogR);
+            fg1.addColorStop(0, 'hsla(35, 15%, 10%, ' + (fogAlpha * 1.2) + ')');
+            fg1.addColorStop(0.3, 'hsla(35, 12%, 7%, ' + (fogAlpha * 0.9) + ')');
+            fg1.addColorStop(0.7, 'hsla(35, 8%, 5%, ' + (fogAlpha * 0.5) + ')');
+            fg1.addColorStop(1, 'hsla(35, 5%, 3%, ' + (fogAlpha * 0.15) + ')');
             ctx.fillStyle = fg1;
             ctx.fillRect(0, 0, width, height);
 
-            // Light diffusion — particle glow scatters into the haze
+            // Second fog layer — slightly offset for depth
+            if (haze > 0.3) {
+                var fog2Alpha = (haze - 0.3) * 0.1;
+                var fg2 = ctx.createRadialGradient(fogCx * 0.8, fogCy * 1.1, 0, fogCx * 0.8, fogCy * 1.1, fogR * 0.6);
+                fg2.addColorStop(0, 'hsla(30, 10%, 8%, ' + fog2Alpha + ')');
+                fg2.addColorStop(1, 'transparent');
+                ctx.fillStyle = fg2;
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            // Audio-reactive light diffusion through fog
             if (sig.isPlaying && sig.smoothRms > 0.02) {
-                var diffAlpha = haze * sig.smoothRms * 0.025;
+                var diffAlpha = haze * sig.smoothRms * 0.08;
                 var dg = ctx.createRadialGradient(fogCx, fogCy, 0, fogCx, fogCy, fogR * 0.5);
-                dg.addColorStop(0, 'hsla(' + (hueShift + 38) + ', 25%, 40%, ' + diffAlpha + ')');
+                dg.addColorStop(0, 'hsla(' + (hueShift + 38) + ', 30%, 45%, ' + diffAlpha + ')');
+                dg.addColorStop(0.5, 'hsla(' + (hueShift + 38) + ', 20%, 30%, ' + (diffAlpha * 0.3) + ')');
                 dg.addColorStop(1, 'transparent');
                 ctx.fillStyle = dg;
                 ctx.fillRect(0, 0, width, height);
@@ -1135,48 +1147,48 @@
         // === AMBIENT GLOW ===
         // Audio-reactive backlight behind the transmitter area
         var glowState = (activeState.glow !== undefined) ? activeState.glow : 1;
-        var glowHue = activeState.glowHue || 38;
-        var glowIntensity = activeState.glowIntensity || 0.5;
+        var glowHue = (activeState.glowHue !== undefined) ? activeState.glowHue : 38;
+        var glowIntensity = (activeState.glowIntensity !== undefined) ? activeState.glowIntensity : 0.5;
 
         if (glowState > 0) {
             var glowCx = width / 2;
             var glowCy = height * 0.42;
-            var glowRadius = Math.min(width, height) * 0.45;
+            var glowRadius = Math.min(width, height) * 0.5;
             
-            // Base glow — always present at low level
-            var baseAlpha = 0.008 * glowIntensity * glowState;
+            // Base glow — always present
+            var baseAlpha = 0.02 * glowIntensity * glowState;
             
-            // Audio-reactive component — voice drives brightness
+            // Audio-reactive — voice drives brightness
             var voiceGlow = 0;
             if (sig.isPlaying && sig.smoothRms > 0.01) {
-                var voice = Math.max(0, sig.rms - (sig.low || 0) * 0.4 - (sig.high || 0) * 0.2);
-                voiceGlow = voice * 0.06 * glowIntensity;
-                // Bass adds slow throb
-                voiceGlow += (sig.smoothLow || 0) * 0.02 * glowIntensity;
+                var voice = Math.max(0, sig.rms - (sig.low || 0) * 0.3 - (sig.high || 0) * 0.2);
+                voiceGlow = voice * 0.15 * glowIntensity;
+                voiceGlow += (sig.smoothLow || 0) * 0.05 * glowIntensity;
             }
             
             // Slow autonomous pulse when not playing
             var autoPulse = 0;
             if (!sig.isPlaying || sig.smoothRms < 0.02) {
-                autoPulse = (Math.sin(time * 0.003) * 0.5 + 0.5) * 0.01 * glowIntensity;
+                autoPulse = (Math.sin(time * 0.003) * 0.5 + 0.5) * 0.025 * glowIntensity;
             }
             
-            var totalAlpha = Math.min(baseAlpha + voiceGlow + autoPulse, 0.12);
+            var totalAlpha = Math.min(baseAlpha + voiceGlow + autoPulse, 0.35);
             
             if (totalAlpha > 0.002) {
                 var pg = ctx.createRadialGradient(glowCx, glowCy, 0, glowCx, glowCy, glowRadius);
-                var glowSat = 35 + (voiceGlow > 0 ? 15 : 0);
-                var glowLit = 50 + (voiceGlow > 0 ? 15 : 0);
+                var glowSat = 45 + (voiceGlow > 0 ? 20 : 0);
+                var glowLit = 55 + (voiceGlow > 0 ? 15 : 0);
                 pg.addColorStop(0, 'hsla(' + glowHue + ', ' + glowSat + '%, ' + glowLit + '%, ' + totalAlpha + ')');
-                pg.addColorStop(0.4, 'hsla(' + glowHue + ', ' + (glowSat - 10) + '%, ' + (glowLit - 10) + '%, ' + (totalAlpha * 0.5) + ')');
+                pg.addColorStop(0.3, 'hsla(' + glowHue + ', ' + (glowSat - 5) + '%, ' + (glowLit - 5) + '%, ' + (totalAlpha * 0.6) + ')');
+                pg.addColorStop(0.7, 'hsla(' + glowHue + ', ' + (glowSat - 15) + '%, ' + (glowLit - 15) + '%, ' + (totalAlpha * 0.15) + ')');
                 pg.addColorStop(1, 'transparent');
                 ctx.fillStyle = pg;
                 ctx.fillRect(0, 0, width, height);
             }
             
-            // Occasional solar flare — bright flash on audio peaks
-            if (sig.isPlaying && sig.peak > 0.75 && Math.random() > 0.95) {
-                var flareAlpha = (sig.peak - 0.7) * 0.15 * glowIntensity;
+            // Solar flare on audio peaks
+            if (sig.isPlaying && sig.peak > 0.7 && Math.random() > 0.93) {
+                var flareAlpha = (sig.peak - 0.6) * 0.3 * glowIntensity;
                 var flareAngle = Math.random() * Math.PI * 2;
                 var flareDist = glowRadius * 0.3 * Math.random();
                 var flareCx = glowCx + Math.cos(flareAngle) * flareDist;
