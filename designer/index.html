@@ -294,7 +294,7 @@
                 <div id="cue-markers"></div>
             </div>
             <span class="transport-duration" id="duration-display">--:--</span>
-            <button class="transport-btn commit" id="btn-commit">● Commit Cue</button>
+            <button class="transport-btn commit" id="btn-commit">● New Cue</button>
         </div>
         <div class="transport-cues" id="cue-list"></div>
         <div style="display:flex; gap:6px; margin-top:6px; justify-content:flex-end;">
@@ -796,7 +796,15 @@
     }
 
     var scrubbing = false;
-    scrubWrap.addEventListener('mousedown', function(e) { scrubbing = true; scrubTo(e); });
+    scrubWrap.addEventListener('mousedown', function(e) {
+        scrubbing = true; scrubTo(e);
+        // Deselect cue when clicking the scrub bar directly
+        if (editingCueIdx >= 0) {
+            editingCueIdx = -1;
+            document.getElementById('btn-commit').textContent = '● New Cue';
+            renderCueList();
+        }
+    });
     window.addEventListener('mousemove', function(e) { if (scrubbing) scrubTo(e); });
     window.addEventListener('mouseup', function() { scrubbing = false; });
 
@@ -835,6 +843,9 @@
         return cue;
     }
 
+    // Track which cue is being edited (-1 = none, creating new)
+    var editingCueIdx = -1;
+
     function renderCueList() {
         var list = document.getElementById('cue-list');
         var markers = document.getElementById('cue-markers');
@@ -843,23 +854,92 @@
         cues.forEach(function(cue, idx) {
             // Chip
             var chip = document.createElement('div'); chip.className = 'cue-chip';
+            if (idx === editingCueIdx) chip.style.borderColor = 'rgba(90, 180, 90, 0.6)';
             chip.innerHTML = '<span class="cue-time">' + formatTime(cue.t) + '</span> <span class="cue-pattern">' + cue.pattern + '</span> <span class="cue-delete" data-idx="' + idx + '">×</span>';
             chip.querySelector('.cue-delete').addEventListener('click', function(e) {
                 e.stopPropagation();
-                cues.splice(idx, 1); renderCueList();
+                cues.splice(idx, 1);
+                if (editingCueIdx === idx) editingCueIdx = -1;
+                else if (editingCueIdx > idx) editingCueIdx--;
+                renderCueList();
             });
             chip.addEventListener('click', function() {
-                // Jump to cue time and load its settings
+                editingCueIdx = idx;
                 if (audio.duration) audio.currentTime = cue.t;
                 loadCueIntoUI(cue);
+                document.getElementById('btn-commit').textContent = '● Update Cue';
+                renderCueList();
             });
             list.appendChild(chip);
 
-            // Scrubber marker
+            // Scrubber marker — draggable
             if (audio.duration > 0) {
                 var marker = document.createElement('div'); marker.className = 'cue-marker';
                 marker.style.left = ((cue.t / audio.duration) * 100) + '%';
+                marker.style.cursor = 'ew-resize';
+                marker.style.pointerEvents = 'auto';
+                marker.style.width = '6px';
+                marker.style.transform = 'translateX(-3px)';
+                marker.setAttribute('data-idx', idx);
                 markers.appendChild(marker);
+
+                // Drag handling
+                (function(markerEl, cueIdx) {
+                    var dragging = false;
+                    markerEl.addEventListener('mousedown', function(e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        dragging = true;
+                        editingCueIdx = cueIdx;
+                        renderCueList();
+                    });
+                    window.addEventListener('mousemove', function(e) {
+                        if (!dragging) return;
+                        var rect = scrubWrap.getBoundingClientRect();
+                        var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                        var newT = Math.round(pct * audio.duration * 10) / 10;
+                        cues[cueIdx].t = newT;
+                        markerEl.style.left = (pct * 100) + '%';
+                        // Update the chip text
+                        var chips = document.getElementById('cue-list').children;
+                        if (chips[cueIdx]) {
+                            var timeSpan = chips[cueIdx].querySelector('.cue-time');
+                            if (timeSpan) timeSpan.textContent = formatTime(newT);
+                        }
+                        audio.currentTime = newT;
+                    });
+                    window.addEventListener('mouseup', function() {
+                        if (dragging) {
+                            dragging = false;
+                            renderCueList(); // re-sort and re-render
+                        }
+                    });
+
+                    // Touch support
+                    markerEl.addEventListener('touchstart', function(e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        dragging = true;
+                        editingCueIdx = cueIdx;
+                        renderCueList();
+                    });
+                    window.addEventListener('touchmove', function(e) {
+                        if (!dragging) return;
+                        var touch = e.touches[0];
+                        var rect = scrubWrap.getBoundingClientRect();
+                        var pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+                        var newT = Math.round(pct * audio.duration * 10) / 10;
+                        cues[cueIdx].t = newT;
+                        markerEl.style.left = (pct * 100) + '%';
+                        audio.currentTime = newT;
+                    });
+                    window.addEventListener('touchend', function() {
+                        if (dragging) {
+                            dragging = false;
+                            renderCueList();
+                        }
+                    });
+                })(marker, idx);
             }
         });
     }
@@ -882,7 +962,6 @@
         }
         state.params = cue.params ? JSON.parse(JSON.stringify(cue.params)) : {};
         buildParamSliders();
-        // Restore STL data if this cue has a model
         if (cue._stlData) {
             stlData = cue._stlData;
             stlProjected = null;
@@ -892,11 +971,25 @@
         }
     }
 
-    // Commit
+    // Commit — overwrite selected cue or create new
     document.getElementById('btn-commit').addEventListener('click', function() {
-        cues.push(currentCueSnapshot());
+        var snapshot = currentCueSnapshot();
+        if (editingCueIdx >= 0 && editingCueIdx < cues.length) {
+            snapshot.t = cues[editingCueIdx].t;
+            if (cues[editingCueIdx]._stlData && !snapshot._stlData) {
+                snapshot._stlData = cues[editingCueIdx]._stlData;
+                snapshot._stlName = cues[editingCueIdx]._stlName;
+                snapshot._stlBuffer = cues[editingCueIdx]._stlBuffer;
+            }
+            cues[editingCueIdx] = snapshot;
+            toast('Updated cue at ' + formatTime(snapshot.t));
+        } else {
+            cues.push(snapshot);
+            toast('New cue at ' + formatTime(audio.currentTime));
+        }
+        editingCueIdx = -1;
+        this.textContent = '● New Cue';
         renderCueList();
-        toast('Cue committed at ' + formatTime(audio.currentTime));
     });
 
     // Export
