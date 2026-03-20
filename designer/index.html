@@ -17,13 +17,20 @@
     }
     html, body { background: var(--bg); color: var(--amber-dim); font-family: var(--mono); font-size: 12px; overflow: hidden; height: 100%; }
 
-    #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+    #atmosphere { z-index: 0; }
 
     #transmitter-ghost {
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 440px; height: 440px; border-radius: 50%;
-        border: 1px dashed rgba(196, 163, 90, 0.1);
         pointer-events: none; z-index: 1;
+        border: 1px solid rgba(196, 163, 90, 0.2);
+        background:
+            radial-gradient(
+                circle at 45% 40%,
+                rgba(16, 15, 13, 0.95) 0%,
+                rgba(10, 9, 8, 0.95) 50%,
+                rgba(7, 7, 6, 0.95) 100%
+            );
     }
 
     /* === NAV === */
@@ -205,7 +212,7 @@
     </style>
 </head>
 <body>
-    <canvas id="particle-canvas"></canvas>
+    <canvas id="atmosphere" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;"></canvas>
     <div id="transmitter-ghost"></div>
 
     <nav class="designer-nav">
@@ -333,200 +340,15 @@
 
     <div id="copy-toast">Copied to clipboard</div>
 
+<script src="/js/stl-loader.js"></script>
+<script src="/js/atmosphere.js"></script>
 <script>
 (function() {
     'use strict';
 
-    function seedRandom(seed) {
-        return function() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-    }
+    // Pattern library and render loop are handled by atmosphere.js
+    // The designer writes to window.atmosphereOverride which atmosphere reads each frame
 
-    var canvas = document.getElementById('particle-canvas');
-    var ctx = canvas.getContext('2d');
-    var width = 0, height = 0, time = 0;
-
-    function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
-    window.addEventListener('resize', resize);
-    resize();
-
-    function clampX(x) { return Math.max(30, Math.min(width - 30, x)); }
-    function clampY(y) { return Math.max(30, Math.min(height - 30, y)); }
-
-    // === PATTERN LIBRARY ===
-    function patternPosition(name, idx, count, params) {
-        var cx = width / 2, cy = height / 2, t = idx / count, margin = 30;
-        var deadR = Math.min(width, height) * 0.18;
-        switch (name) {
-        case 'scatter': { var r = seedRandom(idx * 7919); return { x: margin + r() * (width - margin * 2), y: margin + r() * (height - margin * 2) }; }
-        case 'grid': { var cols = Math.ceil(Math.sqrt(count * (width / height))), rows = Math.ceil(count / cols); var col = idx % cols, row = Math.floor(idx / cols); var gx = margin + (col + 0.5) * ((width - margin * 2) / cols), gy = margin + (row + 0.5) * ((height - margin * 2) / rows); var gdx = gx - cx, gdy = gy - cy, gD = Math.sqrt(gdx * gdx + gdy * gdy) || 1; if (gD < deadR) { gx = cx + (gdx / gD) * (deadR + 20); gy = cy + (gdy / gD) * (deadR + 20); } return { x: gx, y: gy }; }
-        case 'spiral': { var arms = (params && params.arms) || 3, tight = (params && params.tightness) || 0.8; var arm = idx % arms, armT = Math.floor(idx / arms) / Math.ceil(count / arms); var sa = armT * Math.PI * 6 * tight + (arm * Math.PI * 2 / arms), sr = deadR + 30 + armT * (Math.max(width, height) * 0.42); return { x: clampX(cx + Math.cos(sa) * sr), y: clampY(cy + Math.sin(sa) * sr) }; }
-        case 'concentric': { var nr = (params && params.rings) || 5, ring = Math.floor(t * nr), rT = (t * nr) % 1; var rR = deadR + 40 + ring * ((Math.min(width, height) * 0.42) / nr), rA = rT * Math.PI * 2 + ring * 0.4; return { x: clampX(cx + Math.cos(rA) * rR), y: clampY(cy + Math.sin(rA) * rR) }; }
-        case 'lattice': { var sp = (params && params.spacing) || 40, side = Math.ceil(Math.pow(count, 1/3)); var xi = idx % side, yi = Math.floor(idx / side) % side, zi = Math.floor(idx / (side * side)); var ox = (xi - side/2) * sp, oy = (yi - side/2) * sp, oz = (zi - side/2) * sp * 0.6; var sc = 400 / (400 + oz); return { x: cx + ox * sc, y: cy + oy * sc }; }
-        case 'waveform': { var f = (params && params.frequency) || 2, a = (params && params.amplitude) || 80; return { x: margin + t * (width - margin * 2), y: cy + Math.sin(t * Math.PI * 2 * f) * a }; }
-        case 'helix': { var st = idx % 2, hT = Math.floor(idx / 2) / Math.ceil(count / 2); var hF = (params && params.frequency) || 3, hA = (params && params.amplitude) || 60; return { x: margin + hT * (width - margin * 2), y: cy + Math.sin(hT * Math.PI * 2 * hF + st * Math.PI) * hA }; }
-        case 'fibonacci': { var g = (1 + Math.sqrt(5)) / 2, fA = idx * g * Math.PI * 2, fR = deadR + Math.sqrt(idx / count) * (Math.min(width, height) * 0.42); return { x: clampX(cx + Math.cos(fA) * fR), y: clampY(cy + Math.sin(fA) * fR) }; }
-        case 'lissajous': { var la = (params && params.a) || 3, lb = (params && params.b) || 2, ld = (params && params.delta) || Math.PI / 2; var lS = Math.min(width, height) * 0.35; return { x: cx + Math.sin(la * t * Math.PI * 2 + ld) * lS, y: cy + Math.sin(lb * t * Math.PI * 2) * lS }; }
-        case 'converge': { var tx2 = (params && params.x !== undefined) ? params.x * width : cx, ty2 = (params && params.y !== undefined) ? params.y * height : cy; var cR = (params && params.radius) || 3, cA = (idx / count) * Math.PI * 2; return { x: tx2 + Math.cos(cA) * cR, y: ty2 + Math.sin(cA) * cR }; }
-        case 'explode': { var eA = seedRandom(idx * 3571)() * Math.PI * 2, eR = Math.max(width, height) * 0.6 + seedRandom(idx * 9137)() * 100; return { x: clampX(cx + Math.cos(eA) * eR), y: clampY(cy + Math.sin(eA) * eR) }; }
-        case 'ring': { var rRad = (params && params.radius) || Math.min(width, height) * 0.3; return { x: cx + Math.cos(t * Math.PI * 2) * rRad, y: cy + Math.sin(t * Math.PI * 2) * rRad }; }
-        case 'column': { var cW = (params && params.width) || 60, r2 = seedRandom(idx * 4513); return { x: cx + (r2() - 0.5) * cW, y: margin + t * (height - margin * 2) }; }
-        case 'horizon': { var hY = (params && params.y !== undefined) ? params.y * height : cy, spr = (params && params.spread) || 8, r3 = seedRandom(idx * 2741); return { x: margin + t * (width - margin * 2), y: hY + (r3() - 0.5) * spr }; }
-        case 'stl': {
-            if (stlData) {
-                var rX = (params && params.rotateX) || 0;
-                var rY = ((params && params.rotateY) || 0) + time * ((params && params.spinY) || 0);
-                var rZ = (params && params.rotateZ) || 0;
-                var sc = (params && params.scale) || 1;
-                var pe = (params && params.perspective) || 400;
-                var oX = (params && params.offsetX) || 0;
-                var oY = (params && params.offsetY) || 0;
-                var pKey = rX + ',' + rY + ',' + rZ + ',' + sc + ',' + pe + ',' + oX + ',' + oY + ',' + width + ',' + height;
-                if (stlParamKey !== pKey) {
-                    stlProjected = projectSTL(stlData.points, stlData.bounds, width, height, rX, rY, rZ, sc, pe, oX, oY);
-                    stlParamKey = pKey;
-                }
-                if (stlProjected && idx < stlProjected.length) return stlProjected[idx];
-            }
-            return patternPosition('scatter', idx, count, params);
-        }
-        case 'waveform_reactive': {
-            var wrAmp = (params && params.amplitude) || 120;
-            var wrFreq = (params && params.frequency) || 3;
-            var wrLayers = (params && params.layers) || 1;
-            var layer = idx % wrLayers;
-            var layerT = Math.floor(idx / wrLayers) / Math.ceil(count / wrLayers);
-            var layerOffset = (layer - (wrLayers - 1) / 2) * 25;
-            var xPos = 30 + layerT * (width - 60);
-            // Simulated audio response from playing audio
-            var aTime = (audio && !audio.paused) ? audio.currentTime : time * 0.016;
-            var simRms = 0.3 + Math.sin(aTime * 2.1) * 0.15 + Math.sin(aTime * 5.3) * 0.1;
-            var simLow = 0.3 + Math.sin(aTime * 1.2) * 0.2;
-            var simHigh = 0.2 + Math.sin(aTime * 7.8) * 0.15;
-            var baseWave = Math.sin(layerT * Math.PI * 2 * wrFreq);
-            var bassWave = Math.sin(layerT * Math.PI * 2 * 1.5) * simLow * wrAmp * 1.5;
-            var highWave = Math.sin(layerT * Math.PI * 2 * 8 + time * 0.02) * simHigh * wrAmp * 0.4;
-            var rmsWave = baseWave * simRms * wrAmp * 0.8;
-            var yPos = height / 2 + rmsWave + bassWave + highWave + layerOffset;
-            return { x: xPos, y: Math.max(30, Math.min(height - 30, yPos)) };
-        }
-        case 'grid_reactive': {
-            var grCols = (params && params.cols) || 16;
-            var grRows = (params && params.rows) || Math.ceil(count / grCols);
-            var grAmp = (params && params.amplitude) || 150;
-            var grSphR = (params && params.sphereRadius) || 3;
-            var col2 = idx % grCols;
-            var row2 = Math.floor(idx / grCols);
-            if (row2 >= grRows) row2 = grRows - 1;
-            var gx2 = 30 + (col2 + 0.5) * ((width - 60) / grCols);
-            var baseGy2 = 30 + (row2 + 0.5) * ((height - 60) / grRows);
-            var aTime2 = (audio && !audio.paused) ? audio.currentTime : time * 0.016;
-            var simVoice = 0.3 + Math.sin(aTime2 * 2.1) * 0.15 + Math.sin(aTime2 * 5.3) * 0.1;
-            var simLow2 = 0.3 + Math.sin(aTime2 * 1.2) * 0.2;
-            var simHigh2 = 0.2 + Math.sin(aTime2 * 7.8) * 0.15;
-            // Sphere path
-            var sSpd = 0.003 + simVoice * 0.008;
-            var sX = Math.sin(time * sSpd * 2.3) * 0.5 + 0.5;
-            var sY = Math.sin(time * sSpd * 1.7 + 1.2) * 0.5 + 0.5;
-            var nC = col2 / (grCols - 1), nR = row2 / (grRows - 1);
-            var d1x = nC - sX, d1y = nR - sY, d1 = Math.sqrt(d1x*d1x + d1y*d1y);
-            var r1 = grSphR * 0.1 * (0.5 + simVoice * 1.5);
-            var p1 = Math.exp(-(d1*d1)/(2*r1*r1));
-            var disp1 = p1 * grAmp * (0.3 + simVoice * 1.0);
-            // Bass sphere
-            var s2X = Math.sin(time * 0.004 * 1.5 + 3.0) * 0.5 + 0.5;
-            var s2Y = Math.sin(time * 0.004 * 1.1 + 0.7) * 0.5 + 0.5;
-            var d2x = nC - s2X, d2y = nR - s2Y, d2 = Math.sqrt(d2x*d2x + d2y*d2y);
-            var r2 = grSphR * 0.06 * (0.3 + simLow2 * 1.0);
-            var p2 = Math.exp(-(d2*d2)/(2*r2*r2));
-            var disp2 = p2 * grAmp * 0.5 * simLow2;
-            var ripple = Math.sin(nC * 20 + time * 0.05) * simHigh2 * grAmp * 0.08;
-            return { x: gx2, y: Math.max(30, Math.min(height - 30, baseGy2 - disp1 - disp2 - ripple)) };
-        }
-        case 'drift': {
-            var dSpd = (params && params.speed) || 0.3;
-            var dAng = (params && params.angle) || 0;
-            var dSpr = (params && params.spread) || 0.15;
-            var dr = seedRandom(idx * 6133);
-            var pA = dAng + (dr() - 0.5) * dSpr * 2;
-            var flowT2 = (time * dSpd * 0.01 + dr() * 1000) % 1;
-            var crossT2 = (dr() * 1000 + time * dSpd * 0.003 * (0.5 + dr())) % 1;
-            var px2 = flowT2 * width * 1.2 - width * 0.1;
-            var py2 = crossT2 * height;
-            var fX = cx + (px2 - cx) * Math.cos(dAng) - (py2 - cy) * Math.sin(dAng);
-            var fY = cy + (px2 - cx) * Math.sin(dAng) + (py2 - cy) * Math.cos(dAng);
-            return { x: Math.max(30, Math.min(width-30, fX)), y: Math.max(30, Math.min(height-30, fY)) };
-        }
-        case 'dissolve': {
-            var dvRate = (params && params.rate) || 0.3;
-            var dvBase = (params && params.base) || 'ring';
-            var dvR = seedRandom(idx * 4271);
-            var dvThreshold = dvR();
-            if (dvThreshold < dvRate) {
-                var dvAngle = dvR() * Math.PI * 2;
-                var dvDist = (dvRate - dvThreshold) * Math.max(width, height) * 0.5;
-                var dvPos = patternPosition(dvBase, idx, count, params);
-                return { x: Math.max(30, Math.min(width-30, dvPos.x + Math.cos(dvAngle)*dvDist)), y: Math.max(30, Math.min(height-30, dvPos.y + Math.sin(dvAngle)*dvDist)) };
-            }
-            return patternPosition(dvBase, idx, count, params);
-        }
-        case 'breathe': {
-            var bRt = (params && params.rate) || 0.5;
-            var bMn = (params && params.min) || 0.6;
-            var bMx = (params && params.max) || 1.3;
-            var bPh = bMn + (bMx - bMn) * (Math.sin(time * bRt * 0.02) * 0.5 + 0.5);
-            var bAn = (idx / count) * Math.PI * 2;
-            var bLy = Math.ceil(Math.sqrt(count / Math.PI));
-            var bLi = Math.floor(idx / Math.max(1, Math.ceil(count / bLy)));
-            var bLt = bLi / bLy;
-            var bRd = (80 + bLt * (Math.min(width, height) * 0.35)) * bPh;
-            var bA2 = bAn + bLi * 0.3;
-            return { x: cx + Math.cos(bA2) * bRd, y: cy + Math.sin(bA2) * bRd };
-        }
-        case 'interference': {
-            var iF1 = (params && params.freq1) || 3;
-            var iF2 = (params && params.freq2) || 3.7;
-            var iA2 = (params && params.angle) || 0.4;
-            var iAm = (params && params.amplitude) || 80;
-            var iC = Math.ceil(Math.sqrt(count * (width / height)));
-            var iR = Math.ceil(count / iC);
-            var iCo = idx % iC, iRo = Math.floor(idx / iC);
-            var ixx = 30 + (iCo + 0.5) * ((width - 60) / iC);
-            var iyy = 30 + (iRo + 0.5) * ((height - 60) / iR);
-            var w1 = Math.sin((ixx / width) * Math.PI * 2 * iF1 + time * 0.008);
-            var w2 = Math.sin(((ixx * Math.cos(iA2) + iyy * Math.sin(iA2)) / width) * Math.PI * 2 * iF2 + time * 0.006);
-            return { x: ixx, y: Math.max(30, Math.min(height-30, iyy + (w1 + w2) * iAm * 0.3)) };
-        }
-        case 'fragment': {
-            var fGr = (params && params.groups) || 7;
-            var fOS = (params && params.orbitSpeed) || 0.3;
-            var fSp = (params && params.spread) || 15;
-            var fR2 = seedRandom(idx * 8311);
-            var grp = idx % fGr;
-            var gR2 = seedRandom(grp * 1337);
-            var gAn = (grp / fGr) * Math.PI * 2 + gR2() * 0.5;
-            var gRd = 120 + gR2() * (Math.min(width, height) * 0.25);
-            var gOP = time * fOS * 0.005 * (0.5 + gR2() * 0.5) + gR2() * Math.PI * 2;
-            var gCX = cx + Math.cos(gAn + gOP) * gRd;
-            var gCY = cy + Math.sin(gAn + gOP * 0.7) * gRd;
-            var lA = fR2() * Math.PI * 2, lR = fR2() * fSp;
-            return { x: Math.max(30, Math.min(width-30, gCX + Math.cos(lA)*lR)), y: Math.max(30, Math.min(height-30, gCY + Math.sin(lA)*lR)) };
-        }
-        case 'filament': {
-            var fAn2 = (params && params.anchors) || 5;
-            var fTh = (params && params.thickness) || 4;
-            var fR3 = seedRandom(idx * 5591);
-            var thr = idx % fAn2;
-            var thrT = Math.floor(idx / fAn2) / Math.ceil(count / fAn2);
-            var tR = seedRandom(thr * 2903);
-            var ax1 = 30 + tR() * (width - 60), ay1 = 30 + tR() * (height - 60);
-            var ax2 = 30 + tR() * (width - 60), ay2 = 30 + tR() * (height - 60);
-            var pAng = Math.atan2(ay2 - ay1, ax2 - ax1) + Math.PI / 2;
-            var pOff = (fR3() - 0.5) * fTh;
-            return { x: Math.max(30, Math.min(width-30, ax1 + (ax2-ax1)*thrT + Math.cos(pAng)*pOff)), y: Math.max(30, Math.min(height-30, ay1 + (ay2-ay1)*thrT + Math.sin(pAng)*pOff)) };
-        }
-        default: return patternPosition('scatter', idx, count, params);
-        }
-    }
 
     // === STL SYSTEM ===
     var stlData = null;  // { points: [{x,y,z}], bounds: {center, size} }
@@ -645,7 +467,7 @@
         reader.onload = function(evt) {
             currentSTLBuffer = evt.target.result;
             var tris = parseSTL(evt.target.result);
-            var points = distributeSTLPoints(tris, PARTICLE_COUNT);
+            var points = distributeSTLPoints(tris, 300);
             var bounds = computeSTLBounds(points);
             stlData = { points: points, bounds: bounds };
             stlProjected = null;
@@ -658,13 +480,6 @@
     // Show/hide STL controls based on pattern
     var stlControls = document.getElementById('stl-controls');
 
-    // === PARTICLES ===
-    var PARTICLE_COUNT = Math.min(Math.floor(width * height / 4000), 300);
-    var particles = [];
-    for (var i = 0; i < PARTICLE_COUNT; i++) {
-        var rng = seedRandom(i * 7919);
-        particles.push({ x: rng() * width, y: rng() * height, size: rng() * 1.8 + 0.5, baseAlpha: rng() * 0.4 + 0.15, alpha: 0, vx: 0, vy: 0, phase: rng() * Math.PI * 2, freq: rng() * 0.008 + 0.002, hue: 38 + rng() * 15, sat: 30 + rng() * 30, lit: 55 + rng() * 25, idx: i, wanderAngle: rng() * Math.PI * 2 });
-    }
 
     // === STATE ===
     var state = {
@@ -673,7 +488,6 @@
         hueShift: 0, satShift: 0, litShift: 0, params: {}
     };
 
-    var transFrom = 'scatter', transFromParams = {}, transBlend = 1, transSpeed = 0;
 
     // === PARAM DEFS ===
     var paramDefs = {
@@ -748,6 +562,7 @@
             var v = parseFloat(sl.value);
             if (key !== 'transition') state[key] = v;
             val.textContent = sl.value;
+            pushStateToAtmosphere();
         });
     });
 
@@ -767,19 +582,19 @@
             paramsContainer.appendChild(row);
             var inp = row.querySelector('input');
             var v = row.querySelector('.ctrl-val');
-            inp.addEventListener('input', function() { state.params[p.key] = parseFloat(inp.value); v.textContent = inp.value; });
+            inp.addEventListener('input', function() { state.params[p.key] = parseFloat(inp.value); v.textContent = inp.value; pushStateToAtmosphere(); });
         });
     }
 
     selPattern.addEventListener('change', function() {
         var np = selPattern.value;
-        if (np !== state.pattern) {
-            transFrom = state.pattern; transFromParams = JSON.parse(JSON.stringify(state.params));
+        if (np !== state.pattern && window.atmosphereAPI) {
             var dur = parseFloat(document.getElementById('sl-transition').value) || 0;
-            transBlend = dur > 0 ? 0 : 1; transSpeed = dur > 0 ? 1 / (dur * 60) : 0;
+            window.atmosphereAPI.triggerTransition(state.pattern, JSON.parse(JSON.stringify(state.params)), dur);
         }
         state.pattern = np; state.params = {}; buildParamSliders();
         stlControls.style.display = np === 'stl' ? '' : 'none';
+        pushStateToAtmosphere();
     });
     buildParamSliders();
 
@@ -992,6 +807,7 @@
             currentSTLName = cue._stlName || '';
             document.getElementById('stl-filename').textContent = currentSTLName;
         }
+        pushStateToAtmosphere();
     }
 
     // Commit — overwrite selected cue or create new
@@ -1190,22 +1006,15 @@
     // === PREVIEW MODE ===
     var previewMode = false;
     var previewCueIdx = -1;
-    var previewFrom = {};
-    var previewTo = {};
+    var previewFromState = {};
+    var previewToState = null;
     var previewTransStart = 0;
     var previewTransDur = 0;
     var previewBlend = 1;
-    var previewPrevPattern = 'scatter';
-    var previewPrevParams = {};
-    var previewFromState = {};
-    var previewToState = null;
-    var previewAccum = null;
 
     function cloneObj(o) {
         return JSON.parse(JSON.stringify(o));
     }
-
-    function lerpNum(a, b, t) { return a + (b - a) * t; }
 
     function updatePreview(audioTime) {
         if (!previewMode || cues.length === 0) return;
@@ -1220,29 +1029,21 @@
         if (newIdx !== previewCueIdx && newIdx >= 0) {
             var cue = sorted[newIdx];
 
-            // Capture current state as "from" for interpolation
-            previewPrevPattern = state.pattern;
-            previewPrevParams = cloneObj(state.params);
-            previewFromState = {};
+            // Capture current override as "from"
+            var currentOverride = window.atmosphereOverride || state;
             var fields = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
-            fields.forEach(function(k) { previewFromState[k] = state[k] || 0; });
+            previewFromState = {};
+            fields.forEach(function(k) { previewFromState[k] = currentOverride[k] || 0; });
+            previewFromState.pattern = currentOverride.pattern || 'scatter';
+            previewFromState.params = currentOverride.params ? cloneObj(currentOverride.params) : {};
 
-            // Build target state from cue
+            // Build target
             previewToState = {};
             fields.forEach(function(k) { previewToState[k] = (cue[k] !== undefined) ? cue[k] : (previewFromState[k] || 0); });
-
-            // Pattern and params apply to target
             previewToState.pattern = cue.pattern;
             previewToState.params = cue.params ? cloneObj(cue.params) : {};
 
-            // Restore STL data if present
-            if (cue._stlData) {
-                stlData = cue._stlData;
-                stlProjected = null;
-                stlParamKey = '';
-            }
-
-            // Set up transition timing
+            // Transition timing
             previewTransStart = audioTime;
             var dur = cue.transition || 0;
             if (dur > 0 && newIdx < sorted.length - 1) {
@@ -1252,45 +1053,38 @@
             previewTransDur = dur;
             previewBlend = dur > 0 ? 0 : 1;
 
-            // Pattern position blending
-            transFrom = previewPrevPattern;
-            transFromParams = previewPrevParams;
-            transBlend = previewBlend;
-            transSpeed = dur > 0 ? 1 / (dur * 60) : 0;
+            // Trigger pattern position transition in atmosphere
+            if (window.atmosphereAPI) {
+                window.atmosphereAPI.triggerTransition(
+                    previewFromState.pattern,
+                    previewFromState.params,
+                    dur
+                );
+            }
 
-            // If no transition, snap all values immediately
+            // If no transition, snap immediately
             if (dur <= 0) {
-                fields.forEach(function(k) { state[k] = previewToState[k]; });
-                state.pattern = previewToState.pattern;
-                state.params = previewToState.params;
+                window.atmosphereOverride = cloneObj(previewToState);
             }
 
             previewCueIdx = newIdx;
         }
 
-        // Interpolate all state values during transition
+        // Interpolate override during transition
         if (previewTransDur > 0 && previewBlend < 1) {
             var elapsed = audioTime - previewTransStart;
             var t = Math.min(1, elapsed / previewTransDur);
-            t = t * t * (3 - 2 * t); // smoothstep
+            t = t * t * (3 - 2 * t);
 
             var fields2 = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
+            var interpolated = { pattern: previewToState.pattern, params: previewToState.params };
             fields2.forEach(function(k) {
-                var from = previewFromState[k] || 0;
-                var to = previewToState[k] || 0;
-                state[k] = from + (to - from) * t;
+                interpolated[k] = (previewFromState[k] || 0) + ((previewToState[k] || 0) - (previewFromState[k] || 0)) * t;
             });
-
-            // Pattern snaps at start (positions blend via transBlend)
-            state.pattern = previewToState.pattern;
-            state.params = previewToState.params;
-
+            window.atmosphereOverride = interpolated;
             previewBlend = t;
-            transBlend = t;
-        } else if (previewTransDur > 0 && previewBlend >= 1 && previewToState) {
-            // Transition complete — ensure final values are set
-            var fields3 = ['speed','attraction','wander','damping','rotation','brightness','size','connectionDist','connectionAlpha','hueShift','satShift','litShift'];
-            fields3.forEach(function(k) { state[k] = previewToState[k] || 0; });
+        } else if (previewBlend >= 1 && previewToState) {
+            window.atmosphereOverride = cloneObj(previewToState);
         }
     }
 
@@ -1306,15 +1100,15 @@
     previewBtn.addEventListener('click', function() {
         previewMode = !previewMode;
         previewBtn.textContent = previewMode ? 'Preview ●' : 'Preview';
-        previewBtn.classList.toggle('active', previewMode);
         if (previewMode) {
             previewCueIdx = -1;
-            previewAccum = null;
-            // Start playback if not playing
             if (!isPlaying && audio.src) {
                 audio.play(); isPlaying = true;
                 document.getElementById('btn-play').textContent = 'Pause';
             }
+        } else {
+            // Exiting preview — restore manual override
+            pushStateToAtmosphere();
         }
     });
 
@@ -1928,12 +1722,41 @@
         });
     });
 
-    // === RENDER ===
-    function render() {
-        time++;
-        ctx.clearRect(0, 0, width, height);
+    // === ATMOSPHERE INTEGRATION ===
+    // The render loop is handled by atmosphere.js
+    // We just need to keep the override state updated
+    function pushStateToAtmosphere() {
+        if (window.atmosphereOverride) {
+            window.atmosphereOverride.pattern = state.pattern;
+            window.atmosphereOverride.speed = state.speed;
+            window.atmosphereOverride.attraction = state.attraction;
+            window.atmosphereOverride.wander = state.wander;
+            window.atmosphereOverride.damping = state.damping;
+            window.atmosphereOverride.rotation = state.rotation;
+            window.atmosphereOverride.brightness = state.brightness;
+            window.atmosphereOverride.size = state.size;
+            window.atmosphereOverride.connectionDist = state.connectionDist;
+            window.atmosphereOverride.connectionAlpha = state.connectionAlpha;
+            window.atmosphereOverride.hueShift = state.hueShift;
+            window.atmosphereOverride.satShift = state.satShift;
+            window.atmosphereOverride.litShift = state.litShift;
+            window.atmosphereOverride.params = state.params;
+        }
+    }
 
-        // Transport update
+    // Initialize override — designer always starts in manual mode
+    window.atmosphereOverride = {
+        pattern: 'scatter', speed: 3, attraction: 0.04, wander: 0.0005,
+        damping: 0.88, rotation: 0.0003, brightness: 0.9, size: 1,
+        connectionDist: 0, connectionAlpha: 0,
+        hueShift: 0, satShift: 0, litShift: 0, params: {}
+    };
+
+    // Expose the audio element for atmosphere to read time from
+    window._fataAudio = audio;
+
+    // Transport display update loop
+    function updateTransport() {
         if (audio.duration > 0) {
             var pct = audio.currentTime / audio.duration;
             scrubProgress.style.width = (pct * 100) + '%';
@@ -1947,77 +1770,9 @@
             updatePreview(audio.currentTime);
         }
 
-        // Transition blend
-        if (transBlend < 1) transBlend = Math.min(1, transBlend + transSpeed);
-        var blend = transBlend * transBlend * (3 - 2 * transBlend);
-
-        var cx = width / 2, cy = height / 2, deadR = Math.min(width, height) * 0.18;
-        var rot = time * state.rotation, cosR = Math.cos(rot), sinR = Math.sin(rot);
-
-        for (var pi = 0; pi < particles.length; pi++) {
-            var pt = particles[pi];
-            var tx, ty;
-            if (blend >= 1) {
-                var tgt = patternPosition(state.pattern, pt.idx, particles.length, state.params);
-                tx = tgt.x; ty = tgt.y;
-            } else {
-                var from = patternPosition(transFrom, pt.idx, particles.length, transFromParams);
-                var to = patternPosition(state.pattern, pt.idx, particles.length, state.params);
-                tx = from.x + (to.x - from.x) * blend; ty = from.y + (to.y - from.y) * blend;
-            }
-
-            var rtx = tx - cx, rty = ty - cy;
-            tx = cx + rtx * cosR - rty * sinR; ty = cy + rtx * sinR + rty * cosR;
-
-            pt.vx += (tx - pt.x) * state.attraction * state.speed;
-            pt.vy += (ty - pt.y) * state.attraction * state.speed;
-            pt.wanderAngle += (Math.random() - 0.5) * 0.01;
-            pt.vx += Math.cos(pt.wanderAngle) * state.wander * state.speed;
-            pt.vy += Math.sin(pt.wanderAngle) * state.wander * state.speed;
-
-            var cdx = pt.x - cx, cdy = pt.y - cy, cD = Math.sqrt(cdx * cdx + cdy * cdy) || 1;
-            if (cD < deadR) { pt.vx += (cdx / cD) * (1 - cD / deadR) * 0.08; pt.vy += (cdy / cD) * (1 - cD / deadR) * 0.08; }
-
-            pt.vx *= state.damping; pt.vy *= state.damping;
-            pt.x += pt.vx; pt.y += pt.vy;
-            if (pt.x < 10) { pt.x = 10; pt.vx *= -0.5; } if (pt.x > width - 10) { pt.x = width - 10; pt.vx *= -0.5; }
-            if (pt.y < 10) { pt.y = 10; pt.vy *= -0.5; } if (pt.y > height - 10) { pt.y = height - 10; pt.vy *= -0.5; }
-
-            pt.alpha = pt.baseAlpha * (Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7) * state.brightness;
-
-            if (pt.alpha > 0.01) {
-                var dSize = pt.size * state.size;
-                var h = pt.hue + state.hueShift, s = Math.max(0, Math.min(100, pt.sat + state.satShift)), l = Math.max(0, Math.min(100, pt.lit + state.litShift));
-                ctx.fillStyle = 'hsla(' + h + ',' + s + '%,' + l + '%,' + pt.alpha + ')';
-                var vel = Math.sqrt(pt.vx * pt.vx + pt.vy * pt.vy);
-                var stretch = Math.min(vel * 3, 8);
-                if (stretch > 0.5) {
-                    var ang = Math.atan2(pt.vy, pt.vx);
-                    ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(ang);
-                    ctx.beginPath(); ctx.ellipse(0, 0, dSize + stretch, dSize, 0, 0, Math.PI * 2);
-                    ctx.fill(); ctx.restore();
-                } else {
-                    ctx.beginPath(); ctx.arc(pt.x, pt.y, dSize, 0, Math.PI * 2); ctx.fill();
-                }
-            }
-        }
-
-        if (state.connectionAlpha > 0.002 && state.connectionDist > 0) {
-            var cDSq = state.connectionDist * state.connectionDist, mc = Math.min(particles.length, 200);
-            ctx.lineWidth = 0.4;
-            for (var ci = 0; ci < mc; ci++) { var pa = particles[ci]; if (pa.alpha < 0.03) continue;
-                for (var cj = ci + 1; cj < mc; cj++) { var pb = particles[cj]; if (pb.alpha < 0.03) continue;
-                    var dx = pa.x - pb.x, dy = pa.y - pb.y, dSq = dx * dx + dy * dy;
-                    if (dSq < cDSq) { var prox = 1 - dSq / cDSq, la = state.connectionAlpha * prox * Math.min(pa.alpha, pb.alpha) * 1.5;
-                        if (la > 0.002) { ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.strokeStyle = 'hsla(40,25%,65%,' + la + ')'; ctx.stroke(); }
-                    }
-                }
-            }
-        }
-
-        requestAnimationFrame(render);
+        requestAnimationFrame(updateTransport);
     }
-    render();
+    updateTransport();
 })();
 </script>
 </body>
