@@ -507,6 +507,184 @@
             return { x: gx, y: clampY(baseGy + displacement) };
         }
 
+        case 'drift': {
+            // Ocean current — all particles flow in a direction with variance
+            var dSpeed = (params && params.speed) || 0.3;
+            var dAngle = (params && params.angle) || 0; // radians, 0 = rightward
+            var dSpread = (params && params.spread) || 0.15;
+            var dRng = seedRandom(idx * 6133);
+            var s3 = sig || { smoothRms: 0, isPlaying: false };
+
+            // Each particle has a slightly different drift angle
+            var pAngle = dAngle + (dRng() - 0.5) * dSpread * 2;
+            // Audio shifts the drift direction slightly
+            var audioShift = s3.isPlaying ? s3.smoothRms * 0.3 : 0;
+            pAngle += audioShift;
+
+            // Position wraps around screen — use time to create continuous flow
+            var flowT = (time * dSpeed * 0.01 + dRng() * 1000) % 1;
+            var crossT = (dRng() * 1000 + time * dSpeed * 0.003 * (0.5 + dRng())) % 1;
+
+            var dx = Math.cos(pAngle), dy = Math.sin(pAngle);
+            // Flow along the drift direction, spread perpendicular
+            var px = flowT * width * 1.2 - width * 0.1;
+            var py = crossT * height;
+            // Rotate by drift angle
+            var finalX = cx + (px - cx) * Math.cos(dAngle) - (py - cy) * Math.sin(dAngle);
+            var finalY = cy + (px - cx) * Math.sin(dAngle) + (py - cy) * Math.cos(dAngle);
+
+            return { x: clampX(finalX), y: clampY(finalY) };
+        }
+
+        case 'dissolve': {
+            // Particles hold positions then randomly detach and drift away
+            var dRate = (params && params.rate) || 0.3; // 0-1, how dissolved
+            var dBase = (params && params.base) || 'ring'; // base pattern to dissolve from
+            var dRng2 = seedRandom(idx * 4271);
+            var s4 = sig || { smoothRms: 0, isPlaying: false };
+
+            // Audio increases dissolution rate
+            var effectiveRate = dRate + (s4.isPlaying ? s4.smoothRms * 0.2 : 0);
+
+            // Each particle has a dissolve threshold
+            var threshold = dRng2();
+            if (threshold < effectiveRate) {
+                // Dissolved — drift away from center
+                var driftAngle = dRng2() * Math.PI * 2;
+                var driftDist = (effectiveRate - threshold) * Math.max(width, height) * 0.5;
+                var basePos = patternPosition(dBase, idx, count, params, sig);
+                return {
+                    x: clampX(basePos.x + Math.cos(driftAngle) * driftDist),
+                    y: clampY(basePos.y + Math.sin(driftAngle) * driftDist)
+                };
+            } else {
+                // Still in formation
+                return patternPosition(dBase, idx, count, params, sig);
+            }
+        }
+
+        case 'breathe': {
+            // Synchronized expand/contract pulse from center
+            var bRate = (params && params.rate) || 0.5; // pulses per second
+            var bMin = (params && params.min) || 0.6; // minimum scale
+            var bMax = (params && params.max) || 1.3; // maximum scale
+            var s5 = sig || { smoothRms: 0, isPlaying: false };
+
+            // Audio drives the breath — louder = more expanded
+            var breathPhase;
+            if (s5.isPlaying && s5.smoothRms > 0.01) {
+                // Voice-driven: expand with energy
+                breathPhase = bMin + (bMax - bMin) * s5.smoothRms * 2;
+                breathPhase = Math.min(breathPhase, bMax);
+            } else {
+                // Autonomous slow pulse when silent
+                breathPhase = bMin + (bMax - bMin) * (Math.sin(time * bRate * 0.02) * 0.5 + 0.5);
+            }
+
+            // Distribute in a circle, scale by breath
+            var bAngle = (idx / count) * Math.PI * 2;
+            var bLayers = Math.ceil(Math.sqrt(count / Math.PI));
+            var bLayer = Math.floor(idx / Math.max(1, Math.ceil(count / bLayers)));
+            var bLayerT = bLayer / bLayers;
+            var bRadius = (80 + bLayerT * (Math.min(width, height) * 0.35)) * breathPhase;
+            var bA = bAngle + bLayer * 0.3;
+
+            return { x: cx + Math.cos(bA) * bRadius, y: cy + Math.sin(bA) * bRadius };
+        }
+
+        case 'interference': {
+            // Two overlapping wave patterns creating moiré
+            var iFreq1 = (params && params.freq1) || 3;
+            var iFreq2 = (params && params.freq2) || 3.7;
+            var iAngle2 = (params && params.angle) || 0.4; // radians offset
+            var iAmp = (params && params.amplitude) || 80;
+            var s6 = sig || { smoothRms: 0, isPlaying: false };
+
+            // Grid base position
+            var iCols = Math.ceil(Math.sqrt(count * (width / height)));
+            var iRows = Math.ceil(count / iCols);
+            var iCol = idx % iCols;
+            var iRow = Math.floor(idx / iCols);
+            var ix = margin + (iCol + 0.5) * ((width - margin * 2) / iCols);
+            var iy = margin + (iRow + 0.5) * ((height - margin * 2) / iRows);
+
+            // Two wave systems
+            var wave1 = Math.sin((ix / width) * Math.PI * 2 * iFreq1 + time * 0.008);
+            var wave2 = Math.sin(((ix * Math.cos(iAngle2) + iy * Math.sin(iAngle2)) / width) * Math.PI * 2 * iFreq2 + time * 0.006);
+
+            // Interference = sum
+            var combined = (wave1 + wave2) * iAmp * 0.5;
+            // Audio amplifies the interference
+            if (s6.isPlaying) combined *= (0.5 + s6.smoothRms * 1.5);
+            else combined *= 0.3;
+
+            return { x: ix, y: clampY(iy + combined) };
+        }
+
+        case 'fragment': {
+            // Small clusters orbiting independently — isolated consciousness islands
+            var fGroups = (params && params.groups) || 7;
+            var fOrbitSpeed = (params && params.orbitSpeed) || 0.3;
+            var fSpread = (params && params.spread) || 15;
+            var fRng = seedRandom(idx * 8311);
+            var s7 = sig || { smoothRms: 0, isPlaying: false };
+
+            // Assign particle to a group
+            var group = idx % fGroups;
+            var gRng = seedRandom(group * 1337);
+
+            // Each group has its own orbit center and radius
+            var gAngle = (group / fGroups) * Math.PI * 2 + gRng() * 0.5;
+            var gRadius = 120 + gRng() * (Math.min(width, height) * 0.25);
+            var gOrbitPhase = time * fOrbitSpeed * 0.005 * (0.5 + gRng() * 0.5) + gRng() * Math.PI * 2;
+
+            var gCenterX = cx + Math.cos(gAngle + gOrbitPhase) * gRadius;
+            var gCenterY = cy + Math.sin(gAngle + gOrbitPhase * 0.7) * gRadius;
+
+            // Particles within group cluster tightly
+            var localAngle = fRng() * Math.PI * 2;
+            var localR = fRng() * fSpread;
+            // Audio makes groups drift further apart
+            if (s7.isPlaying) gRadius *= (1 + s7.smoothRms * 0.5);
+
+            return {
+                x: clampX(gCenterX + Math.cos(localAngle) * localR),
+                y: clampY(gCenterY + Math.sin(localAngle) * localR)
+            };
+        }
+
+        case 'filament': {
+            // Thin threads stretching between anchor points
+            var fAnchors = (params && params.anchors) || 5;
+            var fThickness = (params && params.thickness) || 4;
+            var s8 = sig || { smoothRms: 0, isPlaying: false };
+            var fRng2 = seedRandom(idx * 5591);
+
+            // Create anchor points around the space
+            var thread = idx % fAnchors;
+            var threadT = Math.floor(idx / fAnchors) / Math.ceil(count / fAnchors);
+            var tRng = seedRandom(thread * 2903);
+
+            // Two anchor points per thread
+            var ax1 = margin + tRng() * (width - margin * 2);
+            var ay1 = margin + tRng() * (height - margin * 2);
+            var ax2 = margin + tRng() * (width - margin * 2);
+            var ay2 = margin + tRng() * (height - margin * 2);
+
+            // Position along the thread with slight perpendicular offset
+            var perpAngle = Math.atan2(ay2 - ay1, ax2 - ax1) + Math.PI / 2;
+            var perpOffset = (fRng2() - 0.5) * fThickness;
+            // Audio makes filaments vibrate
+            if (s8.isPlaying) {
+                perpOffset += Math.sin(threadT * Math.PI * 8 + time * 0.03) * s8.smoothRms * 20;
+            }
+
+            return {
+                x: clampX(ax1 + (ax2 - ax1) * threadT + Math.cos(perpAngle) * perpOffset),
+                y: clampY(ay1 + (ay2 - ay1) * threadT + Math.sin(perpAngle) * perpOffset)
+            };
+        }
+
         default:
             return patternPosition('scatter', idx, count, params, sig);
         }
