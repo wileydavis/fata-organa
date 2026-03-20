@@ -104,6 +104,7 @@
         glow: 1,
         glowHue: 38,
         glowIntensity: 0.5,
+        haze: 0,
         params: {}
     };
 
@@ -766,7 +767,8 @@
             sat: 30 + rng() * 30,
             lit: 55 + rng() * 25,
             idx: idx,
-            wanderAngle: rng() * Math.PI * 2
+            wanderAngle: rng() * Math.PI * 2,
+            depth: rng()  // 0 = far back, 1 = near front
         };
     }
 
@@ -861,6 +863,7 @@
         var satShift = activeState.satShift || 0;
         var litShift = activeState.litShift || 0;
         var params = activeState.params || {};
+        var haze = activeState.haze || 0;
 
         // Glitch
         glitchTimer--;
@@ -1004,10 +1007,17 @@
             if (pt.y < 10) { pt.y = 10; pt.vy *= -0.5; }
             if (pt.y > height - 10) { pt.y = height - 10; pt.vy *= -0.5; }
 
-            // Alpha
-            var breathe = Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7;
-            pt.alpha = pt.baseAlpha * breathe * brightness;
+            // Alpha — depth modulates when haze is active
+            var breatheA = Math.sin(time * pt.freq + pt.phase) * 0.3 + 0.7;
+            pt.alpha = pt.baseAlpha * breatheA * brightness;
             if (sig.isPlaying) pt.alpha *= (1 + sig.smoothRms * 0.8);
+
+            if (haze > 0) {
+                // Depth effect: back particles (depth~0) are dimmer/smaller, front (depth~1) are brighter
+                var depthFade = 0.2 + pt.depth * 0.8; // back=0.2, front=1.0
+                pt.alpha *= (1 - haze) + haze * depthFade;
+            }
+
             if (glitchActive && Math.random() > 0.93) {
                 pt.x += (Math.random() - 0.5) * glitchIntensity * 15;
                 pt.alpha = Math.min(pt.alpha * 2, 0.7);
@@ -1015,9 +1025,24 @@
 
             if (pt.alpha > 0.01) {
                 var drawSize = pt.size * sizeMult * (1 + sig.smoothRms * 0.3);
+
+                // Depth affects size when haze is on — far particles are smaller
+                if (haze > 0) {
+                    var depthScale = 0.5 + pt.depth * 0.5; // back=0.5x, front=1.0x
+                    drawSize *= (1 - haze) + haze * depthScale;
+                }
+
                 var h = pt.hue + hueShift;
                 var s = Math.max(0, Math.min(100, pt.sat + satShift));
                 var l = Math.max(0, Math.min(100, pt.lit + litShift));
+
+                // Depth desaturates and cools back particles when haze is on
+                if (haze > 0) {
+                    var depthDesat = pt.depth; // 0=full desat, 1=no effect
+                    s = s * ((1 - haze) + haze * (0.3 + depthDesat * 0.7));
+                    l = l * ((1 - haze) + haze * (0.7 + depthDesat * 0.3));
+                }
+
                 ctx.fillStyle = 'hsla(' + h + ', ' + s + '%, ' + l + '%, ' + pt.alpha + ')';
 
                 // Motion blur: elongate in velocity direction
@@ -1041,6 +1066,32 @@
                     ctx.arc(pt.x, pt.y, drawSize, 0, Math.PI * 2);
                     ctx.fill();
                 }
+            }
+        }
+
+        // Atmospheric haze — fog layers for depth
+        if (haze > 0.01) {
+            var fogCx = width / 2;
+            var fogCy = height * 0.45;
+            var fogR = Math.max(width, height) * 0.6;
+
+            // Soft fog layer — covers entire scene
+            var fogAlpha = haze * 0.03;
+            var fg1 = ctx.createRadialGradient(fogCx, fogCy, fogR * 0.1, fogCx, fogCy, fogR);
+            fg1.addColorStop(0, 'hsla(38, 15%, 8%, ' + (fogAlpha * 1.5) + ')');
+            fg1.addColorStop(0.5, 'hsla(38, 10%, 5%, ' + fogAlpha + ')');
+            fg1.addColorStop(1, 'hsla(38, 5%, 3%, ' + (fogAlpha * 0.3) + ')');
+            ctx.fillStyle = fg1;
+            ctx.fillRect(0, 0, width, height);
+
+            // Light diffusion — particle glow scatters into the haze
+            if (sig.isPlaying && sig.smoothRms > 0.02) {
+                var diffAlpha = haze * sig.smoothRms * 0.025;
+                var dg = ctx.createRadialGradient(fogCx, fogCy, 0, fogCx, fogCy, fogR * 0.5);
+                dg.addColorStop(0, 'hsla(' + (hueShift + 38) + ', 25%, 40%, ' + diffAlpha + ')');
+                dg.addColorStop(1, 'transparent');
+                ctx.fillStyle = dg;
+                ctx.fillRect(0, 0, width, height);
             }
         }
 
