@@ -235,6 +235,12 @@
             <option value="stl">stl (3D model)</option>
             <option value="waveform_reactive">waveform (reactive)</option>
             <option value="grid_reactive">grid (reactive)</option>
+            <option value="drift">drift</option>
+            <option value="dissolve">dissolve</option>
+            <option value="breathe">breathe</option>
+            <option value="interference">interference</option>
+            <option value="fragment">fragment</option>
+            <option value="filament">filament</option>
         </select>
 
         <!-- STL upload — visible when stl pattern selected -->
@@ -411,6 +417,88 @@
             var disp2 = bandEnergy2 * grAmp * centerWeight2;
             if (rowCenter2 < 0.5) disp2 = -disp2;
             return { x: gx2, y: Math.max(30, Math.min(height - 30, baseGy2 + disp2)) };
+        }
+        case 'drift': {
+            var dSpd = (params && params.speed) || 0.3;
+            var dAng = (params && params.angle) || 0;
+            var dSpr = (params && params.spread) || 0.15;
+            var dr = seedRandom(idx * 6133);
+            var pA = dAng + (dr() - 0.5) * dSpr * 2;
+            var flowT2 = (time * dSpd * 0.01 + dr() * 1000) % 1;
+            var crossT2 = (dr() * 1000 + time * dSpd * 0.003 * (0.5 + dr())) % 1;
+            var px2 = flowT2 * width * 1.2 - width * 0.1;
+            var py2 = crossT2 * height;
+            var fX = cx + (px2 - cx) * Math.cos(dAng) - (py2 - cy) * Math.sin(dAng);
+            var fY = cy + (px2 - cx) * Math.sin(dAng) + (py2 - cy) * Math.cos(dAng);
+            return { x: Math.max(30, Math.min(width-30, fX)), y: Math.max(30, Math.min(height-30, fY)) };
+        }
+        case 'dissolve': {
+            var dvRate = (params && params.rate) || 0.3;
+            var dvBase = (params && params.base) || 'ring';
+            var dvR = seedRandom(idx * 4271);
+            var dvThreshold = dvR();
+            if (dvThreshold < dvRate) {
+                var dvAngle = dvR() * Math.PI * 2;
+                var dvDist = (dvRate - dvThreshold) * Math.max(width, height) * 0.5;
+                var dvPos = patternPosition(dvBase, idx, count, params);
+                return { x: Math.max(30, Math.min(width-30, dvPos.x + Math.cos(dvAngle)*dvDist)), y: Math.max(30, Math.min(height-30, dvPos.y + Math.sin(dvAngle)*dvDist)) };
+            }
+            return patternPosition(dvBase, idx, count, params);
+        }
+        case 'breathe': {
+            var bRt = (params && params.rate) || 0.5;
+            var bMn = (params && params.min) || 0.6;
+            var bMx = (params && params.max) || 1.3;
+            var bPh = bMn + (bMx - bMn) * (Math.sin(time * bRt * 0.02) * 0.5 + 0.5);
+            var bAn = (idx / count) * Math.PI * 2;
+            var bLy = Math.ceil(Math.sqrt(count / Math.PI));
+            var bLi = Math.floor(idx / Math.max(1, Math.ceil(count / bLy)));
+            var bLt = bLi / bLy;
+            var bRd = (80 + bLt * (Math.min(width, height) * 0.35)) * bPh;
+            var bA2 = bAn + bLi * 0.3;
+            return { x: cx + Math.cos(bA2) * bRd, y: cy + Math.sin(bA2) * bRd };
+        }
+        case 'interference': {
+            var iF1 = (params && params.freq1) || 3;
+            var iF2 = (params && params.freq2) || 3.7;
+            var iA2 = (params && params.angle) || 0.4;
+            var iAm = (params && params.amplitude) || 80;
+            var iC = Math.ceil(Math.sqrt(count * (width / height)));
+            var iR = Math.ceil(count / iC);
+            var iCo = idx % iC, iRo = Math.floor(idx / iC);
+            var ixx = 30 + (iCo + 0.5) * ((width - 60) / iC);
+            var iyy = 30 + (iRo + 0.5) * ((height - 60) / iR);
+            var w1 = Math.sin((ixx / width) * Math.PI * 2 * iF1 + time * 0.008);
+            var w2 = Math.sin(((ixx * Math.cos(iA2) + iyy * Math.sin(iA2)) / width) * Math.PI * 2 * iF2 + time * 0.006);
+            return { x: ixx, y: Math.max(30, Math.min(height-30, iyy + (w1 + w2) * iAm * 0.3)) };
+        }
+        case 'fragment': {
+            var fGr = (params && params.groups) || 7;
+            var fOS = (params && params.orbitSpeed) || 0.3;
+            var fSp = (params && params.spread) || 15;
+            var fR2 = seedRandom(idx * 8311);
+            var grp = idx % fGr;
+            var gR2 = seedRandom(grp * 1337);
+            var gAn = (grp / fGr) * Math.PI * 2 + gR2() * 0.5;
+            var gRd = 120 + gR2() * (Math.min(width, height) * 0.25);
+            var gOP = time * fOS * 0.005 * (0.5 + gR2() * 0.5) + gR2() * Math.PI * 2;
+            var gCX = cx + Math.cos(gAn + gOP) * gRd;
+            var gCY = cy + Math.sin(gAn + gOP * 0.7) * gRd;
+            var lA = fR2() * Math.PI * 2, lR = fR2() * fSp;
+            return { x: Math.max(30, Math.min(width-30, gCX + Math.cos(lA)*lR)), y: Math.max(30, Math.min(height-30, gCY + Math.sin(lA)*lR)) };
+        }
+        case 'filament': {
+            var fAn2 = (params && params.anchors) || 5;
+            var fTh = (params && params.thickness) || 4;
+            var fR3 = seedRandom(idx * 5591);
+            var thr = idx % fAn2;
+            var thrT = Math.floor(idx / fAn2) / Math.ceil(count / fAn2);
+            var tR = seedRandom(thr * 2903);
+            var ax1 = 30 + tR() * (width - 60), ay1 = 30 + tR() * (height - 60);
+            var ax2 = 30 + tR() * (width - 60), ay2 = 30 + tR() * (height - 60);
+            var pAng = Math.atan2(ay2 - ay1, ax2 - ax1) + Math.PI / 2;
+            var pOff = (fR3() - 0.5) * fTh;
+            return { x: Math.max(30, Math.min(width-30, ax1 + (ax2-ax1)*thrT + Math.cos(pAng)*pOff)), y: Math.max(30, Math.min(height-30, ay1 + (ay2-ay1)*thrT + Math.sin(pAng)*pOff)) };
         }
         default: return patternPosition('scatter', idx, count, params);
         }
@@ -594,6 +682,34 @@
             { key: 'cols', label: 'Cols', min: 4, max: 32, step: 1, def: 16 },
             { key: 'rows', label: 'Rows', min: 4, max: 20, step: 1, def: 10 },
             { key: 'amplitude', label: 'Amp', min: 20, max: 300, step: 10, def: 150 }
+        ],
+        drift: [
+            { key: 'speed', label: 'Speed', min: 0.05, max: 1, step: 0.05, def: 0.3 },
+            { key: 'angle', label: 'Angle', min: -3.14, max: 3.14, step: 0.1, def: 0 },
+            { key: 'spread', label: 'Spread', min: 0.01, max: 0.5, step: 0.01, def: 0.15 }
+        ],
+        dissolve: [
+            { key: 'rate', label: 'Rate', min: 0, max: 1, step: 0.05, def: 0.3 }
+        ],
+        breathe: [
+            { key: 'rate', label: 'Rate', min: 0.1, max: 2, step: 0.1, def: 0.5 },
+            { key: 'min', label: 'Min', min: 0.2, max: 1, step: 0.05, def: 0.6 },
+            { key: 'max', label: 'Max', min: 1, max: 2.5, step: 0.1, def: 1.3 }
+        ],
+        interference: [
+            { key: 'freq1', label: 'Freq 1', min: 1, max: 8, step: 0.5, def: 3 },
+            { key: 'freq2', label: 'Freq 2', min: 1, max: 8, step: 0.5, def: 3.7 },
+            { key: 'angle', label: 'Angle', min: 0, max: 1.57, step: 0.05, def: 0.4 },
+            { key: 'amplitude', label: 'Amp', min: 20, max: 200, step: 10, def: 80 }
+        ],
+        fragment: [
+            { key: 'groups', label: 'Groups', min: 3, max: 15, step: 1, def: 7 },
+            { key: 'orbitSpeed', label: 'Orbit', min: 0.05, max: 1, step: 0.05, def: 0.3 },
+            { key: 'spread', label: 'Spread', min: 5, max: 40, step: 1, def: 15 }
+        ],
+        filament: [
+            { key: 'anchors', label: 'Threads', min: 2, max: 12, step: 1, def: 5 },
+            { key: 'thickness', label: 'Thick', min: 1, max: 20, step: 1, def: 4 }
         ]
     };
 
@@ -1086,13 +1202,13 @@
 
     // === AUTO SCORE ===
     var autoScorePatterns = {
-        silent:   ['scatter', 'horizon', 'fibonacci'],
-        quiet:    ['scatter', 'lattice', 'fibonacci', 'horizon'],
-        building: ['spiral', 'concentric', 'lattice', 'helix'],
-        loud:     ['waveform_reactive', 'grid_reactive', 'ring', 'explode'],
+        silent:   ['scatter', 'horizon', 'fibonacci', 'drift', 'breathe'],
+        quiet:    ['scatter', 'lattice', 'fibonacci', 'horizon', 'drift', 'breathe', 'filament'],
+        building: ['spiral', 'concentric', 'lattice', 'helix', 'interference', 'fragment'],
+        loud:     ['waveform_reactive', 'grid_reactive', 'ring', 'explode', 'interference'],
         peak:     ['waveform_reactive', 'grid_reactive', 'explode', 'ring'],
-        falling:  ['fibonacci', 'spiral', 'scatter', 'ring'],
-        ending:   ['converge', 'scatter', 'horizon']
+        falling:  ['fibonacci', 'spiral', 'scatter', 'ring', 'dissolve', 'fragment', 'drift'],
+        ending:   ['converge', 'scatter', 'horizon', 'dissolve', 'breathe']
     };
 
     var autoScoreDefaults = {
@@ -1110,7 +1226,13 @@
         horizon: { speed: 2, attraction: 0.03, wander: 0.002, damping: 0.92, brightness: 0.6, size: 0.8, params: { y: 0.15, spread: 10 } },
         converge: { speed: 6, attraction: 0.08, wander: 0.0002, damping: 0.82, brightness: 0.8, size: 0.6, params: { x: 0.5, y: 0.5, radius: 3 } },
         explode: { speed: 5, attraction: 0.05, wander: 0.004, damping: 0.88, brightness: 1.3, size: 1.5 },
-        grid_reactive: { speed: 3.5, attraction: 0.05, wander: 0.001, damping: 0.86, brightness: 1.1, size: 1.1, params: { cols: 20, rows: 12, amplitude: 200 } }
+        grid_reactive: { speed: 3.5, attraction: 0.05, wander: 0.001, damping: 0.86, brightness: 1.1, size: 1.1, params: { cols: 20, rows: 12, amplitude: 200 } },
+        drift: { speed: 1.5, attraction: 0.015, wander: 0.002, damping: 0.94, brightness: 0.6, size: 0.9, params: { speed: 0.3, angle: 0.2, spread: 0.15 } },
+        dissolve: { speed: 2, attraction: 0.02, wander: 0.003, damping: 0.92, brightness: 0.7, size: 1, params: { rate: 0.3, base: 'ring' } },
+        breathe: { speed: 2, attraction: 0.025, wander: 0.001, damping: 0.92, brightness: 0.8, size: 1, params: { rate: 0.5, min: 0.6, max: 1.3 } },
+        interference: { speed: 3, attraction: 0.04, wander: 0.0008, damping: 0.88, brightness: 1, size: 1, params: { freq1: 3, freq2: 3.7, angle: 0.4, amplitude: 100 } },
+        fragment: { speed: 2, attraction: 0.025, wander: 0.002, damping: 0.92, brightness: 0.75, size: 0.9, params: { groups: 7, orbitSpeed: 0.3, spread: 15 } },
+        filament: { speed: 2, attraction: 0.03, wander: 0.001, damping: 0.9, brightness: 0.7, size: 0.8, params: { anchors: 5, thickness: 4 } }
     };
 
     // Color palettes mapped to energy/mood
