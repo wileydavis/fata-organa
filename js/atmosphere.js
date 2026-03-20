@@ -101,6 +101,9 @@
         hueShift: 0,
         satShift: 0,
         litShift: 0,
+        glow: 1,
+        glowHue: 38,
+        glowIntensity: 0.5,
         params: {}
     };
 
@@ -1078,13 +1081,62 @@
             ctx.fillRect(0, tearY, width, tearH);
         }
 
-        // Ambient pulse
-        if (Math.random() > 0.999) {
-            var pg = ctx.createRadialGradient(width / 2, height * 0.4, 0, width / 2, height * 0.4, height * 0.5);
-            pg.addColorStop(0, 'hsla(38, 40%, 60%, 0.02)');
-            pg.addColorStop(1, 'transparent');
-            ctx.fillStyle = pg;
-            ctx.fillRect(0, 0, width, height);
+        // === AMBIENT GLOW ===
+        // Audio-reactive backlight behind the transmitter area
+        var glowState = (activeState.glow !== undefined) ? activeState.glow : 1;
+        var glowHue = activeState.glowHue || 38;
+        var glowIntensity = activeState.glowIntensity || 0.5;
+
+        if (glowState > 0) {
+            var glowCx = width / 2;
+            var glowCy = height * 0.42;
+            var glowRadius = Math.min(width, height) * 0.45;
+            
+            // Base glow — always present at low level
+            var baseAlpha = 0.008 * glowIntensity * glowState;
+            
+            // Audio-reactive component — voice drives brightness
+            var voiceGlow = 0;
+            if (sig.isPlaying && sig.smoothRms > 0.01) {
+                var voice = Math.max(0, sig.rms - (sig.low || 0) * 0.4 - (sig.high || 0) * 0.2);
+                voiceGlow = voice * 0.06 * glowIntensity;
+                // Bass adds slow throb
+                voiceGlow += (sig.smoothLow || 0) * 0.02 * glowIntensity;
+            }
+            
+            // Slow autonomous pulse when not playing
+            var autoPulse = 0;
+            if (!sig.isPlaying || sig.smoothRms < 0.02) {
+                autoPulse = (Math.sin(time * 0.003) * 0.5 + 0.5) * 0.01 * glowIntensity;
+            }
+            
+            var totalAlpha = Math.min(baseAlpha + voiceGlow + autoPulse, 0.12);
+            
+            if (totalAlpha > 0.002) {
+                var pg = ctx.createRadialGradient(glowCx, glowCy, 0, glowCx, glowCy, glowRadius);
+                var glowSat = 35 + (voiceGlow > 0 ? 15 : 0);
+                var glowLit = 50 + (voiceGlow > 0 ? 15 : 0);
+                pg.addColorStop(0, 'hsla(' + glowHue + ', ' + glowSat + '%, ' + glowLit + '%, ' + totalAlpha + ')');
+                pg.addColorStop(0.4, 'hsla(' + glowHue + ', ' + (glowSat - 10) + '%, ' + (glowLit - 10) + '%, ' + (totalAlpha * 0.5) + ')');
+                pg.addColorStop(1, 'transparent');
+                ctx.fillStyle = pg;
+                ctx.fillRect(0, 0, width, height);
+            }
+            
+            // Occasional solar flare — bright flash on audio peaks
+            if (sig.isPlaying && sig.peak > 0.75 && Math.random() > 0.95) {
+                var flareAlpha = (sig.peak - 0.7) * 0.15 * glowIntensity;
+                var flareAngle = Math.random() * Math.PI * 2;
+                var flareDist = glowRadius * 0.3 * Math.random();
+                var flareCx = glowCx + Math.cos(flareAngle) * flareDist;
+                var flareCy = glowCy + Math.sin(flareAngle) * flareDist;
+                var flareR = glowRadius * (0.3 + Math.random() * 0.4);
+                var fg = ctx.createRadialGradient(flareCx, flareCy, 0, flareCx, flareCy, flareR);
+                fg.addColorStop(0, 'hsla(' + glowHue + ', 50%, 65%, ' + flareAlpha + ')');
+                fg.addColorStop(1, 'transparent');
+                ctx.fillStyle = fg;
+                ctx.fillRect(0, 0, width, height);
+            }
         }
 
         requestAnimationFrame(render);
