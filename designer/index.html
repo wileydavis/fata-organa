@@ -2,9 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/img/favicon-180.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dust Mote Laboratory — FATA ORGANA</title>
     <style>
@@ -416,25 +413,34 @@
             var grCols = (params && params.cols) || 16;
             var grRows = (params && params.rows) || Math.ceil(count / grCols);
             var grAmp = (params && params.amplitude) || 150;
+            var grSphR = (params && params.sphereRadius) || 3;
             var col2 = idx % grCols;
             var row2 = Math.floor(idx / grCols);
             if (row2 >= grRows) row2 = grRows - 1;
             var gx2 = 30 + (col2 + 0.5) * ((width - 60) / grCols);
             var baseGy2 = 30 + (row2 + 0.5) * ((height - 60) / grRows);
             var aTime2 = (audio && !audio.paused) ? audio.currentTime : time * 0.016;
-            var bandT2 = col2 / (grCols - 1);
+            var simVoice = 0.3 + Math.sin(aTime2 * 2.1) * 0.15 + Math.sin(aTime2 * 5.3) * 0.1;
             var simLow2 = 0.3 + Math.sin(aTime2 * 1.2) * 0.2;
-            var simRms2 = 0.3 + Math.sin(aTime2 * 2.1) * 0.15;
             var simHigh2 = 0.2 + Math.sin(aTime2 * 7.8) * 0.15;
-            var bandEnergy2;
-            if (bandT2 < 0.33) { bandEnergy2 = simLow2 * (1 - bandT2 * 3) + simRms2 * (bandT2 * 3); }
-            else if (bandT2 < 0.66) { var mt2 = (bandT2 - 0.33) * 3; bandEnergy2 = simRms2 * (1 - mt2) + simHigh2 * mt2; }
-            else { bandEnergy2 = simHigh2; }
-            var rowCenter2 = (row2 + 0.5) / grRows;
-            var centerWeight2 = 1 - Math.abs(rowCenter2 - 0.5) * 2;
-            var disp2 = bandEnergy2 * grAmp * centerWeight2;
-            if (rowCenter2 < 0.5) disp2 = -disp2;
-            return { x: gx2, y: Math.max(30, Math.min(height - 30, baseGy2 + disp2)) };
+            // Sphere path
+            var sSpd = 0.003 + simVoice * 0.008;
+            var sX = Math.sin(time * sSpd * 2.3) * 0.5 + 0.5;
+            var sY = Math.sin(time * sSpd * 1.7 + 1.2) * 0.5 + 0.5;
+            var nC = col2 / (grCols - 1), nR = row2 / (grRows - 1);
+            var d1x = nC - sX, d1y = nR - sY, d1 = Math.sqrt(d1x*d1x + d1y*d1y);
+            var r1 = grSphR * 0.1 * (0.5 + simVoice * 1.5);
+            var p1 = Math.exp(-(d1*d1)/(2*r1*r1));
+            var disp1 = p1 * grAmp * (0.3 + simVoice * 1.0);
+            // Bass sphere
+            var s2X = Math.sin(time * 0.004 * 1.5 + 3.0) * 0.5 + 0.5;
+            var s2Y = Math.sin(time * 0.004 * 1.1 + 0.7) * 0.5 + 0.5;
+            var d2x = nC - s2X, d2y = nR - s2Y, d2 = Math.sqrt(d2x*d2x + d2y*d2y);
+            var r2 = grSphR * 0.06 * (0.3 + simLow2 * 1.0);
+            var p2 = Math.exp(-(d2*d2)/(2*r2*r2));
+            var disp2 = p2 * grAmp * 0.5 * simLow2;
+            var ripple = Math.sin(nC * 20 + time * 0.05) * simHigh2 * grAmp * 0.08;
+            return { x: gx2, y: Math.max(30, Math.min(height - 30, baseGy2 - disp1 - disp2 - ripple)) };
         }
         case 'drift': {
             var dSpd = (params && params.speed) || 0.3;
@@ -699,7 +705,8 @@
         grid_reactive: [
             { key: 'cols', label: 'Cols', min: 4, max: 32, step: 1, def: 16 },
             { key: 'rows', label: 'Rows', min: 4, max: 20, step: 1, def: 10 },
-            { key: 'amplitude', label: 'Amp', min: 20, max: 300, step: 10, def: 150 }
+            { key: 'amplitude', label: 'Amp', min: 20, max: 300, step: 10, def: 150 },
+            { key: 'sphereRadius', label: 'Sphere R', min: 1, max: 8, step: 0.5, def: 3 }
         ],
         drift: [
             { key: 'speed', label: 'Speed', min: 0.05, max: 1, step: 0.05, def: 0.3 },
