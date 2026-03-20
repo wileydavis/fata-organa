@@ -25,11 +25,19 @@
         pointer-events: none; z-index: 1;
         border: 1px solid rgba(196, 163, 90, 0.2);
         background:
+            repeating-linear-gradient(
+                45deg,
+                rgba(160, 140, 100, 0.004) 0px,
+                rgba(0, 0, 0, 0.006) 1px,
+                rgba(140, 120, 80, 0.003) 2px
+            ),
             radial-gradient(
-                circle at 45% 40%,
-                rgba(16, 15, 13, 0.95) 0%,
-                rgba(10, 9, 8, 0.95) 50%,
-                rgba(7, 7, 6, 0.95) 100%
+                ellipse at 42% 35%,
+                rgba(14, 13, 11, 1.0) 0%,
+                rgba(10, 9, 8, 1.0) 20%,
+                rgba(7, 7, 6, 1.0) 45%,
+                rgba(5, 5, 4, 1.0) 70%,
+                rgba(3, 3, 3, 1.0) 100%
             );
     }
 
