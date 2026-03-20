@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Particle Designer — FATA ORGANA</title>
+    <title>Dust Mote Laboratory — FATA ORGANA</title>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -210,8 +210,11 @@
 
     <nav class="designer-nav">
         <a href="/">← Back</a>
-        <span style="color: rgba(196,163,90,0.25);">Particle Score Designer</span>
-        <span id="toggle-controls">Hide Panel</span>
+        <span style="color: rgba(196,163,90,0.25);">Dust Mote Laboratory</span>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <a href="/archive/dust-mote-laboratory-manual" style="color:rgba(196,163,90,0.3); font-size:9px;" title="Read the manual">RTFM</a>
+            <span id="toggle-controls">Hide Panel</span>
+        </div>
     </nav>
 
     <!-- RIGHT PANEL — particle controls -->
@@ -278,34 +281,34 @@
 
         <div class="ctrl-label" style="margin-top:12px;">Actions</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
-            <button class="transport-btn commit" id="btn-commit" style="flex:1; min-width:100px;">● New Cue</button>
+            <button class="transport-btn commit" id="btn-commit" style="flex:1; min-width:100px;" title="Create a new cue at the current playhead position, or update the selected cue">● New Cue</button>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-            <button class="transport-btn" id="btn-autoscore" style="flex:1;">⚡ Auto</button>
-            <button class="transport-btn" id="btn-aiscore" style="flex:1; border-color:rgba(120,160,220,0.3); color:rgba(120,160,220,0.7);">🧠 AI</button>
+            <button class="transport-btn" id="btn-autoscore" style="flex:1;" title="Analyze audio energy and auto-generate a cue sequence">⚡ Auto</button>
+            <button class="transport-btn" id="btn-aiscore" style="flex:1; border-color:rgba(120,160,220,0.3); color:rgba(120,160,220,0.7);" title="Use AI to analyze the transcript and audio, generating a narrative-driven score">🧠 AI</button>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-            <button class="transport-btn" id="btn-loadscore" style="flex:1;">↓ Load</button>
-            <button class="transport-btn commit" id="btn-deploy" style="flex:1;">↑ Deploy</button>
+            <button class="transport-btn" id="btn-loadscore" style="flex:1;" title="Load the currently deployed score for this track from the live site">↓ Load</button>
+            <button class="transport-btn commit" id="btn-deploy" style="flex:1;" title="Push the current score to the live site (password required)">↑ Deploy</button>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-            <button class="transport-btn" id="btn-export" style="flex:1;">Export</button>
-            <button class="transport-btn" id="btn-copy-all" style="flex:1;">Copy</button>
+            <button class="transport-btn" id="btn-export" style="flex:1;" title="View the full score JSON in a modal">Export</button>
+            <button class="transport-btn" id="btn-copy-all" style="flex:1;" title="Copy the full score JSON to clipboard">Copy</button>
         </div>
         <div style="display:flex; gap:4px; margin-top:4px;">
-            <button class="transport-btn danger" id="btn-clear" style="flex:1;">Clear All</button>
+            <button class="transport-btn danger" id="btn-clear" style="flex:1;" title="Delete all cues from the timeline">Clear All</button>
         </div>
     </div>
 
     <!-- BOTTOM BAR — audio transport + timeline -->
     <div id="transport">
         <div class="transport-top">
-            <select class="transport-select" id="track-select">
+            <select class="transport-select" id="track-select" title="Select a track to score">
                 <option value="https://media.fataorgana.fm/episodes/Teaser-Intro.mp3">Lab Orientation (3:31)</option>
                 <option value="https://media.fataorgana.fm/episodes/E1%20V3.mp3?v=2">EP 01 — Calibration (30:08)</option>
                 <option value="https://media.fataorgana.fm/episodes/Attrition%20Final.mp3?v=2">EP 01 Score — Attrition (7:54)</option>
             </select>
-            <button class="transport-btn" id="btn-play">Play</button>
+            <button class="transport-btn" id="btn-play" title="Play or pause the audio">Play</button>
             <span class="transport-time" id="time-display">0:00</span>
             <div class="transport-scrub-wrap" id="scrub-wrap">
                 <div class="transport-scrub-track"></div>
